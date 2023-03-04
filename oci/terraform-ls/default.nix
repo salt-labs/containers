@@ -20,6 +20,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "DESCRIPTION";
+    };
     Entrypoint = [
       "${pkgs.terraform-ls}/bin/terraform-ls"
     ];

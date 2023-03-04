@@ -20,6 +20,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "DESCRIPTION";
+    };
     Entrypoint = [
       "${pkgs.nodePackages.snyk}/bin/snyk"
     ];

@@ -24,6 +24,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "DESCRIPTION";
+    };
     Entrypoint = [
       "${pkgs.busybox}/bin/sh"
     ];

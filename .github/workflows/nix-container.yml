@@ -183,7 +183,7 @@ jobs:
           IMAGE_TAG: "${{ steps.calver.outputs.package_version }}"
 
       - id: publish_container_latest
-        name: Publish container image ${{ matrix.container }}
+        name: "Publish container image ${{ matrix.container }}:latest"
         if: ${{ github.event_name == 'pull_request' }}
         run: ./scripts/oci.sh
         env:
@@ -193,7 +193,7 @@ jobs:
           IMAGE_TAG: "latest"
 
       - id: publish_container_release
-        name: Publish container image ${{ matrix.container }}
+        name: "Publish container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
         if: ${{ github.event_name == 'push'  && github.ref == 'refs/heads/trunk' }}
         run: ./scripts/oci.sh
         env:

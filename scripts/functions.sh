@@ -270,17 +270,35 @@ function publish_container() {
 		IMAGE_TAG="${3}"
 	fi
 
-	FULL_DESTINATION="${REGISTRY_PATH}/${IMAGE_NAME}:${IMAGE_TAG:-latest}"
+	DESTINATION="${REGISTRY_PATH}/${IMAGE_NAME}"
 
-	writeLog "INFO" "Pushing OCI image ${IMAGE_NAME}:${IMAGE_TAG} to registry path ${FULL_DESTINATION}"
+	writeLog "INFO" "Publishing OCI image ${IMAGE_NAME}:${IMAGE_TAG}"
 
+	# Create the provided tag.
 	skopeo copy \
 		--dest-creds="${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
 		"docker-archive:${OCI_ARCHIVE}" \
-		"docker://${FULL_DESTINATION}" || {
-		writeLog "ERROR" "Failed to push OCI image ${IMAGE_NAME}:${IMAGE_TAG} to registry path ${FULL_DESTINATION}"
+		"docker://${DESTINATION}:${IMAGE_TAG}" || {
+		writeLog "ERROR" "Failed to push OCI image ${IMAGE_NAME}:${IMAGE_TAG} to registry path ${DESTINATION}"
 		exit 1
 	}
+
+	if [[ ${IMAGE_TAG} != "latest" ]]; then
+
+		writeLog "INFO" "Publishing OCI image ${IMAGE_NAME}:latest"
+
+		# Always push a latest tag.
+		skopeo copy \
+			--dest-creds="${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
+			"docker-archive:${OCI_ARCHIVE}" \
+			"docker://${DESTINATION}:latest" || {
+			writeLog "ERROR" "Failed to push OCI image ${IMAGE_NAME}:${IMAGE_TAG} to registry path ${DESTINATION}"
+			exit 1
+		}
+
+	fi
+
+	return 0
 
 }
 

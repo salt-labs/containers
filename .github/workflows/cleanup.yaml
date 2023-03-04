@@ -62,11 +62,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        #container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
-        container:
-          - kaniko-cache
-          - action-ship-it
-          - cloud-city
+        container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
         os:
           - ubuntu-latest
 
@@ -75,9 +71,8 @@ jobs:
         name: Cleanup ${{ matrix.container }} packages
         uses: actions/delete-package-versions@v4
         with:
-          owner: salt-labs
           package-name: ${{ matrix.container }}
           package-type: container
-          min-versions-to-keep: 0
+          min-versions-to-keep: 10
           delete-only-untagged-versions: false
           token: ${{ secrets.GITHUB_TOKEN }}

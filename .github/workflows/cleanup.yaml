@@ -60,9 +60,9 @@ jobs:
     needs: matrix
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        #container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
+        container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
         os:
           - ubuntu-latest
 
@@ -71,7 +71,7 @@ jobs:
         name: Delete all untagged containers older than one week
         uses: snok/container-retention-policy@v2
         with:
-          image-names: .*
+          image-names: ${{ matrix.container }}
           cut-off: A week ago UTC
           account-type: org
           org-name: salt-labs
@@ -83,7 +83,7 @@ jobs:
       - name: Delete all containers older than one month
         uses: snok/container-retention-policy@v2
         with:
-          image-names: .*
+          image-names: ${{ matrix.container }}
           cut-off: one min ago UTC+10
           #cut-off: One month ago UTC
           account-type: org
@@ -92,3 +92,50 @@ jobs:
           #skip-tags: latest
           untagged-only: false
           token: ${{ secrets.PAT_PACKAGES }}
+
+      - uses: bots-house/ghcr-delete-image-action@v1.1.0
+        with:
+          owner: salt-labs/devsecops
+          name: ${{ matrix.container }}
+          token: ${{ secrets.PAT_PACKAGES }}
+          untagged-keep-latest: 0
+
+      - uses: bots-house/ghcr-delete-image-action@v1.1.0
+        with:
+          owner: salt-labs
+          name: ${{ matrix.container }}
+          token: ${{ secrets.PAT_PACKAGES }}
+          untagged-keep-latest: 0
+
+      - name: Delete all owner containers without tags
+        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          owner_type: org
+          repository_owner: ${{ github.repository_owner }}
+          untagged_only: false
+
+      - name: Delete all containers from repository without tags
+        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          repository_owner: ${{ github.repository_owner }}
+          repository: devsecops
+          untagged_only: false
+          owner_type: org
+
+      - name: Delete all containers from package
+        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          repository_owner: ${{ github.repository_owner }}
+          repository: ${{ github.repository }}
+          package_name: ${{ matrix.container }}
+          untagged_only: false
+          owner_type: org
+
+      - uses: d22/cleanup-ghcr-containers-action@v0.3.3
+        with:
+          access-token: ${{ secrets.PAT_PACKAGES }}
+          package-name: ${{ matrix.container }}
+          versions-to-keep: 0

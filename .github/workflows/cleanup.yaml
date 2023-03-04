@@ -62,7 +62,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
+        #container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
+        container:
+          - cloud-city
+          - kaniko-cache
+          - brakeman
         os:
           - ubuntu-latest
 

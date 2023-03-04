@@ -67,12 +67,12 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - name: Clean GHCR packages
+      - name: CLEAN ROOT
         uses: cresh-io/action-ghcr-batch-delete-versions@v1
         with:
           github-access-token: "${{ secrets.PAT_PACKAGES }}"
           org: "${{ github.repository_owner }}"
-          package_name: "${{ github.repository }}/${{ matrix.container }}"
+          package_name: "${{ matrix.container }}"
           package_type: "container"
           dry-run: "0"
           selector: |
@@ -81,7 +81,21 @@ jobs:
           #  type=tags;operator=equals;value=2023
         continue-on-error: true
 
-      - name: Clean GHCR packages devsecops
+      - name: CLEAN CONTAINER
+        uses: cresh-io/action-ghcr-batch-delete-versions@v1
+        with:
+          github-access-token: "${{ secrets.PAT_PACKAGES }}"
+          org: "${{ github.repository_owner }}"
+          package_name: "salt-labs/${{ matrix.container }}"
+          package_type: "container"
+          dry-run: "0"
+          selector: |
+            type=tagCount;operator=greaterThan;value=0
+          #excluder: |
+          #  type=tags;operator=equals;value=2023
+        continue-on-error: true
+
+      - name: CLEAN DEVSECOPS
         uses: cresh-io/action-ghcr-batch-delete-versions@v1
         with:
           github-access-token: "${{ secrets.PAT_PACKAGES }}"
@@ -95,16 +109,28 @@ jobs:
           #  type=tags;operator=equals;value=2023
         continue-on-error: true
 
-      - uses: duskmoon314/action-delete-ghcr-untagged@v1
+      - name: CLEANUP DUSKMOON ROOT
+        uses: duskmoon314/action-delete-ghcr-untagged@v1
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           owner_type: org
           owner: ${{ github.repository_owner }}
-          package_name: ${{ github.repository }}/${{ matrix.container }}
+          package_name: ${{ matrix.container }}
           expiration: 0
         continue-on-error: true
 
-      - uses: duskmoon314/action-delete-ghcr-untagged@v1
+      - name: CLEANUP DUSKMOON CONTAINERS
+        uses: duskmoon314/action-delete-ghcr-untagged@v1
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          owner_type: org
+          owner: ${{ github.repository_owner }}
+          package_name: containers/${{ matrix.container }}
+          expiration: 0
+        continue-on-error: true
+
+      - name: CLEANUP DUSKMOON DEVSECOPS
+        uses: duskmoon314/action-delete-ghcr-untagged@v1
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           owner_type: org
@@ -113,12 +139,24 @@ jobs:
           expiration: 0
         continue-on-error: true
 
-      - name: Prune
+      - name: Prune root
         uses: vlaurin/action-ghcr-prune@v0.5.0
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           organization: salt-labs
-          container: ${{ github.repository }}/${{ matrix.container }}
+          container: ${{ matrix.container }}
+          dry-run: false
+          keep-younger-than: 0
+          keep-last: 0
+          prune-untagged: true
+        continue-on-error: true
+
+      - name: Prune containers
+        uses: vlaurin/action-ghcr-prune@v0.5.0
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          organization: salt-labs
+          container: containers/${{ matrix.container }}
           dry-run: false
           keep-younger-than: 0
           keep-last: 0

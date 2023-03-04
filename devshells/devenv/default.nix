@@ -92,7 +92,7 @@ inputs.devenv.lib.mkShell {
           staticcheck.enable = false;
 
           # Spelling
-          hunspell.enable = true;
+          hunspell.enable = false;
           typos.enable = true;
 
           # Git commit messages

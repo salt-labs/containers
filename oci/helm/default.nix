@@ -20,6 +20,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "helm";
+    };
     Entrypoint = [
       "${pkgs.kubernetes-helm}/bin/helm"
     ];

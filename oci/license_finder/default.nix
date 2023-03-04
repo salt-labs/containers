@@ -20,6 +20,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "license_finder";
+    };
     Entrypoint = [
       "${pkgs.license_finder}/bin/license_finder"
     ];

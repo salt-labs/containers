@@ -22,6 +22,9 @@ in
     };
 
     config = {
+      Labels = {
+        "org.opencontainers.image.description" = "Idem";
+      };
       Entrypoint = [
         #"${idem}/bin/python"
         "${pkgs.busybox}/bin/sh"

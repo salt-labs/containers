@@ -20,6 +20,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "packer";
+    };
     Entrypoint = [
       "${pkgs.packer}/bin/packer"
     ];

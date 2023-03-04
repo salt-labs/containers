@@ -22,6 +22,9 @@ in
     };
 
     config = {
+      Labels = {
+        "org.opencontainers.image.description" = "tanzu";
+      };
       Entrypoint = [
         "${tanzu}/bin/tanzu"
       ];

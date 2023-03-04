@@ -10,7 +10,7 @@ on:
       - .github/workflows/nix-container.yml
       - flake.nix
       - flake.lock
-      - containers/*
+      - oci/*
       - devshells/*
       - scripts/*
 
@@ -22,7 +22,7 @@ on:
       - .github/workflows/nix-container.yml
       - flake.nix
       - flake.lock
-      - containers/*
+      - oci/*
       - devshells/*
       - scripts/*
 

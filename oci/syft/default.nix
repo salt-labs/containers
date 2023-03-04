@@ -20,6 +20,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "syft";
+    };
     Entrypoint = [
       "${pkgs.syft}/bin/syft"
     ];

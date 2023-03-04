@@ -20,6 +20,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "kubectl";
+    };
     Entrypoint = [
       "${pkgs.kubectl}/bin/kubectl"
     ];

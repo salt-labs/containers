@@ -20,6 +20,9 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
+    Labels = {
+      "org.opencontainers.image.description" = "tflint";
+    };
     Entrypoint = [
       "${pkgs.tflint}/bin/tflint"
     ];

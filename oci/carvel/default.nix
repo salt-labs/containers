@@ -22,6 +22,9 @@ in
     };
 
     config = {
+      Labels = {
+        "org.opencontainers.image.description" = "Carvel";
+      };
       Entrypoint = [
         "${pkgs.busybox}/bin/sh"
       ];

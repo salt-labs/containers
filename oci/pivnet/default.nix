@@ -22,6 +22,9 @@ in
     };
 
     config = {
+      Labels = {
+        "org.opencontainers.image.description" = "pivnet";
+      };
       Entrypoint = [
         "${pivnet}/bin/pivnet"
       ];

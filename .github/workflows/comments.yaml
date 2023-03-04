@@ -1,0 +1,81 @@
+---
+name: Comments
+
+on:
+  issue_comment:
+    types:
+      - created
+      - edited
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  issues: write
+  pull-requests: write
+  statuses: read
+
+jobs:
+  ##################################################
+  # Posts Giphy comments on '/giphy search_term'
+  ##################################################
+
+  giphy:
+    name: Giphy
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 5
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+      - id: giphy
+        name: Giphy image search
+        uses: IAmHughes/giphy-generator@v1.0.0
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GIPHY_TOKEN: "${{ secrets.GIPHY_TOKEN }}"
+        with:
+          rating: "PG-13" # G, PG, PG-13, R
+          lang: "en"
+
+  ##################################################
+  # Send a notification to Discord
+  ##################################################
+
+  discord:
+    name: Discord
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 5
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+    steps:
+      - name: Post message to Discord
+        id: discord_message
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_DISCORD }}
+          PING: "@MAHDTech"
+          MESSAGE: >
+            The ${{ github.event_name }} event was triggered in the ${{ github.repository }} repository.
+            The comment is available to view [here](${{ github.event.comment.html_url }})
+        run: |
+          sudo apt install jq --yes
+          JSON_CONTENT=$(jq -n --arg 'content' "${PING} ${MESSAGE}" '$ARGS.named')
+          curl \
+          --verbose \
+          --request POST \
+          --header "Content-Type: application/json" \
+          --data "${JSON_CONTENT}" \
+          "$WEBHOOK_URL"

@@ -1,0 +1,19 @@
+# Ignore Nix result file.
+result
+
+# Ignore dev env vars.
+.devenv
+**/.devenv
+**/.devenv*
+**/devenv.local.nix
+
+# Ignore direnv
+.direnv
+**/.direnv
+
+# Ignore bin folder
+bin/
+bin/**
+
+# Ignore TODOs
+TODO/

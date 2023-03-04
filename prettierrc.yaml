@@ -1,0 +1,43 @@
+---
+
+##################################################
+# Name: .prettierrc.yaml
+# Description: Prettier config
+##################################################
+
+#########################
+# Global settings
+#########################
+
+trailingComma: "es5"
+tabWidth: 4
+semi: false
+singleQuote: false
+
+overrides:
+  #########################
+  # Markdown
+  #########################
+  - files:
+      - "*.md"
+    options:
+      tabWidth: 4
+      usetabs: false
+
+  #########################
+  # HTML
+  #########################
+  - files:
+      - "*.html"
+    options:
+      tabWidth: 4
+
+  #########################
+  # YAML
+  #########################
+  - files:
+      - "*.yaml"
+      - "*.yml"
+    options:
+      tabWidth: 2
+      usetabs: false

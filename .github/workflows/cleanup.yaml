@@ -62,7 +62,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
+        #container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
         os:
           - ubuntu-latest
 
@@ -78,7 +78,7 @@ jobs:
           #keep-at-least: 1
           keep-at-least: 0
           untagged-only: true
-          token: ${{ secrets.GITHUB_PAT_PACKAGES }}
+          token: ${{ secrets.PAT_PACKAGES }}
 
       - name: Delete all containers older than one month
         uses: snok/container-retention-policy@v2
@@ -91,4 +91,4 @@ jobs:
           keep-at-least: 0
           #skip-tags: latest
           untagged-only: false
-          token: ${{ secrets.GITHUB_PAT_PACKAGES }}
+          token: ${{ secrets.PAT_PACKAGES }}

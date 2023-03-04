@@ -115,155 +115,155 @@
       inherit hostPlatform;
       crossPkgs = pkgsImportCrossSystem system hostPlatform;
     in {
-      brakeman = import ./containers/brakeman {
+      brakeman = import ./oci/brakeman {
         inherit pkgs;
       };
 
-      buildah = import ./containers/buildah {
+      buildah = import ./oci/buildah {
         inherit pkgs;
       };
 
-      carvel = import ./containers/carvel {
+      carvel = import ./oci/carvel {
         inherit pkgs;
       };
 
-      ci = import ./containers/ci {
+      ci = import ./oci/ci {
         inherit pkgs;
       };
 
-      clair = import ./containers/clair {
+      clair = import ./oci/clair {
         inherit pkgs;
       };
 
-      cmake = import ./containers/cmake {
+      cmake = import ./oci/cmake {
         inherit pkgs;
       };
 
-      codeql = import ./containers/codeql {
+      codeql = import ./oci/codeql {
         inherit pkgs;
       };
 
-      cosign = import ./containers/cosign {
+      cosign = import ./oci/cosign {
         inherit pkgs;
       };
 
-      flawfinder = import ./containers/flawfinder {
+      flawfinder = import ./oci/flawfinder {
         inherit pkgs;
       };
 
-      gitleaks = import ./containers/gitleaks {
+      gitleaks = import ./oci/gitleaks {
         inherit pkgs;
       };
 
-      gnumake = import ./containers/gnumake {
+      gnumake = import ./oci/gnumake {
         inherit pkgs;
       };
 
-      gosec = import ./containers/gosec {
+      gosec = import ./oci/gosec {
         inherit pkgs;
       };
 
-      govc = import ./containers/govc {
+      govc = import ./oci/govc {
         inherit pkgs;
       };
 
-      grype = import ./containers/grype {
+      grype = import ./oci/grype {
         inherit pkgs;
       };
 
-      hadolint = import ./containers/hadolint {
+      hadolint = import ./oci/hadolint {
         inherit pkgs;
       };
 
-      hello = import ./containers/hello {
+      hello = import ./oci/hello {
         inherit pkgs;
       };
 
-      helm = import ./containers/helm {
+      helm = import ./oci/helm {
         inherit pkgs;
       };
 
-      #idem = import ./containers/idem {
+      #idem = import ./oci/idem {
       #  inherit pkgs;
       #};
 
-      kics = import ./containers/kics {
+      kics = import ./oci/kics {
         inherit pkgs;
       };
 
-      kpack = import ./containers/kpack {
+      kpack = import ./oci/kpack {
         inherit pkgs;
       };
 
-      kube-linter = import ./containers/kube-linter {
+      kube-linter = import ./oci/kube-linter {
         inherit pkgs;
       };
 
-      kubectl = import ./containers/kubectl {
+      kubectl = import ./oci/kubectl {
         inherit pkgs;
       };
 
-      kubesec = import ./containers/kubesec {
+      kubesec = import ./oci/kubesec {
         inherit pkgs;
       };
 
-      license_finder = import ./containers/license_finder {
+      license_finder = import ./oci/license_finder {
         inherit pkgs;
       };
 
-      packer = import ./containers/packer {
+      packer = import ./oci/packer {
         inherit pkgs;
       };
 
-      pivnet = import ./containers/pivnet {
+      pivnet = import ./oci/pivnet {
         inherit pkgs;
       };
 
-      salt = import ./containers/salt {
+      salt = import ./oci/salt {
         inherit pkgs;
       };
 
-      secretscanner = import ./containers/secretscanner {
+      secretscanner = import ./oci/secretscanner {
         inherit pkgs;
       };
 
-      semgrep = import ./containers/semgrep {
+      semgrep = import ./oci/semgrep {
         inherit pkgs;
       };
 
-      skopeo = import ./containers/skopeo {
+      skopeo = import ./oci/skopeo {
         inherit pkgs;
       };
 
-      snyk = import ./containers/snyk {
+      snyk = import ./oci/snyk {
         inherit pkgs;
       };
 
-      syft = import ./containers/syft {
+      syft = import ./oci/syft {
         inherit pkgs;
       };
 
-      tanzu = import ./containers/tanzu {
+      tanzu = import ./oci/tanzu {
         inherit pkgs;
       };
 
-      terraform = import ./containers/terraform {
+      terraform = import ./oci/terraform {
         inherit pkgs;
       };
 
-      terraform-ls = import ./containers/terraform-ls {
+      terraform-ls = import ./oci/terraform-ls {
         inherit pkgs;
       };
 
-      tflint = import ./containers/tflint {
+      tflint = import ./oci/tflint {
         inherit pkgs;
       };
 
-      tfsec = import ./containers/tfsec {
+      tfsec = import ./oci/tfsec {
         inherit pkgs;
       };
 
-      trivy = import ./containers/trivy {
+      trivy = import ./oci/trivy {
         inherit pkgs;
       };
     });

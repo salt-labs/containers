@@ -20,9 +20,6 @@ pkgs.dockerTools.buildImage {
   };
 
   config = {
-    Annotations = {
-      "org.opencontainers.image.description" = "brakeman";
-    };
     Labels = {
       "org.opencontainers.image.description" = "brakeman";
     };

@@ -38,6 +38,11 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v3
 
+      - id: repository_name
+        name: Record repository name
+        run: |
+          echo "REPOSITORY_NAME=$(basename ${{ github.repository }})" >> "$GITHUB_OUTPUT"
+
       - id: generate_matrix
         name: Generating a matrix of container names
         run: |
@@ -47,6 +52,7 @@ jobs:
           echo "CONTAINER_MATRIX=${CONTAINER_NAMES}" >> "$GITHUB_OUTPUT"
 
     outputs:
+      repository_name: ${{ steps.repository_name.outputs.REPOSITORY_NAME }}
       container_matrix: ${{ steps.generate_matrix.outputs.CONTAINER_MATRIX }}
 
   cleanup:
@@ -62,75 +68,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
-        container:
-          - cloud-city
-          - kaniko-cache
-          - brakeman
+        container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
         os:
           - ubuntu-latest
 
     steps:
-      - name: CLEANUP DUSKMOON CLOUDCITY
-        uses: duskmoon314/action-delete-ghcr-untagged@v1
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          owner_type: org
-          owner: salt-labs
-          package_name: cloud-city
-          expiration: 0
-        continue-on-error: true
-
-      - name: CLEANUP DUSKMOON KANIKO
-        uses: duskmoon314/action-delete-ghcr-untagged@v1
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          owner_type: org
-          owner: salt-labs
-          package_name: kaniko-cache
-          expiration: 0
-        continue-on-error: true
-
-      - name: CLEANUP DUSKMOON ROOT
+      - id: cleanup_untagged
+        name: Cleanup Untagged Packages
         uses: duskmoon314/action-delete-ghcr-untagged@v1
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           owner_type: org
           owner: ${{ github.repository_owner }}
-          package_name: ${{ matrix.container }}
-          expiration: 0
-        continue-on-error: true
+          package_name: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
+          expiration: 7
 
-      - name: CLEANUP DUSKMOON CONTAINERS
-        uses: duskmoon314/action-delete-ghcr-untagged@v1
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          owner_type: org
-          owner: ${{ github.repository_owner }}
-          package_name: containers/${{ matrix.container }}
-          expiration: 0
-        continue-on-error: true
-
-      - name: Prune containers
+      - id: prune_containers
+        name: Prune expired containers
         uses: vlaurin/action-ghcr-prune@v0.5.0
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           organization: salt-labs
-          container: containers/${{ matrix.container }}
+          container: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
           dry-run: false
-          keep-younger-than: 0
-          keep-last: 0
+          keep-younger-than: 7d
+          keep-last: 3
           prune-untagged: true
-        continue-on-error: true
-
-      - name: Prune kaniko-cache
-        uses: vlaurin/action-ghcr-prune@v0.5.0
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          organization: salt-labs
-          container: kaniko-cache
-          dry-run: false
-          keep-younger-than: 0
-          keep-last: 0
-          prune-untagged: true
-        continue-on-error: true

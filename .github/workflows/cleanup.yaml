@@ -1,0 +1,93 @@
+---
+name: Cleanup
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  matrix:
+    name: Matrix
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+    continue-on-error: false
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v3
+
+      - id: repository_name
+        name: Record repository name
+        run: |
+          echo "REPOSITORY_NAME=$(basename ${{ github.repository }})" >> "$GITHUB_OUTPUT"
+
+      - id: generate_matrix
+        name: Generating a matrix of container names
+        run: |
+          echo "Generating matrix of container names..."
+          CONTAINER_NAMES=$(find oci -mindepth 1 -type d ! -name "_template" ! -name "_disabled*" -printf "%f\n" | jq -R -s -c 'split("\n")[:-1]')
+          echo "${CONTAINER_NAMES}" | jq .
+          echo "CONTAINER_MATRIX=${CONTAINER_NAMES}" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      repository_name: ${{ steps.repository_name.outputs.REPOSITORY_NAME }}
+      container_matrix: ${{ steps.generate_matrix.outputs.CONTAINER_MATRIX }}
+
+  cleanup:
+    name: Cleanup Packages
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+    continue-on-error: false
+
+    needs: matrix
+
+    strategy:
+      fail-fast: false
+      matrix:
+        container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
+        os:
+          - ubuntu-latest
+
+    steps:
+      - id: cleanup_untagged
+        name: Cleanup Untagged Packages
+        uses: duskmoon314/action-delete-ghcr-untagged@v1
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          owner_type: org
+          owner: ${{ github.repository_owner }}
+          package_name: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
+          expiration: 7
+
+      - id: prune_containers
+        name: Prune expired containers
+        uses: vlaurin/action-ghcr-prune@v0.5.0
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          organization: salt-labs
+          container: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
+          dry-run: false
+          keep-younger-than: 7d
+          keep-last: 3
+          prune-untagged: true

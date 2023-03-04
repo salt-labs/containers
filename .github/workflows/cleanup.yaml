@@ -79,6 +79,7 @@ jobs:
           keep-at-least: 0
           untagged-only: true
           token: ${{ secrets.PAT_PACKAGES }}
+        continue-on-error: true
 
       - name: Delete all containers older than one month
         uses: snok/container-retention-policy@v2
@@ -92,6 +93,7 @@ jobs:
           #skip-tags: latest
           untagged-only: false
           token: ${{ secrets.PAT_PACKAGES }}
+        continue-on-error: true
 
       - uses: bots-house/ghcr-delete-image-action@v1.1.0
         with:
@@ -99,6 +101,7 @@ jobs:
           name: ${{ matrix.container }}
           token: ${{ secrets.PAT_PACKAGES }}
           untagged-keep-latest: 0
+        continue-on-error: true
 
       - uses: bots-house/ghcr-delete-image-action@v1.1.0
         with:
@@ -106,6 +109,7 @@ jobs:
           name: ${{ matrix.container }}
           token: ${{ secrets.PAT_PACKAGES }}
           untagged-keep-latest: 0
+        continue-on-error: true
 
       - name: Delete all owner containers without tags
         uses: Chizkiyahu/delete-untagged-ghcr-action@v2
@@ -114,6 +118,7 @@ jobs:
           owner_type: org
           repository_owner: ${{ github.repository_owner }}
           untagged_only: false
+        continue-on-error: true
 
       - name: Delete all containers from repository without tags
         uses: Chizkiyahu/delete-untagged-ghcr-action@v2
@@ -123,6 +128,7 @@ jobs:
           repository: devsecops
           untagged_only: false
           owner_type: org
+        continue-on-error: true
 
       - name: Delete all containers from package
         uses: Chizkiyahu/delete-untagged-ghcr-action@v2
@@ -133,9 +139,11 @@ jobs:
           package_name: ${{ matrix.container }}
           untagged_only: false
           owner_type: org
+        continue-on-error: true
 
       - uses: d22/cleanup-ghcr-containers-action@v0.3.3
         with:
           access-token: ${{ secrets.PAT_PACKAGES }}
           package-name: ${{ matrix.container }}
           versions-to-keep: 0
+        continue-on-error: true

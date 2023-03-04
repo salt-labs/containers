@@ -81,6 +81,20 @@ jobs:
           #  type=tags;operator=equals;value=2023
         continue-on-error: true
 
+      - name: Clean GHCR packages devsecops
+        uses: cresh-io/action-ghcr-batch-delete-versions@v1
+        with:
+          github-access-token: "${{ secrets.PAT_PACKAGES }}"
+          org: "${{ github.repository_owner }}"
+          package_name: "devsecops/${{ matrix.container }}"
+          package_type: "container"
+          dry-run: "0"
+          selector: |
+            type=tagCount;operator=greaterThan;value=0
+          #excluder: |
+          #  type=tags;operator=equals;value=2023
+        continue-on-error: true
+
       - uses: duskmoon314/action-delete-ghcr-untagged@v1
         with:
           token: ${{ secrets.PAT_PACKAGES }}

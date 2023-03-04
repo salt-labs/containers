@@ -7,7 +7,7 @@ on:
       - $default-branch
       - trunk
     paths:
-      - .github/workflows/nix-flake-check.yml
+      - .github/workflows/nix-container.yml
       - flake.nix
       - flake.lock
       - containers/*
@@ -19,7 +19,7 @@ on:
       - $default-branch
       - "trunk"
     paths:
-      - .github/workflows/nix-flake-check.yml
+      - .github/workflows/nix-container.yml
       - flake.nix
       - flake.lock
       - containers/*

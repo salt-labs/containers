@@ -7,6 +7,7 @@ on:
 
   workflow_dispatch:
 
+  # TODO: REMOVE THIS
   pull_request:
 
 defaults:
@@ -61,32 +62,18 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
         os:
           - ubuntu-latest
 
     steps:
       - id: cleanup_packages
-        name: Cleanup packages
-        uses: smartsquaregmbh/delete-old-packages@v0.6.0
+        name: Cleanup ${{ matrix.container }} packages
+        uses: actions/delete-package-versions@v4
         with:
-          owner: salt-labs
-          repo: devsecops
-          keep: 0
-          dry-run: false
-          type: container
+          owner: salt-labs/devsecops
+          package-name: ${{ matrix.container }}
+          package-type: container
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          names: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
-
-      - id: cleanup_packages_org
-        name: Cleanup packages
-        uses: smartsquaregmbh/delete-old-packages@v0.6.0
-        with:
-          organization: salt-labs
-          keep: 0
-          dry-run: false
-          type: container
-          token: ${{ secrets.GITHUB_TOKEN }}
-          names: |
-            kaniko-cache
-            action-ship-it
-            cloud-city

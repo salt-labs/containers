@@ -21,7 +21,7 @@ pkgs.dockerTools.buildImage {
 
   config = {
     Labels = {
-      "org.opencontainers.image.description" = "DESCRIPTION";
+      "org.opencontainers.image.description" = "Cosign";
     };
     Entrypoint = [
       "${pkgs.cosign}/bin/cosign"

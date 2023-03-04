@@ -25,7 +25,7 @@ pkgs.dockerTools.buildImage {
 
   config = {
     Labels = {
-      "org.opencontainers.image.description" = "DESCRIPTION";
+      "org.opencontainers.image.description" = "Codestream CI";
     };
     Entrypoint = [
       "${pkgs.busybox}/bin/sh"

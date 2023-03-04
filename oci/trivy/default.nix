@@ -21,7 +21,7 @@ pkgs.dockerTools.buildImage {
 
   config = {
     Labels = {
-      "org.opencontainers.image.description" = "DESCRIPTION";
+      "org.opencontainers.image.description" = "trivy";
     };
     Entrypoint = [
       "${pkgs.trivy}/bin/trivy"

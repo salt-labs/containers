@@ -110,7 +110,7 @@ if [[ ${CONTAINER_BUILD^^} == "TRUE" ]]; then
 
 	if [[ ${CONTAINER_PUBLISH^^} == "TRUE" ]]; then
 
-		writeLog "INFO" "Pushing container image $IMAGE_NAME"
+		writeLog "INFO" "Publishing container image $IMAGE_NAME"
 
 		publish_container "result" "${IMAGE_NAME}" "${IMAGE_TAG}" || {
 			echo "Failed to publish container image ${IMAGE_NAME}:${IMAGE_TAG}"

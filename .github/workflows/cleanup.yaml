@@ -67,12 +67,28 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - id: cleanup_packages
-        name: Cleanup ${{ matrix.container }} packages
-        uses: actions/delete-package-versions@v4
+      - id: cleanup_weekly
+        name: Delete all untagged containers older than one week
+        uses: snok/container-retention-policy@v2
         with:
-          package-name: ${{ matrix.container }}
-          package-type: container
-          min-versions-to-keep: 10
-          delete-only-untagged-versions: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: .*
+          cut-off: A week ago UTC
+          account-type: org
+          org-name: salt-labs
+          #keep-at-least: 1
+          keep-at-least: 0
+          untagged-only: true
+          token: ${{ secrets.GITHUB_PAT_PACKAGES }}
+
+      - name: Delete all containers older than one month
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: .*
+          cut-off: one min ago UTC+10
+          #cut-off: One month ago UTC
+          account-type: org
+          org-name: salt-labs
+          keep-at-least: 0
+          #skip-tags: latest
+          untagged-only: false
+          token: ${{ secrets.GITHUB_PAT_PACKAGES }}

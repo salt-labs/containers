@@ -7,9 +7,6 @@ on:
 
   workflow_dispatch:
 
-  # TODO: REMOVE THIS
-  pull_request:
-
 defaults:
   run:
     shell: bash

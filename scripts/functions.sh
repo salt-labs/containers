@@ -272,6 +272,8 @@ function publish_container() {
 
 	FULL_DESTINATION="${REGISTRY_PATH}/${IMAGE_NAME}:${IMAGE_TAG:-latest}"
 
+	writeLog "INFO" "Pushing OCI image ${IMAGE_NAME}:${IMAGE_TAG} to registry path ${FULL_DESTINATION}"
+
 	skopeo copy \
 		--dest-creds="${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
 		"docker-archive:${OCI_ARCHIVE}" \

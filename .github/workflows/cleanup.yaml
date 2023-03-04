@@ -72,8 +72,18 @@ jobs:
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           owner_type: org
-          owner: ${{ github.repository_owner }}
+          owner: salt-labs
           package_name: cloud-city
+          expiration: 0
+        continue-on-error: true
+
+      - name: CLEANUP DUSKMOON KANIKO
+        uses: duskmoon314/action-delete-ghcr-untagged@v1
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          owner_type: org
+          owner: salt-labs
+          package_name: kaniko-cache
           expiration: 0
         continue-on-error: true
 
@@ -97,46 +107,12 @@ jobs:
           expiration: 0
         continue-on-error: true
 
-      - name: CLEANUP DUSKMOON DEVSECOPS
-        uses: duskmoon314/action-delete-ghcr-untagged@v1
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          owner_type: org
-          owner: ${{ github.repository_owner }}
-          package_name: devsecops/${{ matrix.container }}
-          expiration: 0
-        continue-on-error: true
-
-      - name: Prune root
-        uses: vlaurin/action-ghcr-prune@v0.5.0
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          organization: salt-labs
-          container: ${{ matrix.container }}
-          dry-run: false
-          keep-younger-than: 0
-          keep-last: 0
-          prune-untagged: true
-        continue-on-error: true
-
       - name: Prune containers
         uses: vlaurin/action-ghcr-prune@v0.5.0
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           organization: salt-labs
           container: containers/${{ matrix.container }}
-          dry-run: false
-          keep-younger-than: 0
-          keep-last: 0
-          prune-untagged: true
-        continue-on-error: true
-
-      - name: Prune devsecops
-        uses: vlaurin/action-ghcr-prune@v0.5.0
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          organization: salt-labs
-          container: devsecops/${{ matrix.container }}
           dry-run: false
           keep-younger-than: 0
           keep-last: 0

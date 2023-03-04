@@ -67,83 +67,58 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - id: cleanup_weekly
-        name: Delete all untagged containers older than one week
-        uses: snok/container-retention-policy@v2
+      - name: Clean GHCR packages
+        uses: cresh-io/action-ghcr-batch-delete-versions@v1
         with:
-          image-names: ${{ matrix.container }}
-          cut-off: A week ago UTC
-          account-type: org
-          org-name: salt-labs
-          #keep-at-least: 1
-          keep-at-least: 0
-          untagged-only: true
-          token: ${{ secrets.PAT_PACKAGES }}
+          github-access-token: "${{ secrets.PAT_PACKAGES }}"
+          org: "${{ github.repository_owner }}"
+          package_name: "${{ github.repository }}/${{ matrix.container }}"
+          package_type: "container"
+          dry-run: "0"
+          selector: |
+            type=tagCount;operator=greaterThan;value=0
+          #excluder: |
+          #  type=tags;operator=equals;value=2023
         continue-on-error: true
 
-      - name: Delete all containers older than one month
-        uses: snok/container-retention-policy@v2
-        with:
-          image-names: ${{ matrix.container }}
-          cut-off: one min ago UTC+10
-          #cut-off: One month ago UTC
-          account-type: org
-          org-name: salt-labs
-          keep-at-least: 0
-          #skip-tags: latest
-          untagged-only: false
-          token: ${{ secrets.PAT_PACKAGES }}
-        continue-on-error: true
-
-      - uses: bots-house/ghcr-delete-image-action@v1.1.0
-        with:
-          owner: salt-labs/devsecops
-          name: ${{ matrix.container }}
-          token: ${{ secrets.PAT_PACKAGES }}
-          untagged-keep-latest: 0
-        continue-on-error: true
-
-      - uses: bots-house/ghcr-delete-image-action@v1.1.0
-        with:
-          owner: salt-labs
-          name: ${{ matrix.container }}
-          token: ${{ secrets.PAT_PACKAGES }}
-          untagged-keep-latest: 0
-        continue-on-error: true
-
-      - name: Delete all owner containers without tags
-        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+      - uses: duskmoon314/action-delete-ghcr-untagged@v1
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           owner_type: org
-          repository_owner: ${{ github.repository_owner }}
-          untagged_only: false
+          owner: ${{ github.repository_owner }}
+          package_name: ${{ github.repository }}/${{ matrix.container }}
+          expiration: 0
         continue-on-error: true
 
-      - name: Delete all containers from repository without tags
-        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+      - uses: duskmoon314/action-delete-ghcr-untagged@v1
         with:
           token: ${{ secrets.PAT_PACKAGES }}
-          repository_owner: ${{ github.repository_owner }}
-          repository: devsecops
-          untagged_only: false
           owner_type: org
+          owner: ${{ github.repository_owner }}
+          package_name: devsecops/${{ matrix.container }}
+          expiration: 0
         continue-on-error: true
 
-      - name: Delete all containers from package
-        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+      - name: Prune
+        uses: vlaurin/action-ghcr-prune@v0.5.0
         with:
           token: ${{ secrets.PAT_PACKAGES }}
-          repository_owner: ${{ github.repository_owner }}
-          repository: ${{ github.repository }}
-          package_name: ${{ matrix.container }}
-          untagged_only: false
-          owner_type: org
+          organization: salt-labs
+          container: ${{ github.repository }}/${{ matrix.container }}
+          dry-run: false
+          keep-younger-than: 0
+          keep-last: 0
+          prune-untagged: true
         continue-on-error: true
 
-      - uses: d22/cleanup-ghcr-containers-action@v0.3.3
+      - name: Prune devsecops
+        uses: vlaurin/action-ghcr-prune@v0.5.0
         with:
-          access-token: ${{ secrets.PAT_PACKAGES }}
-          package-name: ${{ matrix.container }}
-          versions-to-keep: 0
+          token: ${{ secrets.PAT_PACKAGES }}
+          organization: salt-labs
+          container: devsecops/${{ matrix.container }}
+          dry-run: false
+          keep-younger-than: 0
+          keep-last: 0
+          prune-untagged: true
         continue-on-error: true

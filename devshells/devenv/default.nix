@@ -29,7 +29,7 @@ inputs.devenv.lib.mkShell {
         bash-completion
 
         trivy
-        clair
+        #clair
         license_finder
       ];
 

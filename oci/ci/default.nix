@@ -81,6 +81,9 @@ in
         "/home"
         "/lib"
         "/root"
+        "/run"
+        "/sbin"
+        "/usr"
         "/var"
         "/tmp"
       ];
@@ -97,6 +100,7 @@ in
           git
           jq
           less
+          libcap
           ncurses
           readline
           sudo
@@ -170,23 +174,42 @@ in
 
       mkdir --parents \
         /var/lib/containers \
-        /var/tmp
+        /var/tmp \
+        /var/tmp/containers/rootless
 
       chmod --recursive 777 \
         /var/lib/containers \
-        /var/tmp
+        /var/tmp \
+        /var/tmp/containers/rootless
 
       mkdir --parents \
-        /root/.config/containers
+        /etc/containers \
+        /run/containers/storage \
+        /var/lib/containers/storage
 
-      cat <<- EOF > /root/.config/containers/policy.json
+      echo "export BUILDAH_ISOLATION=chroot" >> /root/.bashrc
+
+      # https://github.com/containers/podman/blob/main/vendor/github.com/containers/storage/storage.conf
+      cat <<- EOF > /etc/containers/storage.conf
+      [storage]
+      driver = "vfs"
+      runroot = "/run/containers/storage"
+      graphroot = "/var/lib/containers/storage"
+      rootless_storage_path = "/var/tmp/containers/rootless"
+      EOF
+
+      cat <<- EOF > /etc/containers/policy.json
       {
         "default": [{"type": "insecureAcceptAnything"}]
       }
       EOF
 
-      echo root:10000:65536 >> /etc/subuid
-      echo root:10000:65536 >> /etc/subgid
+      touch /etc/subgid /etc/subuid \
+        && chmod g=u /etc/subgid /etc/subuid /etc/passwd \
+        && echo root:10000:65536 > /etc/subuid \
+        && echo root:10000:65536 > /etc/subgid
+
+
     '';
 
     config = {

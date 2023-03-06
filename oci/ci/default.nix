@@ -189,7 +189,6 @@ in
 
       echo "export BUILDAH_ISOLATION=chroot" >> /root/.bashrc
 
-      # https://github.com/containers/podman/blob/main/vendor/github.com/containers/storage/storage.conf
       cat <<- EOF > /etc/containers/storage.conf
       [storage]
       driver = "vfs"

@@ -1,0 +1,22 @@
+[tool.poetry]
+
+name = "entrypoint"
+version = "0.0.1"
+description = "Entrypoint to python application."
+authors = ["MAHDTech <MAHDTech@saltlabs.tech>"]
+license = "Unlicense"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.28.2"
+pillow = "^9.4.0"
+flask = "^2.2.3"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+entrypoint = "entrypoint:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

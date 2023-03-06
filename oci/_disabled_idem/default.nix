@@ -1,5 +1,24 @@
-{pkgs, ...}: let
-  idem = pkgs.callPackage ./idem.nix {};
+{
+  nixpkgs,
+  pkgs,
+  system,
+  poetry2nix,
+  ...
+}: let
+  overlay = self: super: {
+    app = self.poetry2nix.mkPoetryApplication {
+      projectDir = ./poetry;
+      python = pkgs.python3;
+      poetry = poetry2nix;
+      inherit system;
+      inherit poetry2nix;
+    };
+  };
+
+  overlayPkgs = import nixpkgs {
+    inherit system;
+    overlays = [overlay];
+  };
 in
   pkgs.dockerTools.buildImage {
     name = "idem";
@@ -10,15 +29,17 @@ in
       name = "image-root";
       pathsToLink = ["/bin"];
 
-      paths = with pkgs; [
-        # Common
-        busybox
-        curlFull
-        cacert
-
-        # Tools
-        idem
-      ];
+      paths = with pkgs;
+        [
+          # Common
+          busybox
+          curlFull
+          cacert
+        ]
+        ++ [
+          # Tools
+          overlayPkgs.app
+        ];
     };
 
     config = {
@@ -26,8 +47,7 @@ in
         "org.opencontainers.image.description" = "Idem";
       };
       Entrypoint = [
-        #"${idem}/bin/python"
-        "${pkgs.busybox}/bin/sh"
+        "${overlayPkgs.app}/bin/entrypoint"
       ];
       Cmd = [
       ];

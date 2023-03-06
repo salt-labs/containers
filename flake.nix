@@ -46,6 +46,14 @@
       ref = "main";
       flake = true;
     };
+
+    poetry2nix = {
+      type = "github";
+      owner = "nix-community";
+      repo = "poetry2nix";
+      ref = "master";
+      flake = true;
+    };
   };
 
   outputs = {
@@ -53,6 +61,7 @@
     nixpkgs,
     nixpkgs-unstable,
     devenv,
+    poetry2nix,
     ...
   } @ inputs: let
     inherit (self) outputs;
@@ -108,8 +117,8 @@
     packages = forAllSystems (hostPlatform: let
       # Build Platform
       inherit system;
-      pkgs = pkgsImportSystem system;
       inherit (self.packages.${system}) default;
+      pkgs = pkgsImportSystem system;
 
       # Host Platform
       inherit hostPlatform;
@@ -183,8 +192,12 @@
         inherit pkgs;
       };
 
+      # TODO: fix
       #idem = import ./oci/idem {
+      #  inherit nixpkgs;
       #  inherit pkgs;
+      #  inherit system;
+      #  inherit poetry2nix;
       #};
 
       kics = import ./oci/kics {

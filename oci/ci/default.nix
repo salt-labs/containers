@@ -66,14 +66,15 @@
       )
     ];
 in
-  pkgs.dockerTools.buildImage {
+  pkgs.dockerTools.buildLayeredImage {
     name = "ci";
     tag = "latest";
     created = "now";
 
     #fromImage = baseImage;
+    maxLayers = 100;
 
-    copyToRoot = pkgs.buildEnv {
+    contents = pkgs.buildEnv {
       name = "image-root";
       pathsToLink = [
         "/bin"
@@ -143,7 +144,9 @@ in
         ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "ci"; };
     };
 
-    runAsRoot = ''
+    enableFakechroot = true;
+
+    fakeRootCommands = ''
       #!${pkgs.runtimeShell}
 
       ${pkgs.dockerTools.shadowSetup}

@@ -116,16 +116,16 @@ jobs:
         os:
           - ubuntu-latest
         nix_system:
-          - "aarch64-darwin"
-          - "aarch64-linux"
-          - "x86_64-darwin"
+          #- "aarch64-darwin"
+          #- "aarch64-linux"
+          #- "x86_64-darwin"
           - "x86_64-linux"
-        exclude:
-          # Exclude unsupported combinations.
-          - container: "codeql"
-            nix_system: "aarch64-darwin"
-          - container: "codeql"
-            nix_system: "aarch64-linux"
+        #exclude:
+        # Exclude unsupported combinations.
+        #- container: "codeql"
+        #  nix_system: "aarch64-darwin"
+        #- container: "codeql"
+        #  nix_system: "aarch64-linux"
 
     steps:
       - id: checkout_repository

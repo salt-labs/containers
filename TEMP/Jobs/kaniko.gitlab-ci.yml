@@ -1,0 +1,77 @@
+---
+#########################
+# Name: kaniko
+# Description: Builds OCI images with Kaniko
+# NOTES:
+#   Kaniko uses GOOS and GOARCH to determine the platform to build for.
+#   https://gist.github.com/asukakenji/f15ba7e588ac42795f421b48b8aede63
+#########################
+
+.kaniko:
+  image:
+    # NOTE: Debug is required as GitLab CI needs the shell available
+    name: artefacts.saltlabs.cloud/docker/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - mkdir --parents /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - echo "${ADDITIONAL_CA_CERT_BUNDLE}" >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - echo "${CI_SERVER_TLS_CA_FILE}" /kaniko/ssl/certs/ci-ca-cert-bundle.crt
+    - cat /kaniko/.docker/config.json
+  script:
+    - export OCI_DOCKERFILE="${OCI_DOCKERFILE:=Dockerfile}"
+    - |
+      [[ "${PLATFORM:-EMPTY}" == "EMPTY" ]] && (echo "PLATFORM must be set" >&2; exit 1)
+      [[ "${OCI_NAME:-EMPTY}" == "EMPTY" ]] && (echo "OCI_NAME must be set" >&2; exit 1)
+      [[ "${OCI_CONTEXT:-EMPTY}" == "EMPTY" ]] && (echo "OCI_CONTEXT must be set" >&2; exit 1)
+      [[ "${OCI_IMAGE:-EMPTY}" == "EMPTY" ]] && (echo "OCI_IMAGE must be set" >&2; exit 1)
+      [[ "${OCI_TAG:-EMPTY}" == "EMPTY" ]] && (echo "OCI_TAG must be set" >&2; exit 1)
+      [[ ! -f "${OCI_CONTEXT}/${OCI_NAME}/${OCI_DOCKERFILE}" ]] && (echo "A valid Dockerfile is required at ${OCI_CONTEXT}/${OCI_NAME}/${OCI_DOCKERFILE}" >&2; exit 1)
+    - /kaniko/executor
+      --context ${OCI_CONTEXT}/${OCI_NAME}
+      --dockerfile ${OCI_CONTEXT}/${OCI_NAME}/${OCI_DOCKERFILE}
+      --destination ${OCI_IMAGE}:${OCI_TAG}
+      --reproducible
+      --verbosity debug
+      --customPlatform ${PLATFORM}
+  allow_failure: false
+  timeout: 1h
+
+.kaniko-linux-amd64:
+  extends:
+    - ".kaniko"
+  variables:
+    PLATFORM: "linux/amd64"
+  rules:
+    - if: '$PLATFORM_AMD64 == "TRUE"'
+      changes:
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "containers/**"
+      when: on_success
+
+.kaniko-linux-arm64:
+  extends:
+    - ".kaniko"
+  variables:
+    PLATFORM: "linux/arm64"
+  rules:
+    - if: '$PLATFORM_ARM64 == "TRUE"'
+      changes:
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "containers/**"
+      when: on_success
+
+.kaniko-linux-arm:
+  extends:
+    - ".kaniko"
+  variables:
+    PLATFORM: "linux/arm"
+  rules:
+    - if: '$PLATFORM_ARM == "TRUE"'
+      changes:
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "containers/**"
+      when: on_success

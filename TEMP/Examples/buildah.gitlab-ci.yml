@@ -1,0 +1,62 @@
+---
+#########################
+# Name: buildah
+# Description: An example building containers with Buildah
+# Notes:
+#   * Builds and publishes OCI images into GitLab.
+# Usage:
+#   * Copy and paste the below into .gitlab-ci.yml
+#   * Update the variables to suit your project.
+#   * Include the changes through the MR process.
+#########################
+
+stages:
+  - build
+  - release
+
+include:
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Workflows/release_semver.gitlab-ci.yml"
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/buildah.gitlab-ci.yml"
+
+buildah-build:
+  stage: build
+  extends:
+    - ".buildah-linux-amd64"
+  variables:
+    OCI_PLATFORM_AMD64: "TRUE"
+    OCI_NAME: "${CI_PROJECT_NAME}"
+    OCI_CONTEXT: "containers"
+    OCI_DOCKERFILE: "Dockerfile"
+    OCI_IMAGE: "${CI_REGISTRY_IMAGE}"
+    OCI_TAG: "${CI_COMMIT_SHA}"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "containers/**"
+      when: on_success
+    - when: never
+
+buildah-release:
+  stage: release
+  extends:
+    - ".buildah-linux-amd64"
+  needs:
+    - job: "semver-get"
+      optional: false
+      artifacts: true
+    - job: "semver-tag"
+      optional: false
+      artifacts: false
+  variables:
+    OCI_PLATFORM_AMD64: "TRUE"
+    OCI_NAME: "${CI_PROJECT_NAME}"
+    OCI_CONTEXT: "containers"
+    OCI_DOCKERFILE: "Dockerfile"
+    OCI_IMAGE: "${CI_REGISTRY_IMAGE}"
+    OCI_TAG: "${NEXT_VERSION}"
+  rules:
+    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+      when: on_success
+    - when: never

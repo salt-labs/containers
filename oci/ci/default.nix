@@ -1,66 +1,193 @@
 {pkgs, ...}: let
+  containerUser = "ci";
+
   entrypoint = pkgs.callPackage ./entrypoint {};
+
+  environmentHelpers = with pkgs.dockerTools; [
+    usrBinEnv
+    binSh
+    caCertificates
+    #fakeNss
+  ];
+
+  baseImage = pkgs.dockerTools.buildImageWithNixDb {
+    name = "docker.io/debian";
+    tag = "stable-slim";
+    copyToRoot = pkgs.buildEnv {
+      name = "image-root";
+      pathsToLink = [
+        "/bin"
+        "/home"
+        "/var"
+      ];
+      paths = with pkgs; [
+        bash
+        coreutils
+        nix
+      ];
+    };
+    config = {
+      Env = [
+        "NIX_PAGER=cat"
+        "USER=nobody"
+      ];
+    };
+  };
+
+  nonRootShadowSetup = {
+    user,
+    uid,
+    gid ? uid,
+  }:
+    with pkgs; [
+      (
+        writeTextDir "etc/shadow" ''
+          root:!x:::::::
+          ${user}:!:::::::
+        ''
+      )
+      (
+        writeTextDir "etc/passwd" ''
+          root:x:0:0::/root:${runtimeShell}
+          ${user}:x:${toString uid}:${toString gid}::/home/${user}:
+        ''
+      )
+      (
+        writeTextDir "etc/group" ''
+          root:x:0:
+          ${user}:x:${toString gid}:
+        ''
+      )
+      (
+        writeTextDir "etc/gshadow" ''
+          root:x::
+          ${user}:x::
+        ''
+      )
+    ];
 in
   pkgs.dockerTools.buildImage {
     name = "ci";
     tag = "latest";
     created = "now";
 
+    #fromImage = baseImage;
+
     copyToRoot = pkgs.buildEnv {
       name = "image-root";
-      pathsToLink = ["/bin"];
-
-      paths = with pkgs; [
-        # Common
-        bash
-        bash-completion
-        coreutils-full
-        curlFull
-        cacert
-        getopt
-        ncurses
-        readline
-        tzdata
-
-        # Tools
-        git
-        jq
-        less
-        unzip
-        vim
-        wget
-        yq
-
-        # Everything including the kitchen sink.
-        brakeman
-        buildah
-        clair
-        cosign
-        flawfinder
-        gitleaks
-        gosec
-        govc
-        grype
-        hadolint
-        helm
-        kics
-        kube-linter
-        kubectl
-        kubesec
-        license_finder
-        packer
-        secretscanner
-        shellcheck
-        skopeo
-        nodePackages.snyk
-        tflint
-        tfsec
-        trivy
-
-        # Entrypoint
-        entrypoint
+      pathsToLink = [
+        "/bin"
+        "/etc"
+        "/home"
+        "/lib"
+        "/root"
+        "/var"
+        "/tmp"
       ];
+
+      paths = with pkgs;
+        [
+          # Common
+          bash
+          bash-completion
+          cacert
+          coreutils-full
+          curlFull
+          getopt
+          git
+          jq
+          less
+          ncurses
+          readline
+          sudo
+          shadow
+          tzdata
+          unzip
+          vim
+          wget
+          yq
+
+          # Everything including the kitchen sink.
+          brakeman
+          buildah
+          clair
+          cosign
+          flawfinder
+          gitleaks
+          gosec
+          govc
+          grype
+          hadolint
+          helm
+          kics
+          kube-linter
+          kubectl
+          kubesec
+          license_finder
+          packer
+          secretscanner
+          shellcheck
+          skopeo
+          nodePackages.snyk
+          tflint
+          tfsec
+          trivy
+
+          # Entrypoint
+          entrypoint
+        ]
+        ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "ci"; };
     };
+
+    runAsRoot = ''
+      #!${pkgs.runtimeShell}
+
+      ${pkgs.dockerTools.shadowSetup}
+
+      groupadd \
+        sudo
+
+      useradd \
+        --home-dir /home/${containerUser} \
+        --create-home \
+        --shell /bin/bash \
+        --uid 1000 \
+        ${containerUser}
+
+      usermod \
+        --append \
+        --groups sudo \
+        ${containerUser}
+
+      echo \
+        '%sudo ALL=(ALL) NOPASSWD:ALL' >> \
+        /etc/sudoers.d/${containerUser}
+
+      chown \
+        --recursive \
+        ${containerUser}:${containerUser} \
+        /home/${containerUser}
+
+      mkdir --parents \
+        /var/lib/containers \
+        /var/tmp
+
+      chmod --recursive 777 \
+        /var/lib/containers \
+        /var/tmp
+
+      mkdir --parents \
+        /root/.config/containers
+
+      cat <<- EOF > /root/.config/containers/policy.json
+      {
+        "default": [{"type": "insecureAcceptAnything"}]
+      }
+      EOF
+
+      echo root:10000:65536 >> /etc/subuid
+      echo root:10000:65536 >> /etc/subgid
+    '';
 
     config = {
       Labels = {

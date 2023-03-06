@@ -1,0 +1,93 @@
+---
+##################################################
+# Name: publish.gitlab-ci.yml
+# Description: Publishes packages to Artifactory.
+# Notes:
+#     * The location of the Archive must specified in the overriding script to be used to upload to Artifactory
+#     * The Archive can be a single file or a folder, which will be specified in the ARCHIVE_TYPE=[FILE/FOLDER]
+#     * ARCHIVE_LOCATION="Location and filename"
+#     * ARCHIVE_TYPE="FILE"
+##################################################
+
+# Publish the package to Artifactory.
+.artifactory-publish:
+  stage: release
+  needs: []
+  dependencies: null
+  image:
+    name: artefacts.saltlabs.cloud/docker/debian:bullseye-slim
+  variables:
+    # Artifactory
+    ARTIFACTORY_URL_SUFFIX: "artifactory"
+    # Artefact type: common
+    ARTIFACT_TYPE: "generic"
+    # Artefact type: terraform
+    TERRAFORM_MODULE_DIR: ${CI_PROJECT_DIR}
+    TERRAFORM_MODULE_NAME: ${CI_PROJECT_NAME}
+    TERRAFORM_MODULE_SYSTEM: "vsphere"
+  before_script:
+    - apt update
+    - apt install --yes apt-utils curl findutils tar
+    # Check all the required variables have been defined.
+    - |
+      [[ -z "${NEXT_VERSION}" ]] && (echo "NEXT_VERSION must be set" >&2; exit 1)
+      [[ -z "${ARTIFACTORY_TOKEN}" ]] && (echo "ARTIFACTORY_TOKEN must be set" >&2; exit 1)
+      [[ -z "${ARTIFACTORY_URL}" ]] && (echo "ARTIFACTORY_URL must be set" >&2; exit 1)
+      [[ -z "${ARTIFACTORY_REPO}" ]] && (echo "ARTIFACTORY_REPO must be set" >&2; exit 1)
+      [[ -z "${ARCHIVE_PATH}" ]] && (echo "ARCHIVE_PATH must be set" >&2; exit 1)
+    # Confirm the folder to be processed already exists.
+    - |
+      if [[ -d "${ARCHIVE_PATH}" ]];
+      then
+        echo "The Archive path ${ARCHIVE_PATH} exists."
+      else
+        echo "The Archive path ${ARCHIVE_PATH} does not exist!"
+        exit 1
+      fi
+  script:
+    # Set variables specific to the destination artifact type.
+    - |
+      case "${ARTIFACT_TYPE,,}" in
+        "generic" )
+          DESTINATION="${ARTIFACTORY_URL}${ARTIFACTORY_URL_SUFFIX:+/$ARTIFACTORY_URL_SUFFIX}/${ARTIFACTORY_REPO}"
+          AUTHORIZATION_HEADER="X-JFrog-Art-Api: ${ARTIFACTORY_TOKEN}"
+        ;;
+        * )
+          # Unknown, try default
+          DESTINATION="${ARTIFACTORY_URL}${ARTIFACTORY_URL_SUFFIX:+/$ARTIFACTORY_URL_SUFFIX}/${ARTIFACTORY_REPO}"
+          AUTHORIZATION_HEADER="X-JFrog-Art-Api: ${ARTIFACTORY_TOKEN}"
+        ;;
+      esac
+      echo "Publishing to Artifactory destination ${DESTINATION}"
+    # We only publish new artefacts when the version has been incremented.
+    # This is indicated by the addition of a new tag and TAG_ADDED=TRUE
+    # No publishing of existing artefacts if the version has not been bumped.
+    - |
+      if [[ ! "${TAG_ADDED:-FALSE}" == "TRUE" ]];
+      then
+        echo "Skipping publishing of existing Artefacts version ${NEXT_VERSION}"
+        exit 0
+      else
+        echo "Publishing new Artefacts with version ${NEXT_VERSION}"
+      fi
+    # Loop over each file and publish it.
+    - |
+      find "${ARCHIVE_PATH}/" -type f -printf '%P\n' | \
+      while read FILE
+      do
+        echo "Uploading artefact ${FILE} to ${DESTINATION}/${FILE}"
+        set -e
+        curl \
+        --insecure \
+        --fail \
+        --header "${AUTHORIZATION_HEADER}" \
+        --upload-file "${ARCHIVE_PATH}/${FILE}" \
+        "${DESTINATION}/${FILE};released=false;version_number=${NEXT_VERSION}"
+      done
+  rules:
+    # Always run on commits to mainline.
+    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+      when: on_success
+    # Don't run for anything else.
+    - when: never
+  allow_failure: false

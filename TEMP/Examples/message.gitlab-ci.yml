@@ -1,0 +1,24 @@
+---
+#########################
+# Name: message.
+# Description: An example workflow
+# Notes:
+#   * This is a small example workflow to test imports.
+# Usage:
+#   * Copy and paste the below into .gitlab-ci.yml
+#   * Customise your message.
+#   * Include the changes through the MR process.
+#########################
+
+stages:
+  - debug
+
+include:
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/message.gitlab-ci.yml"
+
+message:
+  stage: debug
+  extends:
+    - ".message"
+  variables:
+    MESSAGE: "Hello World with my custom message"

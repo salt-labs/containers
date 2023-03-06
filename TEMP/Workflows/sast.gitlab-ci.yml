@@ -1,0 +1,271 @@
+---
+##################################################
+# Name: sast
+# Description: Template for using GitLab SAST related templates.
+# Notes:
+#   GitLab has configured these to run on commits to any branch.
+##################################################
+
+stages:
+  - test
+
+variables:
+  CI_TEMPLATE_REGISTRY_URL: "${ARTIFACTORY_URL}"
+  CI_TEMPLATE_REGISTRY_HOST: "${ARTIFACTORY_REGISTRY}"
+  CI_TEMPLATE_REGISTRY_PORT: "443"
+
+include:
+  # Code Quality
+
+  # TODO: This is disabled due to the many, many current open issues.
+  # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Code-Quality.gitlab-ci.yml
+  # https://gitlab.com/gitlab-org/gitlab/-/commit/09062ba31054739034a4705642263362edd56e60
+  # https://gitlab.com/gitlab-org/ci-cd/codequality/-/issues/25
+  # https://gitlab.com/gitlab-org/ci-cd/codequality/-/issues/43
+  #- template: Code-Quality.gitlab-ci.yml
+
+  # Compliance
+
+  # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Security/License-Scanning.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
+
+  # Dependency Scanning
+
+  # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+  # SAST
+
+  # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Security/SAST.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+
+  # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Security/SAST-IaC.latest.gitlab-ci.yml
+  - template: Security/SAST-IaC.latest.gitlab-ci.yml
+
+  # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Security/Container-Scanning.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+
+  # https://github.com/Checkmarx/kics/blob/master/docs/integrations_gitlabci.md
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/kics.gitlab-ci.yml"
+
+  # Secret Detection
+
+  # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+#########################
+# Jobs
+#########################
+
+###############
+# Code Quality
+# https://docs.gitlab.com/ee/ci/testing/code_quality.html#code-quality
+###############
+
+# HACK: Until GitLab is updated.
+code_quality:
+  stage: test
+  image:
+    name: docker:20.10.21@sha256:0e3e7e2033cf7779ab6985e24ad18d6ec415c9dd944acef5ca56119a3a0dda2e
+  services:
+    - name: "docker:20.10.21-dind@sha256:7b7ef8858c96e95fba85cbfa0d216db700a62a3c0fcddaa7a8f3b01b40679f42"
+      command:
+        [
+          "--tls=false",
+          "--host=tcp://0.0.0.0:2375",
+          "--insecure-registry=artefacts.saltlabs.cloud",
+        ]
+  variables:
+    MAX_ATTEMPTS: "10"
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    CODECLIMATE_PREFIX: "$CI_TEMPLATE_REGISTRY_HOST/"
+    CODE_QUALITY_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/gitlab-org/ci-cd/codequality:0.87.0"
+    DOCKER_HOST: "tcp://docker:2375"
+  before_script:
+    - | # HACK: Workaround for a known race condition. https://gitlab.com/gitlab-org/gitlab-runner/-/issues/27215
+      ATTEMPTS=0
+      until docker info &>/dev/null;
+      do
+        ((ATTEMPTS++))
+        if [[ ${ATTEMPTS} -le ${MAX_ATTEMPTS} ]];
+        then
+          echo "Waiting for the Docker daemon attempt ${ATTEMPTS}"
+        else
+          echo "Timeout waiting for the Docker daemon!"
+          exit 1
+        fi
+        sleep 1
+      done
+      echo "The Docker daemon is ready."
+    - |
+      if [[ "${ARTIFACTORY_USER:-EMPTY} == "EMPTY" ]] || [[ "${ARTIFACTORY_PASS:-EMPTY} == "EMPTY" ]];
+      then
+        echo "ERROR: Unable to login to ${CI_TEMPLATE_REGISTRY_HOST}"
+        echo "Please ensure that both \$ARTIFACTORY_USER and \$ARTIFACTORY_PASS variables have been set."
+        exit 1
+      fi
+    - docker login -u $ARTIFACTORY_USER -p $ARTIFACTORY_PASS ${CI_TEMPLATE_REGISTRY_HOST}
+    - docker pull "$CODE_QUALITY_IMAGE"
+  script:
+    - export SOURCE_CODE=$PWD
+    - |
+      if ! docker info &>/dev/null; then
+        if [ -z "$DOCKER_HOST" ] && [ -n "$KUBERNETES_PORT" ]; then
+          export DOCKER_HOST='tcp://docker:2375'
+        fi
+      fi
+    - | # this is required to avoid undesirable reset of Docker image ENV variables being set on build stage
+      function propagate_env_vars() {
+        CURRENT_ENV=$(printenv)
+
+        for VAR_NAME; do
+          echo $CURRENT_ENV | grep "${VAR_NAME}=" > /dev/null && echo "--env $VAR_NAME "
+        done
+      }
+    - docker pull --quiet "$CODE_QUALITY_IMAGE"
+    - |
+      docker run --rm \
+        $(propagate_env_vars \
+          SOURCE_CODE \
+          TIMEOUT_SECONDS \
+          CODECLIMATE_DEBUG \
+          CODECLIMATE_DEV \
+          REPORT_STDOUT \
+          REPORT_FORMAT \
+          ENGINE_MEMORY_LIMIT_BYTES \
+          CODECLIMATE_PREFIX \
+        ) \
+        --volume "$PWD":/code \
+        --volume /var/run/docker.sock:/var/run/docker.sock \
+        "$CODE_QUALITY_IMAGE" /code
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    expire_in: 1 week
+  dependencies: []
+  rules:
+    - if: "$CODE_QUALITY_DISABLED"
+      when: never
+    - if: "$CI_COMMIT_TAG || $CI_COMMIT_BRANCH"
+
+###############
+# Compliance
+#   https://docs.gitlab.com/ee/user/compliance/license_compliance/
+###############
+
+license_scanning:
+  stage: test
+
+###############
+# Dependency Scanning
+#   https://docs.gitlab.com/ee/user/application_security/dependency_scanning/
+###############
+
+dependency_scanning:
+  stage: test
+  variables:
+    SECURE_LOG_LEVEL: info
+
+gemnasium-dependency_scanning:
+  stage: test
+
+gemnasium-maven-dependency_scanning:
+  stage: test
+
+gemnasium-python-dependency_scanning:
+  stage: test
+
+###############
+# SAST
+#   https://docs.gitlab.com/ee/user/application_security/sast/
+#   https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Jobs/SAST.gitlab-ci.yml
+#   https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Jobs/SAST-IaC.gitlab-ci.yml
+#   https://docs.gitlab.com/ee/user/application_security/iac_scanning/index.html
+###############
+
+sast:
+  stage: test
+
+bandit-sast:
+  stage: test
+
+brakeman-sast:
+  stage: test
+
+container_scanning:
+  stage: test
+  variables:
+    GIT_STRATEGY: fetch
+    DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
+    DOCKERFILE_PATH: "containers/${CI_PROJECT_NAME}/Dockerfile"
+    CS_DEFAULT_BRANCH_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
+    CS_DISABLE_DEPENDENCY_LIST: "false"
+    CS_DISABLE_LANGUAGE_VULNERABILITY_SCAN: "false"
+    CS_IGNORE_UNFIXED: "false"
+    SECURE_LOG_LEVEL: "info"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "containers/**"
+      when: on_success
+  # TODO: Define a process to manage CVE approvals in the environment.
+  #       Reference: https://docs.gitlab.com/ee/user/application_security/container_scanning/#vulnerability-allowlisting
+  allow_failure: true
+
+eslint-sast:
+  stage: test
+
+flawfinder-sast:
+  stage: test
+
+gosec-sast:
+  stage: test
+
+# HACK: The current images from GitLab are missing the git binary and use and older KICS Release v1.4.9
+# This should be fixed in a future GitLab release. There are several open issues including;
+# https://gitlab.com/gitlab-org/gitlab/-/issues/347434
+# https://stackoverflow.com/questions/72319925/gitlab-ci-issue-with-sast-iac-uploading-artifacts-permission-denied
+kics-iac-sast:
+  stage: test
+  before_script:
+    - apk update
+    - apk add git
+
+# HACK: Workaround to use custom KICS v1.5.11 until GitLab fixes in future release.
+kics-iac:
+  stage: test
+  extends: ".kics-iac"
+
+kubesec-sast:
+  stage: test
+
+nodejs-scan-sast:
+  stage: test
+
+phpcs-security-audit-sast:
+  stage: test
+
+security-code-scan-sast:
+  stage: test
+
+semgrep-sast:
+  stage: test
+
+spotbugs-sast:
+  stage: test
+  variables:
+    FAIL_NEVER: 0
+
+###############
+# Secret Detection
+#   https://docs.gitlab.com/ee/user/application_security/secret_detection/index.html
+###############
+
+secret_detection:
+  stage: test
+  variables:
+    GIT_SSL_NO_VERIFY: "true"
+    SECRET_DETECTION_HISTORIC_SCAN: "false"

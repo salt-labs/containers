@@ -1,0 +1,37 @@
+---
+#########################
+# Name: lint
+# Description: An example of the linter workflow.
+# Notes:
+#   * This will run the configured linters on each MR update.
+#   * Not all linters will run by default, optional examples shown below.
+# Usage:
+#   * Copy and paste the below into .gitlab-ci.yml
+#   * Copy the included config files from .gitlab/linters to your repo.
+#   * Optionally modify the linter configs to suit your projects style guidelines.
+#   * Include the changes through the MR process.
+#########################
+
+stages:
+  - test
+
+include:
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Workflows/lint.gitlab-ci.yml"
+
+# There are some optional jobs you might wish to include bu copying the example you want.
+
+megalinter:
+  stage: test
+  extends:
+    - ".megalinter"
+  variables:
+    # TODO: Enable strict mode in a future PBI when the environment is more mature.
+    DISABLE_ERRORS: "true"
+
+superlinter:
+  stage: test
+  extends:
+    - ".superlinter"
+  variables:
+    # TODO: Enable strict mode in a future PBI when the environment is more mature.
+    DISABLE_ERRORS: "true"

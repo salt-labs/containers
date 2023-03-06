@@ -1,0 +1,32 @@
+---
+##################################################
+# Name: release_semver
+# Description: Increments release numbers using semantic versioning.
+# Notes:
+#   * This workflow is configured to run on merges into the mainline branch.
+#
+#   * A CI variable GIT_BOT_TOKEN is required to be set with a token that
+#     has permissions to read from and write to the repository.
+##################################################
+
+stages:
+  - release
+
+include:
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/semver.gitlab-ci.yml"
+
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/tag.gitlab-ci.yml"
+
+semver-get:
+  stage: release
+  extends:
+    - ".semver"
+
+semver-tag:
+  stage: release
+  extends:
+    - ".tag"
+  needs:
+    - job: "semver-get"
+      optional: false
+      artifacts: true

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
@@ -24,6 +24,12 @@ function usage() {
 		The following binaries are currently enabled:
 
 		$(for BIN in "${ENABLED_BINARIES[@]}"; do printf "    - %s\n" "${BIN}"; done)
+
+		Each binary has a global disable flag if required to disable/skip a step.
+
+		    \$DISABLE_<binary_name>="TRUE"
+
+		    DISABLE_TRIVY="TRUE"
 
 		Each binary also has specific usage information available by running:
 

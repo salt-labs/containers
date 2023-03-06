@@ -1,0 +1,80 @@
+---
+#########################
+# Name: publish_ansible
+# Description: An example using the Publish workflow for an Ansible collection.
+# Notes:
+#   * This workflow depends on conventional commit messages to determine semver.
+#   * This workflow executes on merges into the main line branch and builds on MRs.
+#   * A CI variable ARTIFACTORY_TOKEN is required with permissions to Artifactory.
+# Usage:
+#   * Copy and paste the below into .gitlab-ci.yml
+#   * Copy the included release config file from .gitlab/release/config.yaml
+#   * Optionally, copy the changelog template folder from .gitlab/release/changelog
+#   * Complete the TODO comments before removing them.
+#   * Customise the jobs as required.
+#   * Include the changes through the MR process.
+#########################
+
+stages:
+  - build
+
+  - release
+
+include:
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/ansible_collection.gitlab-ci.yml"
+
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Workflows/release_semver.gitlab-ci.yml"
+
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/publish.gitlab-ci.yml"
+
+# Checks the collection will build during MR process.
+ansible-collection-build:
+  stage: build
+  extends:
+    - ".ansible-collection"
+  variables:
+    BUMP_GALAXY_VERSION: "False"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    - when: never
+
+# Bump the version of the collection during release process.
+ansible-collection-release:
+  stage: release
+  extends:
+    - ".ansible-collection"
+  needs:
+    - job: "semver-get"
+      optional: false
+      artifacts: true
+  variables:
+    BUMP_GALAXY_VERSION: "True"
+  rules:
+    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+      when: on_success
+    - when: never
+
+ansible-collection-publish:
+  stage: release
+  extends:
+    - ".artifactory-publish"
+  needs:
+    - job: "semver-get"
+      optional: false
+      artifacts: true
+    - job: "semver-tag"
+      optional: false
+      artifacts: true
+    - job: "ansible-collection-release"
+      optional: false
+      artifacts: true
+  variables:
+    ARCHIVE_PATH: "output"
+    # TODO: Set the CI variable where you have defined your Artifactory Token.
+    ARTIFACTORY_TOKEN: "${ARTIFACTORY_TOKEN}"
+    # TODO: Set the CI varaible where defined the Artifactory server URL without suffixes.
+    ARTIFACTORY_URL: "${ARTIFACTORY_URL}"
+    # TODO: Provide the name of the repository where your archive is published too.
+    # NOTE: Artifactory will create any suffix folder automatically if required.
+    ARTIFACTORY_REPO: "ansible-local/splunk"

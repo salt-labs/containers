@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
@@ -10,6 +10,10 @@ declare -A COMMANDS
 
 export SCRIPT="${0##*/}"
 export LOGLEVEL="${LOGLEVEL:=DEBUG}"
+
+# The CI home is the working directory of the container.
+# Relative to this location location, all logs, outputs and reports are written.
+export CI_HOME="${PWD}/ci"
 
 COMMANDS=(
 	["brakeman"]="run_brakeman"

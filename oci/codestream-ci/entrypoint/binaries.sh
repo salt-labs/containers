@@ -992,10 +992,15 @@ function run_kaniko() {
 
 	writeLog "INFO" "Writing registry credentials to /kaniko/.docker/config.json"
 
+	# Strip the project and group from the registry URL
+	CI_REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
+	CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
+	CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
+
 	cat <<-EOF >/kaniko/.docker/config.json
 		{
 		  "auths": {
-		    "${CI_REGISTRY}": {
+		    "${CI_REGISTRY_HOST}": {
 		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
 		    }
 		  }

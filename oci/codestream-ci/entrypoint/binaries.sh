@@ -1585,6 +1585,66 @@ function run_skopeo() {
 
 }
 
+function run_syft() {
+
+	local BIN_NAME="${FUNCNAME[0]#run_}"
+	local BIN_ARGS=("${@}")
+
+	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
+
+	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
+	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
+
+	if [[ ${DISABLE_SYFT:-FALSE} == "TRUE" ]]; then
+		writeLog "WARN" "${BIN_NAME} is disabled, skipping..."
+		return 0
+	fi
+
+	case "${BIN_ARGS[0]:-EMPTY}" in
+
+	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
+		"${BIN_NAME}" --help || {
+			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
+			return 1
+		}
+
+		return 0
+
+		;;
+
+	esac
+
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+		writeLog "ERROR" "Failed to run ${BIN_NAME}."
+		return 1
+	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
+
+}
+
 function run_synk() {
 
 	local BIN_NAME="${FUNCNAME[0]#run_}"

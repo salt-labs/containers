@@ -966,6 +966,7 @@ function run_kaniko() {
 			- CI_IMAGE_TAG                (default: latest)
 			- CI_IMAGE_PLATFORM         (default: linux/amd64)
 			- CI_IMAGE_DOCKERFILE      (default: Dockerfile)
+			- CI_REGISTRY_CACHE   (default: \$CI_REGISTRY/kaniko-cache)
 
 		EOF
 
@@ -1013,7 +1014,7 @@ function run_kaniko() {
 		--context "${CI_GIT_SRC}" \
 		--dockerfile "${CI_GIT_SRC}/${CI_IMAGE_DOCKERFILE:-Dockerfile}" \
 		--destination "${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
-		--cache-repo "${CI_REGISTRY}/kaniko-cache" \
+		--cache-repo "${CI_REGISTRY_CACHE:=$CI_REGISTRY/kaniko-cache}" \
 		--custom-platform "${CI_IMAGE_PLATFORM:-linux/amd64}" \
 		--reproducible \
 		--verbosity info || {

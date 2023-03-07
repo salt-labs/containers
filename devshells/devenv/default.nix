@@ -135,7 +135,7 @@ inputs.devenv.lib.mkShell {
 
               # Unordered list intendation.
               MD007 = {
-                indent = 4;
+                indent = 2;
               };
 
               # Training spaces
@@ -153,6 +153,11 @@ inputs.devenv.lib.mkShell {
               # Disabled for use with prettier.
               MD030 = false;
             };
+          };
+
+          prettier = {
+            output = "list-different";
+            write = false;
           };
 
           yamllint = {

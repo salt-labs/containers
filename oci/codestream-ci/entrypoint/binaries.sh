@@ -304,6 +304,18 @@ function run_clair() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -341,6 +353,18 @@ function run_cosign() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -460,6 +484,18 @@ function run_gitleaks() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -471,10 +507,28 @@ function run_gitleaks() {
 
 	esac
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
-		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		return 1
-	}
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running gitleaks..."
+
+	gitleaks \
+		detect \
+		"${BIN_ARGS[@]:-}" \
+		--redact \
+		--source "${CI_GIT_SRC}" \
+		--exit-code "1" \
+		--max-target-megabytes 10 \
+		--report-format sarif \
+		--report-path "${CI_BIN_HOME}/gitleaks.sarif" \
+		--verbose
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "gitleaks run complete."
+
+	return 0
 
 }
 
@@ -497,6 +551,18 @@ function run_gosec() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -536,6 +602,18 @@ function run_govc() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -573,6 +651,18 @@ function run_grype() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -612,6 +702,18 @@ function run_hadolint() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -649,6 +751,18 @@ function run_helm() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -771,6 +885,18 @@ function run_kics() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -808,6 +934,18 @@ function run_kube-linter() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -847,6 +985,18 @@ function run_kubectl() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -884,6 +1034,18 @@ function run_kubesec() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -923,6 +1085,18 @@ function run_license_finder() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -960,6 +1134,18 @@ function run_packer() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -999,6 +1185,18 @@ function run_secretscanner() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -1036,6 +1234,18 @@ function run_shellcheck() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -1075,6 +1285,18 @@ function run_skopeo() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -1112,6 +1334,18 @@ function run_synk() {
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
@@ -1151,6 +1385,18 @@ function run_tflint() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -1189,6 +1435,18 @@ function run_tfsec() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			return 1
@@ -1211,10 +1469,6 @@ function run_trivy() {
 
 	local BIN_NAME="${FUNCNAME[0]#run_}"
 	local BIN_ARGS=("${@}")
-
-	local TRIVY_OUTPUT
-	local TRIVY_IMAGE_NAME
-	local -A TRIVY_IMAGE_VULNS
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
 	mkdir --parents "${CI_BIN_HOME}"
@@ -1242,17 +1496,20 @@ function run_trivy() {
 	"--help" | "--usage")
 
 		cat <<-EOF
+			Overview
+
 			This Trivy wrapper script is designed to be used with vRealize Codestream.
 
 			Trivy is run within a container with no access to a local Docker socket.
 
 			Therefore, a container image is expected to be available locally or Trivy is to be run in client mode.
 
-			The following environment variables are required to be set:
+			The following environment variables are required:
 
+			- CI_GIT_SRC
+			- \$CI_REGISTRY
 			- \$CI_REGISTRY_USERNAME
 			- \$CI_REGISTRY_PASSWORD
-			- \$CI_REGISTRY
 			- \$CI_IMAGE_NAME
 			- \$CI_IMAGE_TAG
 
@@ -1260,18 +1517,7 @@ function run_trivy() {
 
 			- \$TRIVY_REPORT_THRESHOLD
 
-			For example; they might be set to the following:
-
-			- CI_REGISTRY_USERNAME=registry-bot
-			- CI_REGISTRY_PASSWORD=supersecret
-			- CI_REGISTRY=registry.example.com/library
-			- CI_IMAGE_NAME=example/image
-			- CI_IMAGE_TAG=latest
-
-			- TRIVY_REPORT_THRESHOLD=high
-
 			Additional arguments and overrides can be passed as shown below.
-
 		EOF
 
 		"${BIN_NAME}" --help || {

@@ -34,9 +34,8 @@ function usage() {
 
 	local MESSAGE="${1:-}"
 
-	clear || true
-
 	cat <<-EOF
+
 		${MESSAGE:-Usage information for $SCRIPT}
 
 		usage: ${0##*/} <binary_name> <binary_args>
@@ -54,6 +53,7 @@ function usage() {
 		Each binary also has specific usage information available by running:
 
 		    <binary_name> --help
+
 
 	EOF
 

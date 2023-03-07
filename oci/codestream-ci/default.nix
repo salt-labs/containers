@@ -224,9 +224,9 @@ in
         && echo root:10000:65536 > /etc/subgid
 
       # Kaniko
-      mkdir --parents /kaniko/.docker
-      touch /kaniko/.docker/config.json
-      chmod 777 /kaniko/.docker/config.json
+      mkdir --parents /kaniko/.docker /root/.docker
+      touch /kaniko/.docker/config.json /root/.docker/config.json
+      chmod 777 /kaniko/.docker/config.json /root/.docker/config.json
     '';
 
     config = {

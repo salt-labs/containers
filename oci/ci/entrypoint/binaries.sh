@@ -69,14 +69,18 @@ function run_git_clone() {
 		rm -rf "${CI_GIT_SRC}"
 	fi
 
-	if [[ -n ${CI_GIT_USER:-} ]] && [[ -n ${CI_GIT_TOKEN:-} ]]; then
+	if [[ ${CI_GIT_USER:-EMPTY} != "EMPTY" ]] && [[ ${CI_GIT_TOKEN:-EMPTY} != "EMPTY" ]]; then
 		# If CI_GIT_USER and CI_GIT_TOKEN are set, use them to authenticate
 
 		writeLog "DEBUG" "Using CI_GIT_USER and CI_GIT_TOKEN to authenticate"
 
+		# Split the CI_GIT_REPO into the protocol and the rest
+		local CI_GIT_PROTOCOL="${CI_GIT_REPO%%://*}"
+		local CI_GIT_PATH="${CI_GIT_PATH#*://}"
+
 		git clone \
 			--branch "${CI_GIT_BRANCH}" \
-			"https://${CI_GIT_USER}:${CI_GIT_TOKEN}@${CI_GIT_REPO}" \
+			"${CI_GIT_PROTOCOL}${CI_GIT_USER}:${CI_GIT_TOKEN}@${CI_GIT_PATH}" \
 			"${CI_GIT_SRC}" || {
 			writeLog "ERROR" "Failed to clone git repository!"
 			exit 1
@@ -216,6 +220,8 @@ function run_buildah() {
 	checkVarEmpty "CI_IMAGE_REGISTRY" "Image registry" && exit 1
 	checkVarEmpty "CI_IMAGE_NAME" "Image name" && exit 1
 
+	_pushd "${CI_GIT_SRC}"
+
 	buildah images || {
 		writeLog "ERROR" "Failed to list existing images!"
 		exit 1
@@ -227,6 +233,8 @@ function run_buildah() {
 		writeLog "ERROR" "Failed to list existing images!"
 		exit 1
 	}
+
+	_popd
 
 	return 0
 

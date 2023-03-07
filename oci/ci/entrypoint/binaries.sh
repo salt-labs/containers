@@ -40,6 +40,9 @@ function run_git_clone() {
 			The following environment variables are optional:
 
 			- CI_GIT_BRANCH     (default: main)
+			- CI_GIT_USER
+			- CI_GIT_TOKEN
+			- CI_GIT_SSH_KEY
 		EOF
 
 		git --help || {
@@ -64,13 +67,59 @@ function run_git_clone() {
 		rm -rf "${CI_GIT_SRC}"
 	fi
 
-	git clone \
-		--branch "${CI_GIT_BRANCH}" \
-		"${CI_GIT_REPO}" \
-		"${CI_GIT_SRC}" || {
-		writeLog "ERROR" "Failed to clone git repository!"
-		exit 1
-	}
+	if [[ -n ${CI_GIT_USER:-} ]] && [[ -n ${CI_GIT_TOKEN:-} ]]; then
+		# If CI_GIT_USER and CI_GIT_TOKEN are set, use them to authenticate
+
+		writeLog "DEBUG" "Using CI_GIT_USER and CI_GIT_TOKEN to authenticate"
+
+		git clone \
+			--branch "${CI_GIT_BRANCH}" \
+			"https://${CI_GIT_USER}:${CI_GIT_TOKEN}@${CI_GIT_REPO}" \
+			"${CI_GIT_SRC}" || {
+			writeLog "ERROR" "Failed to clone git repository!"
+			exit 1
+		}
+
+	elif [[ -n ${CI_GIT_SSH_KEY:-} ]]; then
+		# If CI_GIT_SSH_KEY is set, use it to authenticate
+
+		writeLog "DEBUG" "Using CI_GIT_SSH_KEY to authenticate"
+
+		# Create SSH key
+		mkdir --parents "${CI_BIN_HOME}/.ssh"
+		echo "${CI_GIT_SSH_KEY}" >"${CI_BIN_HOME}/.ssh/id_rsa"
+		chmod 600 "${CI_BIN_HOME}/.ssh/id_rsa"
+
+		# Create SSH config
+		cat <<-EOF >"${CI_BIN_HOME}/.ssh/config"
+			Host *
+				StrictHostKeyChecking no
+				UserKnownHostsFile=/dev/null
+		EOF
+
+		# Clone git repository
+		git clone \
+			--branch "${CI_GIT_BRANCH}" \
+			"git@${CI_GIT_REPO}" \
+			"${CI_GIT_SRC}" || {
+			writeLog "ERROR" "Failed to clone git repository!"
+			exit 1
+		}
+
+	else
+		# Otherwise, use no authentication
+
+		writeLog "DEBUG" "Using no authentication for git clone"
+
+		git clone \
+			--branch "${CI_GIT_BRANCH}" \
+			"https://${CI_GIT_REPO}" \
+			"${CI_GIT_SRC}" || {
+			writeLog "ERROR" "Failed to clone git repository!"
+			exit 1
+		}
+
+	fi
 
 	return 0
 

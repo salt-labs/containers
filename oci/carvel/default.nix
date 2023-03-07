@@ -3,7 +3,10 @@
   crossPkgs,
   ...
 }: let
-  carvel = pkgs.callPackage ./carvel.nix {};
+  carvel = pkgs.callPackage ./carvel.nix {
+    inherit pkgs;
+    inherit crossPkgs;
+  };
 in
   pkgs.dockerTools.buildImage {
     name = "carvel";

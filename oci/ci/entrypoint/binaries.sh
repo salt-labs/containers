@@ -227,7 +227,7 @@ function run_buildah() {
 		exit 1
 	}
 
-	# Build image
+	writeLog "WARN" "TODO: Build image using buildah here..."
 
 	buildah images || {
 		writeLog "ERROR" "Failed to list existing images!"
@@ -579,6 +579,77 @@ function run_helm() {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		exit 1
 	}
+
+}
+
+function run_kaniko() {
+
+	local BIN_NAME="${FUNCNAME[0]#run_}"
+	local BIN_ARGS=("${@}")
+
+	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
+
+	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
+	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
+
+	if [[ ${DISABLE_BUILDAH:-FALSE} == "TRUE" ]]; then
+		writeLog "WARN" "${BIN_NAME} is disabled, skipping..."
+		return 0
+	fi
+
+	case "${BIN_ARGS[0]:-EMPTY}" in
+
+	"--help" | "--usage")
+
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+			- CI_IMAGE_REGISTRY
+			- CI_IMAGE_NAME
+
+			The following environment variables are optional:
+
+			- CI_IMAGE_TAG  (default: latest)
+
+		EOF
+
+		"${BIN_NAME}" --help || {
+			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
+			exit 1
+		}
+
+		exit 0
+
+		;;
+
+	esac
+
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && exit 1
+	checkVarEmpty "CI_IMAGE_REGISTRY" "Image registry" && exit 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image name" && exit 1
+
+	_pushd "${CI_GIT_SRC}"
+
+	buildah images || {
+		writeLog "ERROR" "Failed to list existing images!"
+		exit 1
+	}
+
+	writeLog "WARN" "TODO: Build image using buildah here..."
+
+	buildah images || {
+		writeLog "ERROR" "Failed to list existing images!"
+		exit 1
+	}
+
+	_popd
+
+	return 0
 
 }
 

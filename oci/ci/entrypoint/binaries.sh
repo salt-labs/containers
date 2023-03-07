@@ -607,12 +607,16 @@ function run_kaniko() {
 			The following environment variables are required:
 
 			- CI_GIT_SRC
-			- CI_IMAGE_REGISTRY
+			- CI_REGISTRY
+			- CI_REGISTRY_USERNAME
+			- CI_REGISTRY_PASSWORD
 			- CI_IMAGE_NAME
 
 			The following environment variables are optional:
 
-			- CI_IMAGE_TAG  (default: latest)
+			- CI_IMAGE_TAG                (default: latest)
+			- CI_IMAGE_PLATFORM         (default: linux/amd64)
+			- CI_IMAGE_DOCKERFILE      (default: Dockerfile)
 
 		EOF
 
@@ -630,24 +634,33 @@ function run_kaniko() {
 	# START
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && exit 1
-	checkVarEmpty "CI_IMAGE_REGISTRY" "Image registry" && exit 1
+	checkVarEmpty "CI_REGISTRY" "Image registry" && exit 1
+	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && exit 1
+	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && exit 1
 	checkVarEmpty "CI_IMAGE_NAME" "Image name" && exit 1
 
-	_pushd "${CI_GIT_SRC}"
+	writeLog "INFO" "Writing registry credentials to /kaniko/.docker/config.json"
 
-	buildah images || {
-		writeLog "ERROR" "Failed to list existing images!"
-		exit 1
-	}
+	cat <<-EOF >/kaniko/.docker/config.json
+		{
+		  "auths": {
+		    "${CI_REGISTRY}": {
+		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
+		    }
+		  }
+		}
+	EOF
+	cat /kaniko/.docker/config.json
 
-	writeLog "WARN" "TODO: Build image using buildah here..."
+	writeLog "INFO" "Building image ${CI_IMAGE_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}"
 
-	buildah images || {
-		writeLog "ERROR" "Failed to list existing images!"
-		exit 1
-	}
-
-	_popd
+	executor \
+		--context "${CI_GIT_SRC}" \
+		--dockerfile "${CI_IMAGE_DOCKERFILE:-Dockerfile}" \
+		--destination "${CI_IMAGE_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
+		--platform "${CI_IMAGE_PLATFORM:-linux/amd64}" \
+		--reproducible \
+		--verbosity debug
 
 	return 0
 

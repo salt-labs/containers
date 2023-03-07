@@ -3,10 +3,6 @@
 set -eu
 
 #########################
-# Variables
-#########################
-
-#########################
 # Functions (binary specific)
 #########################
 
@@ -1006,15 +1002,23 @@ function run_kaniko() {
 		}
 	EOF
 
+	# When debug logging is enabled, show the credentials file.
+	if [[ ${LOGLEVEL} == "DEBUG" ]]; then
+		cat /kaniko/.docker/config.json
+	fi
+
 	writeLog "INFO" "Building image ${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}"
 
 	executor \
 		--context "${CI_GIT_SRC}" \
 		--dockerfile "${CI_IMAGE_DOCKERFILE:-Dockerfile}" \
 		--destination "${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
-		--customPlatform "${CI_IMAGE_PLATFORM:-linux/amd64}" \
+		--custom-platform "${CI_IMAGE_PLATFORM:-linux/amd64}" \
 		--reproducible \
-		--verbosity debug
+		--verbosity debug || {
+		writeLog "ERROR" "Failed to run ${BIN_NAME}."
+		return 1
+	}
 
 	writeLog "INFO" "Finished running ${BIN_NAME}."
 

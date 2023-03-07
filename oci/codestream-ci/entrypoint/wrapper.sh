@@ -98,7 +98,7 @@ else
 
 	writeLog "INFO" "Running ${BIN} with args ${BIN_ARGS[*]:-none}"
 
-	"run_${BIN}" "${BIN_ARGS[@]}" || {
+	"${COMMANDS[${BIN}]}" "${BIN_ARGS[@]}" || {
 		writeLog "ERROR" "Failed to run ${BIN} with args ${BIN_ARGS[*]:-none}"
 		exit 3
 	}

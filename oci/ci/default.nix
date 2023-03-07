@@ -106,6 +106,7 @@ in
           readline
           sudo
           shadow
+          tree
           tzdata
           unzip
           vim

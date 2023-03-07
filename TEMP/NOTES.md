@@ -88,23 +88,31 @@ popd
 ```
 
 capsh --print
-- https://github.com/containers/buildah/blob/main/docs/tutorials/05-openshift-rootless-build.md
-- https://github.com/ES-Nix/podman-rootless/issues/2
-- https://github.com/ES-Nix/podman-rootless
-- https://docs-bigbang.dso.mil/1.41.0/packages/gitlab-runner/docs/rootless-podman/
-- https://stackoverflow.com/questions/75239810/podman-rootless-no-privileged-in-openshift
-- https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container
-- https://github.com/containers/buildah/issues/4049
-- https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Go.gitlab-ci.yml
-- https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md
-The container needs ability to run as the standard anyuid
- oc adm policy add-scc-to-user anyuid -z buildah-sa
 
+- [URL](https://github.com/containers/buildah/blob/main/docs/tutorials/05-openshift-rootless-build.md)
+- [URL](https://github.com/ES-Nix/podman-rootless/issues/2)
+- [URL](https://github.com/ES-Nix/podman-rootless)
+- [URL](https://docs-bigbang.dso.mil/1.41.0/packages/gitlab-runner/docs/rootless-podman/)
+- [URL](https://stackoverflow.com/questions/75239810/podman-rootless-no-privileged-in-openshift)
+- [URL](https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container)
+- [URL](https://github.com/containers/buildah/issues/4049)
+- [URL](https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Go.gitlab-ci.yml)
+- [URL](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md)
+
+  The container needs ability to run as the standard anyuid
+  oc adm policy add-scc-to-user anyuid -z buildah-sa
 
 ```yaml
-    securityContext:
-       capabilities:
-         add:
-           - CAP_SETGID
-           - CAP_SETUID
+securityContext:
+  capabilities:
+    add:
+      - CAP_SETGID
+      - CAP_SETUID
 ```
+
+## Steps
+
+- Create project (cloudassemblyuy/infrastruct)
+- Create registry token secret
+- Create registry endpoint (codestream/endpoints)
+-

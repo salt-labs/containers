@@ -3,7 +3,10 @@
   crossPkgs,
   ...
 }: let
-  pivnet = pkgs.callPackage ./pivnet.nix {};
+  pivnet = pkgs.callPackage ./pivnet.nix {
+    inherit pkgs;
+    inherit crossPkgs;
+  };
 in
   pkgs.dockerTools.buildImage {
     name = "pivnet";

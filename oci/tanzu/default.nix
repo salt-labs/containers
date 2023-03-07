@@ -3,7 +3,10 @@
   crossPkgs,
   ...
 }: let
-  tanzu = pkgs.callPackage ./tanzu.nix {};
+  tanzu = pkgs.callPackage ./tanzu.nix {
+    inherit pkgs;
+    inherit crossPkgs;
+  };
 in
   pkgs.dockerTools.buildImage {
     name = "tanzu";

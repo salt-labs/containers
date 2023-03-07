@@ -43,6 +43,7 @@ COMMANDS=(
 	["grype"]="run_grype"
 	["hadolint"]="run_hadolint"
 	["helm"]="run_helm"
+	["kaniko"]="run_kaniko"
 	["kics"]="run_kics"
 	["kube-linter"]="run_kube-linter"
 	["kubectl"]="run_kubectl"
@@ -75,7 +76,7 @@ fi
 
 if [[ $# -eq 0 ]]; then
 
-	# shellcheck disable=SC2059
+	# shellcheck disable=SC2016
 	usage 'ERROR: Please supply an enabled binary as $1'
 	exit 1
 

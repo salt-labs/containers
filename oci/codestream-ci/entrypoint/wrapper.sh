@@ -54,6 +54,7 @@ COMMANDS=(
 	["secretscanner"]="run_secretscanner"
 	["shellcheck"]="run_shellcheck"
 	["skopeo"]="run_skopeo"
+	["syft"]="run_syft"
 	["synk"]="run_synk"
 	["tflint"]="run_tflint"
 	["tfsec"]="run_tfsec"

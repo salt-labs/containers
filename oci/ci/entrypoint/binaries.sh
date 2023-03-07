@@ -347,6 +347,38 @@ function run_flawfinder() {
 
 	esac
 
+	# START
+
+	# Look for all C/C++ source files
+	if find . -type f -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.c++' -o -name '*.cp' -o -name '*.cxx' -print -quit | grep -q .; then
+
+	else
+
+		writeLog "WARN" "No C/C++ source files found, skipping flawfinder run..."
+
+	fi
+
+	flawfinder-sast:
+	extends: .sast-analyzer
+	image:
+	name: "$SAST_ANALYZER_IMAGE"
+	variables:
+	SAST_ANALYZER_IMAGE_TAG: 3
+	SAST_ANALYZER_IMAGE: "$SECURE_ANALYZERS_PREFIX/flawfinder:$SAST_ANALYZER_IMAGE_TAG"
+	rules:
+	- if: $SAST_DISABLED
+	when: never
+	- if: $SAST_EXCLUDED_ANALYZERS =~ /flawfinder/
+	when: never
+	- if: $CI_COMMIT_BRANCH
+	exists:
+	- '**/*.c'
+	- '**/*.cc'
+	- '**/*.cpp'
+	- '**/*.c++'
+	- '**/*.cp'
+	- '**/*.cxx'
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		exit 1

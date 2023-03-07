@@ -141,13 +141,6 @@
         inherit crossPkgs;
       };
 
-      ci = import ./oci/ci {
-        inherit pkgs;
-        inherit pkgsUnstable;
-        inherit crossPkgs;
-        inherit crossPkgsUnstable;
-      };
-
       clair = import ./oci/clair {
         inherit pkgs;
         inherit crossPkgs;
@@ -156,6 +149,13 @@
       cmake = import ./oci/cmake {
         inherit pkgs;
         inherit crossPkgs;
+      };
+
+      codestream-ci = import ./oci/codestream-ci {
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+        inherit crossPkgsUnstable;
       };
 
       codeql = import ./oci/codeql {

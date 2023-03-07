@@ -32,7 +32,7 @@ export CI_HOME="${PWD}/ci"
 
 COMMANDS=(
 	["git_clone"]="run_git_clone"
-	#["brakeman"]="run_brakeman"
+	["brakeman"]="run_brakeman"
 	["buildah"]="run_buildah"
 	#["clair"]="run_clair"
 	#["cosign"]="run_cosign"
@@ -43,6 +43,7 @@ COMMANDS=(
 	#["grype"]="run_grype"
 	#["hadolint"]="run_hadolint"
 	#["helm"]="run_helm"
+	["help"]="usage"
 	["kaniko"]="run_kaniko"
 	#["kics"]="run_kics"
 	#["kube-linter"]="run_kube-linter"
@@ -63,17 +64,6 @@ COMMANDS=(
 # Pre-flight checks
 #########################
 
-if [[ ${CI_WORKING_DIR} != "${WORKING_DIR:-NONE}" ]]; then
-
-	writeLog "ERROR" "The working directory must be set to ${CI_WORKING_DIR} as the container image used has limited write access to the root filesystem."
-
-else
-
-	writeLog "DEBUG" "Current working directory is ${PWD}"
-	writeLog "DEBUG" "Codestream workiung directory is ${WORKING_DIR}"
-
-fi
-
 if [[ $# -eq 0 ]]; then
 
 	# shellcheck disable=SC2016
@@ -85,6 +75,17 @@ else
 	BIN="${1:-}"
 	shift
 	BIN_ARGS=("${@}")
+
+fi
+
+if [[ ${CI_WORKING_DIR} != "${WORKING_DIR:-NONE}" ]]; then
+
+	writeLog "ERROR" "The working directory in the codestream workspace must be set to ${CI_WORKING_DIR} as the container image used has limited write access to the root filesystem."
+
+else
+
+	writeLog "DEBUG" "Current working directory is ${PWD}"
+	writeLog "DEBUG" "Codestream workiung directory is ${WORKING_DIR}"
 
 fi
 

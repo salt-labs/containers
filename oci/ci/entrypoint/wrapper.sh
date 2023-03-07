@@ -22,7 +22,7 @@ WORKING_DIR="${WORKDIR:=workdir}"
 declare -A COMMANDS
 
 export SCRIPT="${0##*/}"
-export LOGLEVEL="${LOGLEVEL:=DEBUG}"
+export LOGLEVEL="${CI_LOG_LEVEL:=INFO}"
 
 # The CI home is the working directory of the container.
 # Relative to this location location, all logs, outputs and reports are written.

@@ -593,7 +593,7 @@ function run_kaniko() {
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
 
-	if [[ ${DISABLE_BUILDAH:-FALSE} == "TRUE" ]]; then
+	if [[ ${DISABLE_KANIKO:-FALSE} == "TRUE" ]]; then
 		writeLog "WARN" "${BIN_NAME} is disabled, skipping..."
 		return 0
 	fi

@@ -12,6 +12,49 @@ set -eu
 
 function run_git_clone() {
 
+	local BIN_NAME="${FUNCNAME[0]#run_}"
+	local BIN_ARGS=("${@}")
+
+	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
+
+	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
+	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
+
+	if [[ ${DISABLE_GIT_CLONE:-FALSE} == "TRUE" ]]; then
+		writeLog "WARN" "${BIN_NAME} is disabled, skipping..."
+		return 0
+	fi
+
+	case "${BIN_ARGS[0]:-EMPTY}" in
+
+	"--help" | "--usage")
+
+		cat <<-EOF
+			The following environment variables are required:
+
+			- CI_GIT_REPO
+			- CI_GIT_BRANCH
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- CI_GIT_BRANCH     (default: main)
+		EOF
+
+		git --help || {
+			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
+			exit 1
+		}
+
+		exit 0
+
+		;;
+
+	esac
+
+	# START
+
 	checkVarEmpty "CI_GIT_REPO" "URL to git source" && exit 1
 	checkVarEmpty "CI_GIT_BRANCH" "Git branch to clone" && exit 1
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && exit 1
@@ -39,6 +82,7 @@ function run_brakeman() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -76,6 +120,7 @@ function run_buildah() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	local BUILDAH_CI_REGISTRY="${CI_REGISTRY:?CI_REGISTRY is required}"
 	local BUILDAH_CI_IMAGE_NAME="${CI_IMAGE_NAME:?CI_IMAGE_NAME is required}"
@@ -126,6 +171,7 @@ function run_clair() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -163,6 +209,7 @@ function run_cosign() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -200,6 +247,7 @@ function run_flawfinder() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -237,6 +285,7 @@ function run_gitleaks() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -274,6 +323,7 @@ function run_gosec() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -311,6 +361,7 @@ function run_govc() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -348,6 +399,7 @@ function run_grype() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -385,6 +437,7 @@ function run_hadolint() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -422,6 +475,7 @@ function run_helm() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -459,6 +513,7 @@ function run_kics() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -496,6 +551,7 @@ function run_kube-linter() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -533,6 +589,7 @@ function run_kubectl() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -570,6 +627,7 @@ function run_kubesec() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -607,6 +665,7 @@ function run_license_finder() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -644,6 +703,7 @@ function run_packer() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -681,6 +741,7 @@ function run_secretscanner() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -718,6 +779,7 @@ function run_shellcheck() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -755,6 +817,7 @@ function run_skopeo() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -792,6 +855,7 @@ function run_synk() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -829,6 +893,7 @@ function run_tflint() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -866,6 +931,7 @@ function run_tfsec() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
@@ -907,6 +973,7 @@ function run_trivy() {
 	local -A TRIVY_IMAGE_VULNS
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+	mkdir --parents "${CI_BIN_HOME}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"

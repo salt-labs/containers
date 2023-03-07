@@ -21,7 +21,7 @@ overrides:
       - "*.md"
     options:
       tabWidth: 2
-      usetabs: false
+      useTabs: false
 
   #########################
   # HTML
@@ -39,4 +39,4 @@ overrides:
       - "*.yml"
     options:
       tabWidth: 2
-      usetabs: false
+      useTabs: false

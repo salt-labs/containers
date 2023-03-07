@@ -6,8 +6,10 @@ set -eu
 # Variables (Codestream)
 #########################
 
-# These are expected to be injected by the Codestream CI environment.
-WORKING_DIR="${WORKDIR:=workdir}"
+# Codestream defines the working directory in $WORKING_DIR
+# The working directory must be 'workdir' as the container
+# image used has limited write access to the root filesystem.
+CI_WORKING_DIR="workdir"
 
 # Injected when "auto inject parameters 'git' is enabled."
 #GIT_SERVER_URL="${GIT_SERVER_URL:?GIT_SERVER_URL is required}"
@@ -60,8 +62,20 @@ COMMANDS=(
 # Pre-flight checks
 #########################
 
+if [[ ${CI_WORKING_DIR} != "${WORKING_DIR:-NONE}" ]]; then
+
+	writeLog "ERROR" "The working directory must be set to ${CI_WORKING_DIR} as the container image used has limited write access to the root filesystem."
+
+else
+
+	writeLog "DEBUG" "Current working directory is ${PWD}"
+	writeLog "DEBUG" "Codestream workiung directory is ${WORKING_DIR}"
+
+fi
+
 if [[ $# -eq 0 ]]; then
 
+	# shellcheck disable=SC2059
 	usage 'ERROR: Please supply an enabled binary as $1'
 	exit 1
 

@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  pkgsUnstable,
+  ...
+}: let
   containerUser = "ci";
 
   entrypoint = pkgs.callPackage ./entrypoint {};
@@ -65,6 +69,10 @@
         ''
       )
     ];
+
+  unstablePkgs = with pkgsUnstable; [
+    kaniko
+  ];
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "ci";
@@ -110,6 +118,7 @@ in
           tzdata
           unzip
           vim
+          which
           wget
           yq
 
@@ -142,6 +151,7 @@ in
           # Entrypoint
           entrypoint
         ]
+        ++ unstablePkgs
         ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "ci"; };
     };
 

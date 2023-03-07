@@ -1,4 +1,8 @@
-{pkgs, ...}:
+{
+  pkgs,
+  crossPkgs,
+  ...
+}:
 pkgs.dockerTools.buildImage {
   name = "syft";
   tag = "latest";

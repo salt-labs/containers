@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
   kpack = {
     cli = pkgs.fetchurl {
       name = "kpack-cli";

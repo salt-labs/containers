@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
   pivnet = pkgs.fetchurl {
     name = "pivnet";
     url = "https://github.com/pivotal-cf/pivnet-cli/releases/download/v3.0.1/pivnet-linux-amd64-3.0.1";

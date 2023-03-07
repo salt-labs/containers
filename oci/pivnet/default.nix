@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
   pivnet = pkgs.callPackage ./pivnet.nix {};
 in
   pkgs.dockerTools.buildImage {

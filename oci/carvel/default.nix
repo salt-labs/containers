@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
   carvel = pkgs.callPackage ./carvel.nix {};
 in
   pkgs.dockerTools.buildImage {

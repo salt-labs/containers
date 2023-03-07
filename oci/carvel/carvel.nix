@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
   carvel = {
     ytt = pkgs.fetchurl {
       name = "ytt";

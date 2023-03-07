@@ -31,6 +31,7 @@ function run_git_clone() {
 	"--help" | "--usage")
 
 		cat <<-EOF
+
 			The following environment variables are required:
 
 			- CI_GIT_REPO
@@ -43,6 +44,7 @@ function run_git_clone() {
 			- CI_GIT_USER
 			- CI_GIT_TOKEN
 			- CI_GIT_SSH_KEY
+
 		EOF
 
 		git --help || {
@@ -171,10 +173,6 @@ function run_buildah() {
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
 	mkdir --parents "${CI_BIN_HOME}"
 
-	local BUILDAH_CI_REGISTRY="${CI_REGISTRY:?CI_REGISTRY is required}"
-	local BUILDAH_CI_IMAGE_NAME="${CI_IMAGE_NAME:?CI_IMAGE_NAME is required}"
-	local BUILDAH_CI_IMAGE_TAG="${CI_IMAGE_TAG:?CI_IMAGE_TAG is required}"
-
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"
 
@@ -188,11 +186,16 @@ function run_buildah() {
 	"--help" | "--usage")
 
 		cat <<-EOF
-			Buildah requires the following environment variables to be set.
 
-			- \$X
-			- \$Y   
-			- \$Z
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+			- CI_IMAGE_REGISTRY
+			- CI_IMAGE_NAME
+
+			The following environment variables are optional:
+
+			- CI_IMAGE_TAG  (default: latest)
 
 		EOF
 
@@ -207,10 +210,25 @@ function run_buildah() {
 
 	esac
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
-		writeLog "ERROR" "Failed to run ${BIN_NAME}."
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && exit 1
+	checkVarEmpty "CI_IMAGE_REGISTRY" "Image registry" && exit 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image name" && exit 1
+
+	buildah images || {
+		writeLog "ERROR" "Failed to list existing images!"
 		exit 1
 	}
+
+	# Build image
+
+	buildah images || {
+		writeLog "ERROR" "Failed to list existing images!"
+		exit 1
+	}
+
+	return 0
 
 }
 

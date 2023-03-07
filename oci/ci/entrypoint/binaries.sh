@@ -10,6 +10,29 @@ set -eu
 # Functions (binary specific)
 #########################
 
+function run_git_clone() {
+
+	checkVarEmpty "CI_GIT_REPO" "URL to git source" && exit 1
+	checkVarEmpty "CI_GIT_BRANCH" "Git branch to clone" && exit 1
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && exit 1
+
+	if [[ -d ${CI_GIT_SRC} ]]; then
+		writeLog "WARN" "Source directory already exists, cleaning..."
+		rm -rf "${CI_GIT_SRC}"
+	fi
+
+	git clone \
+		--branch "${CI_GIT_BRANCH}" \
+		"${CI_GIT_REPO}" \
+		"${CI_GIT_SRC}" || {
+		writeLog "ERROR" "Failed to clone git repository!"
+		exit 1
+	}
+
+	return 0
+
+}
+
 function run_brakeman() {
 
 	local BIN_NAME="${FUNCNAME[0]#run_}"
@@ -53,6 +76,10 @@ function run_buildah() {
 	local BIN_ARGS=("${@}")
 
 	local CI_BIN_HOME="${CI_HOME}/${BIN_NAME}"
+
+	local BUILDAH_CI_REGISTRY="${CI_REGISTRY:?CI_REGISTRY is required}"
+	local BUILDAH_CI_IMAGE_NAME="${CI_IMAGE_NAME:?CI_IMAGE_NAME is required}"
+	local BUILDAH_CI_IMAGE_TAG="${CI_IMAGE_TAG:?CI_IMAGE_TAG is required}"
 
 	writeLog "DEBUG" "Entering ${FUNCNAME[0]}"
 	writeLog "DEBUG" "${BIN_NAME} home set to ${CI_BIN_HOME}"

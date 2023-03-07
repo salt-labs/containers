@@ -10,6 +10,26 @@ set -eu
 # Functions (common)
 #########################
 
+function _pushd() {
+
+	local DIR="${1}"
+
+	pushd "${DIR}" 1>/dev/null || {
+		writeLog "ERROR" "Failed to push directory to ${DIR}"
+		return 1
+	}
+
+}
+
+function _popd() {
+
+	popd 1>/dev/null || {
+		writeLog "ERROR" "Failed to pop directory back"
+		return 1
+	}
+
+}
+
 function usage() {
 
 	local MESSAGE="${1:-}"

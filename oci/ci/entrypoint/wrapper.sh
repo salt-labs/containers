@@ -3,7 +3,20 @@
 set -eu
 
 #########################
-# Variables
+# Variables (Codestream)
+#########################
+
+# These are expected to be injected by the Codestream CI environment.
+WORKING_DIR="${WORKDIR:=workdir}"
+
+# Injected when "auto inject parameters 'git' is enabled."
+#GIT_SERVER_URL="${GIT_SERVER_URL:?GIT_SERVER_URL is required}"
+#GIT_REPO_NAME="${GIT_REPO_NAME:?GIT_REPO_NAME is required}"
+#GIT_BRANCH_NAME="${GIT_BRANCH_NAME:?GIT_BRANCH_NAME is required}"
+#GIT_COMMIT_ID="${GIT_COMMIT_ID:?GIT_COMMIT_ID is required}"
+
+#########################
+# Variables (Common)
 #########################
 
 declare -A COMMANDS
@@ -16,6 +29,7 @@ export LOGLEVEL="${LOGLEVEL:=DEBUG}"
 export CI_HOME="${PWD}/ci"
 
 COMMANDS=(
+	["git_clone"]="run_git_clone"
 	["brakeman"]="run_brakeman"
 	["buildah"]="run_buildah"
 	["clair"]="run_clair"

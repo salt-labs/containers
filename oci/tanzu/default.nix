@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
   tanzu = pkgs.callPackage ./tanzu.nix {};
 in
   pkgs.dockerTools.buildImage {

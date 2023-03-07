@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
   product_name = "tanzu";
   product_version = "2.1.0";
   filename = "tanzu-cli-bundle-linux-amd64.tar.gz";

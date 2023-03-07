@@ -49,10 +49,10 @@ function run_git_clone() {
 
 		git --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -60,9 +60,9 @@ function run_git_clone() {
 
 	# START
 
-	checkVarEmpty "CI_GIT_REPO" "URL to git source" && exit 1
-	checkVarEmpty "CI_GIT_BRANCH" "Git branch to clone" && exit 1
-	checkVarEmpty "CI_GIT_SRC" "Source code directory" && exit 1
+	checkVarEmpty "CI_GIT_REPO" "URL to git source" && return 1
+	checkVarEmpty "CI_GIT_BRANCH" "Git branch to clone" && return 1
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
 
 	if [[ -d ${CI_GIT_SRC} ]]; then
 		writeLog "WARN" "Source directory already exists, cleaning..."
@@ -83,7 +83,7 @@ function run_git_clone() {
 			"${CI_GIT_PROTOCOL}://${CI_GIT_USER}:${CI_GIT_TOKEN}@${CI_GIT_PATH}" \
 			"${CI_GIT_SRC}" || {
 			writeLog "ERROR" "Failed to clone git repository!"
-			exit 1
+			return 1
 		}
 
 	elif [[ -n ${CI_GIT_SSH_KEY:-} ]]; then
@@ -109,7 +109,7 @@ function run_git_clone() {
 			"git@${CI_GIT_REPO}" \
 			"${CI_GIT_SRC}" || {
 			writeLog "ERROR" "Failed to clone git repository!"
-			exit 1
+			return 1
 		}
 
 	else
@@ -122,7 +122,7 @@ function run_git_clone() {
 			"${CI_GIT_REPO}" \
 			"${CI_GIT_SRC}" || {
 			writeLog "ERROR" "Failed to clone git repository!"
-			exit 1
+			return 1
 		}
 
 	fi
@@ -151,21 +151,65 @@ function run_brakeman() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- TODO
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
 	esac
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
-		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
-	}
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	# Look for all Ruby source files
+	local FIND_LINES
+	FIND_LINES=$(
+		find "${CI_GIT_SRC}" \
+			\( -name '*.rb' -o -name 'Gemfile' \) \
+			! \( -name '.nope' \) \
+			-print \
+			-quit 2>/dev/null |
+			wc -l 2>/dev/null
+	)
+	if [[ ! ${FIND_LINES} -gt 0 ]]; then
+
+		writeLog "WARN" "No Ruby source files found, skipping brakeman run..."
+		return 0
+
+	fi
+
+	writeLog "INFO" "Running brakeman..."
+
+	brakeman \
+		"${BIN_ARGS[@]:-}" \
+		--color \
+		--run-all-checks \
+		--output "${CI_BIN_HOME}/brakeman.json" \
+		--output "${CI_BIN_HOME}/brakeman.html" \
+		--output "${CI_BIN_HOME}/brakeman.md" \
+		--force \
+		--path "${CI_GIT_SRC}"
+
+	# NOTE: This is where you would upload results...
+
+	return 0
 
 }
 
@@ -205,10 +249,10 @@ function run_buildah() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -216,22 +260,22 @@ function run_buildah() {
 
 	# START
 
-	checkVarEmpty "CI_GIT_SRC" "Source code directory" && exit 1
-	checkVarEmpty "CI_IMAGE_REGISTRY" "Image registry" && exit 1
-	checkVarEmpty "CI_IMAGE_NAME" "Image name" && exit 1
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+	checkVarEmpty "CI_IMAGE_REGISTRY" "Image registry" && return 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
 
 	_pushd "${CI_GIT_SRC}"
 
 	buildah images || {
 		writeLog "ERROR" "Failed to list existing images!"
-		exit 1
+		return 1
 	}
 
 	writeLog "WARN" "TODO: Build image using buildah here..."
 
 	buildah images || {
 		writeLog "ERROR" "Failed to list existing images!"
-		exit 1
+		return 1
 	}
 
 	_popd
@@ -262,10 +306,10 @@ function run_clair() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -273,7 +317,7 @@ function run_clair() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -300,10 +344,10 @@ function run_cosign() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -311,7 +355,7 @@ function run_cosign() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -345,22 +389,24 @@ function run_flawfinder() {
 			The following environment variables are optional:
 
 			- CI_SAST_SARIF_FILE                (default: flawfinder.sarif)
-			- CI_SAST_SARIF_URL             (default: none)
+			- CI_SAST_SARIF_URL               (default: none)
 
 		EOF
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
 	esac
 
 	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
 
 	# Look for all C/C++ source files
 	local FIND_LINES
@@ -381,14 +427,14 @@ function run_flawfinder() {
 
 	writeLog "INFO" "Running flawfinder..."
 
-	flawfinder "${CI_GIT_SRC}"
+	flawfinder "${CI_GIT_SRC}" "${BIN_ARGS[@]:-}"
 
-	flawfinder --sarif "${CI_GIT_SRC}" >"${CI_SAST_SARIF_FILE:=flawfinder.sarif}" || {
-		writeLog "ERROR" "Failed to run flawfinder."
-		exit 1
+	flawfinder --sarif "${CI_GIT_SRC}" >"${CI_BIN_HOME}/${CI_SAST_SARIF_FILE:=flawfinder.sarif}" || {
+		writeLog "ERROR" "Failed to geherate sarif report for flawfinder."
+		return 1
 	}
 
-	# NOTE: This is where you would upload flawfinder.sarif.
+	# NOTE: This is where you would upload results...
 
 	return 0
 
@@ -416,10 +462,10 @@ function run_gitleaks() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -427,7 +473,7 @@ function run_gitleaks() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -454,10 +500,10 @@ function run_gosec() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -465,7 +511,7 @@ function run_gosec() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -492,10 +538,10 @@ function run_govc() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -503,7 +549,7 @@ function run_govc() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -530,10 +576,10 @@ function run_grype() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -541,7 +587,7 @@ function run_grype() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -568,10 +614,10 @@ function run_hadolint() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -579,7 +625,7 @@ function run_hadolint() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -606,10 +652,10 @@ function run_helm() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -617,7 +663,7 @@ function run_helm() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -662,10 +708,10 @@ function run_kaniko() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -673,11 +719,11 @@ function run_kaniko() {
 
 	# START
 
-	checkVarEmpty "CI_GIT_SRC" "Source code directory" && exit 1
-	checkVarEmpty "CI_REGISTRY" "Image registry" && exit 1
-	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && exit 1
-	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && exit 1
-	checkVarEmpty "CI_IMAGE_NAME" "Image name" && exit 1
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+	checkVarEmpty "CI_REGISTRY" "Image registry" && return 1
+	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && return 1
+	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && return 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
 
 	writeLog "INFO" "Writing registry credentials to /kaniko/.docker/config.json"
 
@@ -728,10 +774,10 @@ function run_kics() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -739,7 +785,7 @@ function run_kics() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -766,10 +812,10 @@ function run_kube-linter() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -777,7 +823,7 @@ function run_kube-linter() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -804,10 +850,10 @@ function run_kubectl() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -815,7 +861,7 @@ function run_kubectl() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -842,10 +888,10 @@ function run_kubesec() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -853,7 +899,7 @@ function run_kubesec() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -880,10 +926,10 @@ function run_license_finder() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -891,7 +937,7 @@ function run_license_finder() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -918,10 +964,10 @@ function run_packer() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -929,7 +975,7 @@ function run_packer() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -956,10 +1002,10 @@ function run_secretscanner() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -967,7 +1013,7 @@ function run_secretscanner() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -994,10 +1040,10 @@ function run_shellcheck() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -1005,7 +1051,7 @@ function run_shellcheck() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -1032,10 +1078,10 @@ function run_skopeo() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -1043,7 +1089,7 @@ function run_skopeo() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -1070,10 +1116,10 @@ function run_synk() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -1081,7 +1127,7 @@ function run_synk() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -1108,10 +1154,10 @@ function run_tflint() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -1119,7 +1165,7 @@ function run_tflint() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -1146,10 +1192,10 @@ function run_tfsec() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -1157,7 +1203,7 @@ function run_tfsec() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }
@@ -1183,13 +1229,13 @@ function run_trivy() {
 	fi
 
 	# Mandatory environment variables
-	checkVarEmpty "CI_REGISTRY" "Registry" && exit 1
-	checkVarEmpty "CI_IMAGE_NAME" "Image Name" && exit 1
-	checkVarEmpty "CI_IMAGE_TAG" "Image Tag" && exit 1
+	checkVarEmpty "CI_REGISTRY" "Registry" && return 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image Name" && return 1
+	checkVarEmpty "CI_IMAGE_TAG" "Image Tag" && return 1
 
 	mkdir --parents "${TRIVY_HOME}" || {
 		writeLog "ERROR" "Unable to continue, failed to create ${TRIVY_HOME}"
-		exit 1
+		return 1
 	}
 
 	case "${BIN_ARGS[0]:-EMPTY}" in
@@ -1231,10 +1277,10 @@ function run_trivy() {
 
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
-			exit 1
+			return 1
 		}
 
-		exit 0
+		return 0
 
 		;;
 
@@ -1244,7 +1290,7 @@ function run_trivy() {
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" image ${TRIVY_IMAGE_NAME} -- || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		exit 1
+		return 1
 	}
 
 }

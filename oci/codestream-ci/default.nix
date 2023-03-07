@@ -3,7 +3,7 @@
   pkgsUnstable,
   ...
 }: let
-  containerUser = "ci";
+  containerUser = "codestream-ci";
 
   entrypoint = pkgs.callPackage ./entrypoint {};
 
@@ -75,7 +75,7 @@
   ];
 in
   pkgs.dockerTools.buildLayeredImage {
-    name = "ci";
+    name = "codestream-ci";
     tag = "latest";
     created = "now";
 
@@ -153,7 +153,7 @@ in
           entrypoint
         ]
         ++ unstablePkgs
-        ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "ci"; };
+        ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "codestream-ci"; };
     };
 
     enableFakechroot = true;

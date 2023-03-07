@@ -116,3 +116,10 @@ securityContext:
 - Create registry token secret
 - Create registry endpoint (codestream/endpoints)
 -
+
+echo -e 'FROM alpine \nRUN echo "created from standard input"' > Dockerfile | tar -cf - Dockerfile | gzip -9 | \
+ executor \
+ --context tar://stdin \
+ --destination=index.docker.io/mahdtech/demo:latest
+
+executor --context /workdir --dockerfile /workdir/Dockerfile --destination index.docker.io/mahdtech/demo:latest --reproducible --verbosity debug --custom-platform linux/amd64

@@ -222,6 +222,12 @@
       #  inherit crossPkgs;
       #};
 
+      kaniko = import ./oci/kaniko {
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+      };
+
       kics = import ./oci/kics {
         inherit pkgs;
         inherit crossPkgs;

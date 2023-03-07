@@ -6,7 +6,7 @@
 pkgs.dockerTools.buildImage {
   name = "grype";
   tag = "latest";
-  created = "now";
+  #created = "now";
 
   copyToRoot = pkgs.buildEnv {
     name = "image-root";

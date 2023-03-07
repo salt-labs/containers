@@ -23,7 +23,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "idem";
     tag = "latest";
-    created = "now";
+    #created = "now";
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

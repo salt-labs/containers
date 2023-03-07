@@ -33,7 +33,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "template";
     tag = "latest";
-    created = "now";
+    #created = "now";
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

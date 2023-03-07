@@ -594,7 +594,7 @@ function run_gosec() {
 
 			The following environment variables are optional:
 
-			- TODO
+			- GI_GOSEC_PATH      (default: ./...)   
 
 		EOF
 
@@ -615,14 +615,39 @@ function run_gosec() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	# Look for all golang source files
+	local FIND_LINES
+	FIND_LINES=$(
+		find "${CI_GIT_SRC}" \
+			\( -name '*.go' -o -name '*.mod' \) \
+			! \( -name '.nope' \) \
+			-print \
+			-quit 2>/dev/null |
+			wc -l 2>/dev/null
+	)
+	if [[ ! ${FIND_LINES} -gt 0 ]]; then
+
+		writeLog "WARN" "No golang source files found, skipping gosec run..."
+		return 0
+
+	fi
+
+	_pushd "${CI_GIT_SRC}" || return 1
+
+	"${BIN_NAME}" \
+		"${BIN_ARGS[@]:-}" \
+		"${GI_GOSEC_PATH}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
 
 	# NOTE: This is where you would upload results...
 
+	_popd || return 1
+
 	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -713,10 +738,15 @@ function run_grype() {
 			The following environment variables are required:
 
 			- CI_GIT_SRC
+			- CI_REGISTRY
+			- CI_REGISTRY_USERNAME
+			- CI_REGISTRY_PASSWORD
+			- CI_IMAGE_NAME
 
 			The following environment variables are optional:
 
-			- TODO
+			- CI_IMAGE_TAG                (default: latest)
+			- CI_IMAGE_PLATFORM          (default: linux)
 
 		EOF
 
@@ -734,13 +764,48 @@ function run_grype() {
 	# START
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+	checkVarEmpty "CI_REGISTRY" "Image registry" && return 1
+	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && return 1
+	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && return 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
-		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		return 1
-	}
+	if [[ ! -f "${CI_BIN_HOME}/config.yaml" ]]; then
+
+		writeLog "INFO" "Creating ${BIN_NAME} config file..."
+		touch "${CI_BIN_HOME}/config.yaml"
+
+		# TODO: Add config file contents
+
+	fi
+
+	# If there is an SBOM from syft, scan using that first
+	if [[ -f "${CI_HOME}/syft/sbom.json" ]]; then
+
+		writeLog "INFO" "Found SBOM from syft, scanning using that..."
+
+		"${BIN_NAME}" \
+			"${BIN_ARGS[@]:-}" \
+			--config "${CI_BIN_HOME}/config.yaml" \
+			--platform "${CI_IMAGE_PLATFORM:-linux}" \
+			--format sarif \
+			--verbose \
+			sbom:"${CI_BIN_HOME}/syft/sbom.json"
+
+	else
+
+		writeLog "INFO" "No SBOM found, scanning image directly..."
+
+		"${BIN_NAME}" \
+			"${BIN_ARGS[@]:-}" \
+			--config "${CI_BIN_HOME}/config.yaml" \
+			--platform "${CI_IMAGE_PLATFORM:-linux}" \
+			--format sarif \
+			--verbose \
+			registry:"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}"
+
+	fi
 
 	# NOTE: This is where you would upload results...
 

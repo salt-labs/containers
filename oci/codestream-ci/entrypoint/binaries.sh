@@ -64,6 +64,8 @@ function run_git_clone() {
 	checkVarEmpty "CI_GIT_BRANCH" "Git branch to clone" && return 1
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
 
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	if [[ -d ${CI_GIT_SRC} ]]; then
 		writeLog "WARN" "Source directory already exists, cleaning..."
 		rm -rf "${CI_GIT_SRC}"
@@ -127,6 +129,8 @@ function run_git_clone() {
 
 	fi
 
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
 	return 0
 
 }
@@ -178,6 +182,8 @@ function run_brakeman() {
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
 
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	# Look for all Ruby source files
 	local FIND_LINES
 	FIND_LINES=$(
@@ -208,6 +214,8 @@ function run_brakeman() {
 		--path "${CI_GIT_SRC}"
 
 	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 	return 0
 
@@ -264,6 +272,8 @@ function run_buildah() {
 	checkVarEmpty "CI_IMAGE_REGISTRY" "Image registry" && return 1
 	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
 
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	_pushd "${CI_GIT_SRC}"
 
 	buildah images || {
@@ -279,6 +289,8 @@ function run_buildah() {
 	}
 
 	_popd
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 	return 0
 
@@ -327,10 +339,20 @@ function run_clair() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 }
 
@@ -377,10 +399,20 @@ function run_cosign() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 }
 
@@ -432,6 +464,8 @@ function run_flawfinder() {
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
 
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	# Look for all C/C++ source files
 	local FIND_LINES
 	FIND_LINES=$(
@@ -449,8 +483,6 @@ function run_flawfinder() {
 
 	fi
 
-	writeLog "INFO" "Running flawfinder..."
-
 	flawfinder "${CI_GIT_SRC}" "${BIN_ARGS[@]:-}"
 
 	flawfinder --sarif "${CI_GIT_SRC}" >"${CI_BIN_HOME}/${CI_SAST_SARIF_FILE:=flawfinder.sarif}" || {
@@ -459,6 +491,8 @@ function run_flawfinder() {
 	}
 
 	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 	return 0
 
@@ -511,7 +545,7 @@ function run_gitleaks() {
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
 
-	writeLog "INFO" "Running gitleaks..."
+	writeLog "INFO" "Running ${BIN_NAME}..."
 
 	gitleaks \
 		detect \
@@ -526,7 +560,7 @@ function run_gitleaks() {
 
 	# NOTE: This is where you would upload results...
 
-	writeLog "INFO" "gitleaks run complete."
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 	return 0
 
@@ -575,10 +609,20 @@ function run_gosec() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 }
 
@@ -625,10 +669,22 @@ function run_govc() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -675,10 +731,22 @@ function run_grype() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -710,7 +778,7 @@ function run_hadolint() {
 
 			The following environment variables are optional:
 
-			- TODO
+			- CI_IMAGE_DOCKERFILE      (default: Dockerfile)
 
 		EOF
 
@@ -725,10 +793,18 @@ function run_hadolint() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 }
 
@@ -775,10 +851,22 @@ function run_helm() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -839,6 +927,8 @@ function run_kaniko() {
 	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && return 1
 	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
 
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	writeLog "INFO" "Writing registry credentials to /kaniko/.docker/config.json"
 
 	cat <<-EOF >/kaniko/.docker/config.json
@@ -860,6 +950,8 @@ function run_kaniko() {
 		--customPlatform "${CI_IMAGE_PLATFORM:-linux/amd64}" \
 		--reproducible \
 		--verbosity debug
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
 
 	return 0
 
@@ -908,10 +1000,22 @@ function run_kics() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -958,10 +1062,22 @@ function run_kube-linter() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1008,10 +1124,22 @@ function run_kubectl() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1058,10 +1186,22 @@ function run_kubesec() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1108,10 +1248,22 @@ function run_license_finder() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1158,10 +1310,22 @@ function run_packer() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1208,10 +1372,22 @@ function run_secretscanner() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1258,10 +1434,22 @@ function run_shellcheck() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1308,10 +1496,22 @@ function run_skopeo() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1358,10 +1558,20 @@ function run_synk() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1408,10 +1618,22 @@ function run_tflint() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1458,10 +1680,20 @@ function run_tfsec() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 
@@ -1531,12 +1763,24 @@ function run_trivy() {
 
 	esac
 
+	# START
+
+	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+
+	writeLog "INFO" "Running ${BIN_NAME}..."
+
 	TRIVY_IMAGE_NAME="${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG}"
 
 	"${BIN_NAME}" "${BIN_ARGS[@]:-}" image ${TRIVY_IMAGE_NAME} -- || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
+
+	# NOTE: This is where you would upload results...
+
+	writeLog "INFO" "Finished running ${BIN_NAME}."
+
+	return 0
 
 }
 

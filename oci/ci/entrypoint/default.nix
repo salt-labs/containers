@@ -3,7 +3,7 @@
   wrapperFunctionsCommon = builtins.readFile ./functions.sh;
   wrapperFunctionsBinaries = builtins.readFile ./binaries.sh;
 in
-  writeShellScriptBin "wrapper" (
+  writeShellScriptBin "codestream-ci" (
     wrapperFunctionsCommon
     + wrapperFunctionsBinaries
     + wrapper

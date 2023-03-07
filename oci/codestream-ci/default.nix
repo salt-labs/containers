@@ -1,6 +1,7 @@
 {
   pkgs,
   pkgsUnstable,
+  crossPkgs,
   ...
 }: let
   containerUser = "codestream-ci";
@@ -11,7 +12,7 @@
     usrBinEnv
     binSh
     caCertificates
-    #fakeNss
+    fakeNss
   ];
 
   baseImage = pkgs.dockerTools.buildImageWithNixDb {
@@ -77,7 +78,7 @@ in
   pkgs.dockerTools.buildLayeredImage {
     name = "codestream-ci";
     tag = "latest";
-    created = "now";
+    #created = "now";
 
     #fromImage = baseImage;
     maxLayers = 100;
@@ -108,6 +109,8 @@ in
           findutils
           getopt
           git
+          gnutar
+          gzip
           jq
           less
           libcap
@@ -128,6 +131,8 @@ in
           buildah
           clair
           cosign
+          docker-credential-gcr
+          docker-credential-helpers
           flawfinder
           gitleaks
           gosec
@@ -140,11 +145,11 @@ in
           kubectl
           kubesec
           license_finder
+          nodePackages.snyk
           packer
           secretscanner
           shellcheck
           skopeo
-          nodePackages.snyk
           tflint
           tfsec
           trivy
@@ -163,70 +168,11 @@ in
 
       ${pkgs.dockerTools.shadowSetup}
 
-      groupadd \
-        sudo
-
-      useradd \
-        --home-dir /home/${containerUser} \
-        --create-home \
-        --shell /bin/bash \
-        --uid 1000 \
-        ${containerUser}
-
-      usermod \
-        --append \
-        --groups sudo \
-        ${containerUser}
-
-      echo \
-        '%sudo ALL=(ALL) NOPASSWD:ALL' >> \
-        /etc/sudoers.d/${containerUser}
-
-      chown \
-        --recursive \
-        ${containerUser}:${containerUser} \
-        /home/${containerUser}
-
-      mkdir --parents \
-        /var/lib/containers \
-        /var/tmp \
-        /var/tmp/containers/rootless
-
-      chmod --recursive 777 \
-        /var/lib/containers \
-        /var/tmp \
-        /var/tmp/containers/rootless
-
-      mkdir --parents \
-        /etc/containers \
-        /run/containers/storage \
-        /var/lib/containers/storage
-
-      echo "export BUILDAH_ISOLATION=chroot" >> /root/.bashrc
-
-      cat <<- EOF > /etc/containers/storage.conf
-      [storage]
-      driver = "vfs"
-      runroot = "/run/containers/storage"
-      graphroot = "/var/lib/containers/storage"
-      rootless_storage_path = "/var/tmp/containers/rootless"
-      EOF
-
-      cat <<- EOF > /etc/containers/policy.json
-      {
-        "default": [{"type": "insecureAcceptAnything"}]
-      }
-      EOF
-
-      touch /etc/subgid /etc/subuid \
-        && chmod g=u /etc/subgid /etc/subuid /etc/passwd \
-        && echo root:10000:65536 > /etc/subuid \
-        && echo root:10000:65536 > /etc/subgid
-
       # Kaniko
+      # https://github.com/GoogleContainerTools/kaniko/blob/main/deploy/Dockerfile#L52-L56
       mkdir --parents /kaniko/.docker /kaniko/ssl/certs
       touch /kaniko/.docker/config.json
-      chmod 777 /kaniko/.docker/config.json
+      chmod -r 777 /kaniko/
       cat /etc/ssl/certs/ca-bundle.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
     '';
 
@@ -243,13 +189,20 @@ in
       };
       Env = [
         "CHARSET=UTF-8"
+        "DOCKER_CONFIG=/kaniko/.docker/"
+        "DOCKER_CREDENTIAL_GCR_CONFIG=/kaniko/.config/gcloud/docker_credential_gcr_config.json"
+        "HOME=/root"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
         #"PS1='🐳  \[\033[1;36m\]\h \[\033[1;34m\]\W\[\033[0;35m\] \[\033[1;36m\]# \[\033[0m\]'"
+        "PATH=/bin:/kaniko"
         "SHELL=/bin/bash"
+        "SSL_CERT_DIR=/kaniko/ssl/certs"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "TERM=xterm"
         "TZ=UTC"
+        "USER=root"
+        "WORKDIR=/workdir"
       ];
       WorkingDir = "/workdir";
     };

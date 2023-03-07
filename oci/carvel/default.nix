@@ -11,7 +11,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "carvel";
     tag = "latest";
-    created = "now";
+    #created = "now";
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

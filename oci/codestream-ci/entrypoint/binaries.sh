@@ -1016,7 +1016,7 @@ function run_kaniko() {
 
 	executor \
 		--context "${CI_GIT_SRC}" \
-		--dockerfile "${CI_IMAGE_DOCKERFILE:-Dockerfile}" \
+		--dockerfile "${CI_GIT_SRC}/${CI_IMAGE_DOCKERFILE:-Dockerfile}" \
 		--destination "${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
 		--custom-platform "${CI_IMAGE_PLATFORM:-linux/amd64}" \
 		--reproducible \

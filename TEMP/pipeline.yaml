@@ -7,6 +7,7 @@ enabled: true
 description: Testing codestream pipelines
 concurrency: 10
 options: [GIT_TRIGGER]
+
 input:
   BUILDER_IMAGE_PATH: ghcr.io/salt-labs/containers/codestream-ci:latest
   GIT_BRANCH: containers/dockerfile
@@ -21,6 +22,7 @@ input:
   OCI_REGISTRY: ghcr.io/salt-labs/demo
   OCI_REGISTRY_CACHE: ghcr.io/salt-labs/kaniko-cache
   OCI_REGISTRY_USERNAME: MAHDTech
+
 _inputMeta:
   IMAGE_TAG:
     mandatory: true
@@ -61,6 +63,7 @@ _inputMeta:
   LOG_LEVEL:
     mandatory: true
     description: Log level for CI tasks
+
 workspace:
   type: K8S
   endpoint: cbr-mc-cluster-1
@@ -75,6 +78,7 @@ workspace:
     proxyType: loadBalancer
     namespace: codestream-ci
     persistentVolumeClaim: codestream-ci
+
 stageOrder:
   - Static Analysis
   - Unit Testing
@@ -82,6 +86,7 @@ stageOrder:
   - Integration Testing
   - Release
   - Deploy
+
 stages:
   Unit Testing:
     taskOrder:

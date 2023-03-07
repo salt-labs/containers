@@ -105,6 +105,7 @@ in
           cacert
           coreutils-full
           curlFull
+          findutils
           getopt
           git
           jq

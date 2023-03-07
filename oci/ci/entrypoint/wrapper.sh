@@ -9,7 +9,7 @@ set -eu
 # Codestream defines the working directory in $WORKING_DIR
 # The working directory must be 'workdir' as the container
 # image used has limited write access to the root filesystem.
-CI_WORKING_DIR="workdir"
+CI_WORKING_DIR="/workdir"
 
 # Injected when "auto inject parameters 'git' is enabled."
 #GIT_SERVER_URL="${GIT_SERVER_URL:?GIT_SERVER_URL is required}"

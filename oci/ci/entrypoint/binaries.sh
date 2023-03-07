@@ -76,11 +76,11 @@ function run_git_clone() {
 
 		# Split the CI_GIT_REPO into the protocol and the rest
 		local CI_GIT_PROTOCOL="${CI_GIT_REPO%%://*}"
-		local CI_GIT_PATH="${CI_GIT_PATH#*://}"
+		local CI_GIT_PATH="${CI_GIT_REPO#*://}"
 
 		git clone \
 			--branch "${CI_GIT_BRANCH}" \
-			"${CI_GIT_PROTOCOL}${CI_GIT_USER}:${CI_GIT_TOKEN}@${CI_GIT_PATH}" \
+			"${CI_GIT_PROTOCOL}://${CI_GIT_USER}:${CI_GIT_TOKEN}@${CI_GIT_PATH}" \
 			"${CI_GIT_SRC}" || {
 			writeLog "ERROR" "Failed to clone git repository!"
 			exit 1
@@ -119,7 +119,7 @@ function run_git_clone() {
 
 		git clone \
 			--branch "${CI_GIT_BRANCH}" \
-			"https://${CI_GIT_REPO}" \
+			"${CI_GIT_REPO}" \
 			"${CI_GIT_SRC}" || {
 			writeLog "ERROR" "Failed to clone git repository!"
 			exit 1

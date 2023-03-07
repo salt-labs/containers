@@ -122,4 +122,4 @@ echo -e 'FROM alpine \nRUN echo "created from standard input"' > Dockerfile | ta
  --context tar://stdin \
  --destination=index.docker.io/mahdtech/demo:latest
 
-executor --context /workdir --dockerfile /workdir/Dockerfile --destination index.docker.io/mahdtech/demo:latest --reproducible --verbosity debug --custom-platform linux/amd64
+executor --context /workdir --dockerfile /workdir/Dockerfile --destination ghcr.io/salt-labs/demo/demo-clean:latest --reproducible --verbosity info --custom-platform linux/amd64 --cache-repo ghcr.io/salt-labs/kaniko-cache

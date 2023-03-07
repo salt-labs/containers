@@ -1018,9 +1018,10 @@ function run_kaniko() {
 		--context "${CI_GIT_SRC}" \
 		--dockerfile "${CI_GIT_SRC}/${CI_IMAGE_DOCKERFILE:-Dockerfile}" \
 		--destination "${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
+		--cache-repo "${CI_REGISTRY}/kaniko-cache" \
 		--custom-platform "${CI_IMAGE_PLATFORM:-linux/amd64}" \
 		--reproducible \
-		--verbosity debug || {
+		--verbosity info || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}

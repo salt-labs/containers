@@ -238,7 +238,7 @@ stages:
             - export CI_IMAGE_NAME=${input.IMAGE_NAME}
             - export CI_IMAGE_TAG=${input.IMAGE_TAG}
             - ""
-            - codestream-ci kaniko
+            - codestream-ci kaniko --skip-tls-verify --skip-tls-verify-pull
             - ""
           export: []
           artifacts: []

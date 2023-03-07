@@ -336,6 +336,19 @@ function run_flawfinder() {
 
 	"--help" | "--usage")
 
+		cat <<-EOF
+
+			The following environment variables are required:
+
+			- CI_GIT_SRC
+
+			The following environment variables are optional:
+
+			- CI_SAST_SARIF_FILE                (default: flawfinder.sarif)
+			- CI_SAST_SARIF_URL             (default: none)
+
+		EOF
+
 		"${BIN_NAME}" --help || {
 			writeLog "ERROR" "Failed to run ${BIN_NAME} ${BIN_ARGS[*]:-none}"
 			exit 1
@@ -350,39 +363,34 @@ function run_flawfinder() {
 	# START
 
 	# Look for all C/C++ source files
-	if find . -type f -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.c++' -o -name '*.cp' -o -name '*.cxx' -print -quit | grep -q .; then
-
-	else
+	local FIND_LINES
+	FIND_LINES=$(
+		find "${CI_GIT_SRC}" \
+			\( -name '*.c' -o -name '*.c++' -o -name '*.cc' -o -name '*.cp' -o -name '*.cpp' -o -name '*.cxx' \) \
+			! \( -name '.nope' \) \
+			-print \
+			-quit 2>/dev/null |
+			wc -l 2>/dev/null
+	)
+	if [[ ! ${FIND_LINES} -gt 0 ]]; then
 
 		writeLog "WARN" "No C/C++ source files found, skipping flawfinder run..."
+		return 0
 
 	fi
 
-	flawfinder-sast:
-	extends: .sast-analyzer
-	image:
-	name: "$SAST_ANALYZER_IMAGE"
-	variables:
-	SAST_ANALYZER_IMAGE_TAG: 3
-	SAST_ANALYZER_IMAGE: "$SECURE_ANALYZERS_PREFIX/flawfinder:$SAST_ANALYZER_IMAGE_TAG"
-	rules:
-	- if: $SAST_DISABLED
-	when: never
-	- if: $SAST_EXCLUDED_ANALYZERS =~ /flawfinder/
-	when: never
-	- if: $CI_COMMIT_BRANCH
-	exists:
-	- '**/*.c'
-	- '**/*.cc'
-	- '**/*.cpp'
-	- '**/*.c++'
-	- '**/*.cp'
-	- '**/*.cxx'
+	writeLog "INFO" "Running flawfinder..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
-		writeLog "ERROR" "Failed to run ${BIN_NAME}."
+	flawfinder "${CI_GIT_SRC}"
+
+	flawfinder --sarif "${CI_GIT_SRC}" >"${CI_SAST_SARIF_FILE:=flawfinder.sarif}" || {
+		writeLog "ERROR" "Failed to run flawfinder."
 		exit 1
 	}
+
+	# NOTE: This is where you would upload flawfinder.sarif.
+
+	return 0
 
 }
 
@@ -684,12 +692,12 @@ function run_kaniko() {
 	EOF
 	cat /kaniko/.docker/config.json
 
-	writeLog "INFO" "Building image ${CI_IMAGE_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}"
+	writeLog "INFO" "Building image ${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}"
 
 	executor \
 		--context "${CI_GIT_SRC}" \
 		--dockerfile "${CI_IMAGE_DOCKERFILE:-Dockerfile}" \
-		--destination "${CI_IMAGE_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
+		--destination "${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
 		--platform "${CI_IMAGE_PLATFORM:-linux/amd64}" \
 		--reproducible \
 		--verbosity debug

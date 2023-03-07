@@ -156,12 +156,12 @@ inputs.devenv.lib.mkShell {
           };
 
           prettier = {
-            output = "list-different";
+            output = "check";
             write = false;
           };
 
           yamllint = {
-            configPath = builtins.toString (./. + "/.linters/yaml-lint.yaml");
+            configPath = builtins.toString (./. + "/.linters/.yaml-lint.yaml");
           };
         };
       };

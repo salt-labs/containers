@@ -1007,11 +1007,6 @@ function run_kaniko() {
 		}
 	EOF
 
-	# When debug logging is enabled, show the credentials file.
-	if [[ ${LOGLEVEL} == "DEBUG" ]]; then
-		cat /kaniko/.docker/config.json
-	fi
-
 	writeLog "INFO" "Building image ${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}"
 
 	executor \

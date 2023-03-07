@@ -224,9 +224,10 @@ in
         && echo root:10000:65536 > /etc/subgid
 
       # Kaniko
-      mkdir --parents /kaniko/.docker /root/.docker
-      touch /kaniko/.docker/config.json /root/.docker/config.json
-      chmod 777 /kaniko/.docker/config.json /root/.docker/config.json
+      mkdir --parents /kaniko/.docker /kaniko/ssl/certs
+      touch /kaniko/.docker/config.json
+      chmod 777 /kaniko/.docker/config.json
+      cat /etc/ssl/certs/ca-bundle.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
     '';
 
     config = {

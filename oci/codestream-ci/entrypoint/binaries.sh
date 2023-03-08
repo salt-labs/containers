@@ -1061,9 +1061,10 @@ function run_kaniko() {
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
 	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
 	
-	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+	# NOTE: Kaniko already sets the var as the directory.
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 	
-	cat <<-EOF > "${DOCKER_CONFIG}"
+	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {

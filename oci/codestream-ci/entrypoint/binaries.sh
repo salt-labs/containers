@@ -418,7 +418,7 @@ function run_cosign() {
 	export DOCKER_CONFIG="${HOME}/.docker"
 	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 
-	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
+	cat <<-EOF >"${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
@@ -430,28 +430,27 @@ function run_cosign() {
 
 	writeLog "INFO" "Writing cosign keys..."
 
-	echo "${CI_SIGN_KEY_PRIV}" > "${CI_BIN_HOME}/cosign.key"
-	echo "${CI_SIGN_KEY_PUB}" > "${CI_BIN_HOME}/cosign.pub"
+	echo "${CI_SIGN_KEY_PRIV}" >"${CI_BIN_HOME}/cosign.key"
+	echo "${CI_SIGN_KEY_PUB}" >"${CI_BIN_HOME}/cosign.pub"
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
 	"${BIN_NAME}" \
 		"${BIN_ARGS[@]:-}" \
 		sign -key "${CI_BIN_HOME}/cosign.key" \
-		"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
-		|| {
-		writeLog "ERROR" "Failed to sign image with ${BIN_NAME}."
-		return 1
-	}
+		"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" ||
+		{
+			writeLog "ERROR" "Failed to sign image with ${BIN_NAME}."
+			return 1
+		}
 
 	"${BIN_NAME}" \
 		"${BIN_ARGS[@]:-}" \
-		sign -key cosign.key \
-		|| {
-		writeLog "ERROR" "Failed to verify signature with ${BIN_NAME}."
-		return 1
-	}
-
+		sign -key cosign.key ||
+		{
+			writeLog "ERROR" "Failed to verify signature with ${BIN_NAME}."
+			return 1
+		}
 
 	# NOTE: This is where you would upload results...
 
@@ -811,7 +810,7 @@ function run_grype() {
 	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && return 1
 	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && return 1
 	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
-	
+
 	# Strip the project and group from the registry URL
 	#local CI_REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
@@ -820,7 +819,7 @@ function run_grype() {
 	export DOCKER_CONFIG="${HOME}/.docker"
 	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 
-	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
+	cat <<-EOF >"${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
@@ -1060,11 +1059,11 @@ function run_kaniko() {
 	#local CI_REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
 	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
-	
+
 	# NOTE: Kaniko already sets the var as the directory.
 	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
-	
-	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
+
+	cat <<-EOF >"${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
@@ -1074,8 +1073,7 @@ function run_kaniko() {
 		}
 	EOF
 
-	if [[ "${LOGLEVEL}" == "DEBUG" ]];
-	then
+	if [[ ${LOGLEVEL} == "DEBUG" ]]; then
 		writeLog "DEBUG" "Displaying secrets."
 		cat "${DOCKER_CONFIG}/config.json"
 	fi
@@ -1722,7 +1720,7 @@ function run_syft() {
 	export DOCKER_CONFIG="${HOME}/.docker"
 	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 
-	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
+	cat <<-EOF >"${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
@@ -1735,11 +1733,11 @@ function run_syft() {
 	"${BIN_NAME}" \
 		"${BIN_ARGS[@]:-}" \
 		-o json="${CI_BIN_HOME}/sbom.json" \
-		"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
-		|| {
-		writeLog "ERROR" "Failed to run ${BIN_NAME}."
-		return 1
-	}
+		"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" ||
+		{
+			writeLog "ERROR" "Failed to run ${BIN_NAME}."
+			return 1
+		}
 
 	# NOTE: This is where you would upload results...
 
@@ -1749,7 +1747,7 @@ function run_syft() {
 
 }
 
-function run_synk() {
+function run_snyk() {
 
 	local BIN_NAME="${FUNCNAME[0]#run_}"
 	local BIN_ARGS=("${@}")
@@ -1952,7 +1950,7 @@ function run_trivy() {
 	"--help" | "--usage")
 
 		cat <<-EOF
-			
+
 			Overview
 
 			This Trivy wrapper script is designed to be used with vRealize Codestream.
@@ -1975,7 +1973,7 @@ function run_trivy() {
 			- CI_TRIVY_REPORT_THRESHOLD
 
 			Additional arguments and overrides can be passed as shown below.
-		
+
 		EOF
 
 		"${BIN_NAME}" --help || {
@@ -1998,17 +1996,17 @@ function run_trivy() {
 	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
-	
+
 	# Strip the project and group from the registry URL
-	# shellcheck disable=SC2034	
+	# shellcheck disable=SC2034
 	#local REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
 	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
-	
+
 	export DOCKER_CONFIG="${HOME}/.docker"
 	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
-	
-	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
+
+	cat <<-EOF >"${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {

@@ -150,6 +150,7 @@ in
           secretscanner
           shellcheck
           skopeo
+          syft
           tflint
           tfsec
           trivy
@@ -181,7 +182,7 @@ in
         "org.opencontainers.image.description" = "Codestream CI";
       };
       Entrypoint = [
-        "${entrypoint}/bin/wrapper"
+        "${entrypoint}/bin/codestream-ci"
       ];
       Cmd = [
       ];

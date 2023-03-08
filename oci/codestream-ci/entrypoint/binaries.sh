@@ -73,12 +73,12 @@ function run_git_clone() {
 		writeLog "DEBUG" "Using CI_GIT_USER and CI_GIT_TOKEN to authenticate"
 
 		# Split the CI_GIT_REPO into the protocol and the rest
-		local CI_GIT_PROTOCOL="${CI_GIT_REPO%%://*}"
+		#local CI_GIT_PROTOCOL="${CI_GIT_REPO%%://*}"
 		local CI_GIT_PATH="${CI_GIT_REPO#*://}"
 
 		git clone \
 			--branch "${CI_GIT_BRANCH}" \
-			"${CI_GIT_PROTOCOL}://${CI_GIT_USER}:${CI_GIT_TOKEN}@${CI_GIT_PATH}" \
+			"${CI_GIT_ROTOCOL}://${CI_GIT_USER}:${CI_GIT_TOKEN}@${CI_GIT_PATH}" \
 			"${CI_GIT_SRC}" || {
 			writeLog "ERROR" "Failed to clone git repository!"
 			return 1
@@ -373,14 +373,19 @@ function run_cosign() {
 	"--help" | "--usage")
 
 		cat <<-EOF
-
 			The following environment variables are required:
 
 			- CI_GIT_SRC
+			- CI_REGISTRY
+			- CI_REGISTRY_USERNAME
+			- CI_REGISTRY_PASSWORD
+			- CI_IMAGE_NAME
+			- CI_SIGN_KEY_PRIV
+			- CI_SIGN_KEY_PUB
 
 			The following environment variables are optional:
 
-			- TODO
+			- CI_IMAGE_TAG                (default: latest)
 
 		EOF
 
@@ -398,13 +403,55 @@ function run_cosign() {
 	# START
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+	checkVarEmpty "CI_REGISTRY" "Image registry" && return 1
+	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && return 1
+	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && return 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
+	checkVarEmpty "CI_SIGN_KEY_PRIV" "Cosign private key" && return 1
+	checkVarEmpty "CI_SIGN_KEY_PUB" "Cosign public key" && return 1
+
+	# Strip the project and group from the registry URL
+	#local CI_REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
+	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
+	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
+
+	export DOCKER_CONFIG="/.docker/config.json"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+
+	cat <<-EOF > "${DOCKER_CONFIG}"
+		{
+		  "auths": {
+		    "${CI_REGISTRY_HOST}": {
+		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
+		    }
+		  }
+		}
+	EOF
+
+	writeLog "INFO" "Writing cosign keys..."
+
+	echo "${CI_SIGN_KEY_PRIV}" > "${CI_BIN_HOME}/cosign.key"
+	echo "${CI_SIGN_KEY_PUB}" > "${CI_BIN_HOME}/cosign.pub"
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
-		writeLog "ERROR" "Failed to run ${BIN_NAME}."
+	"${BIN_NAME}" \
+		"${BIN_ARGS[@]:-}" \
+		sign -key "${CI_BIN_HOME}/cosign.key" \
+		"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
+		|| {
+		writeLog "ERROR" "Failed to sign image with ${BIN_NAME}."
 		return 1
 	}
+
+	"${BIN_NAME}" \
+		"${BIN_ARGS[@]:-}" \
+		sign -key cosign.key \
+		|| {
+		writeLog "ERROR" "Failed to verify signature with ${BIN_NAME}."
+		return 1
+	}
+
 
 	# NOTE: This is where you would upload results...
 
@@ -764,6 +811,24 @@ function run_grype() {
 	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && return 1
 	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && return 1
 	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
+	
+	# Strip the project and group from the registry URL
+	#local CI_REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
+	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
+	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
+
+	export DOCKER_CONFIG="/.docker/config.json"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+
+	cat <<-EOF > "${DOCKER_CONFIG}"
+		{
+		  "auths": {
+		    "${CI_REGISTRY_HOST}": {
+		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
+		    }
+		  }
+		}
+	EOF
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
@@ -991,14 +1056,15 @@ function run_kaniko() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	writeLog "INFO" "Writing registry credentials to /kaniko/.docker/config.json"
-
 	# Strip the project and group from the registry URL
-	CI_REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
-	CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
-	CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
-
-	cat <<-EOF >/kaniko/.docker/config.json
+	#local CI_REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
+	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
+	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
+	
+	export DOCKER_CONFIG="/kaniko/.docker/config.json"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+	
+	cat <<-EOF > "${DOCKER_CONFIG}"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
@@ -1611,10 +1677,15 @@ function run_syft() {
 			The following environment variables are required:
 
 			- CI_GIT_SRC
+			- CI_REGISTRY
+			- CI_REGISTRY_USERNAME
+			- CI_REGISTRY_PASSWORD
+			- CI_IMAGE_NAME
 
 			The following environment variables are optional:
 
-			- TODO
+			- CI_IMAGE_TAG                (default: latest)
+			- CI_IMAGE_PLATFORM         (default: linux/amd64)
 
 		EOF
 
@@ -1632,8 +1703,34 @@ function run_syft() {
 	# START
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+	checkVarEmpty "CI_REGISTRY" "Image registry" && return 1
+	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && return 1
+	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && return 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	# Strip the project and group from the registry URL
+	#local CI_REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
+	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
+	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
+
+	export DOCKER_CONFIG="${HOME}/.docker/config.json"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+
+	cat <<-EOF > "${DOCKER_CONFIG}"
+		{
+		  "auths": {
+		    "${CI_REGISTRY_HOST}": {
+		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
+		    }
+		  }
+		}
+	EOF
+
+	"${BIN_NAME}" \
+		"${BIN_ARGS[@]:-}" \
+		-o json="${CI_BIN_HOME}/sbom.json" \
+		"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" \
+		|| {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1844,21 +1941,12 @@ function run_trivy() {
 		return 0
 	fi
 
-	# Mandatory environment variables
-	checkVarEmpty "CI_REGISTRY" "Registry" && return 1
-	checkVarEmpty "CI_IMAGE_NAME" "Image Name" && return 1
-	checkVarEmpty "CI_IMAGE_TAG" "Image Tag" && return 1
-
-	mkdir --parents "${TRIVY_HOME}" || {
-		writeLog "ERROR" "Unable to continue, failed to create ${TRIVY_HOME}"
-		return 1
-	}
-
 	case "${BIN_ARGS[0]:-EMPTY}" in
 
 	"--help" | "--usage")
 
 		cat <<-EOF
+			
 			Overview
 
 			This Trivy wrapper script is designed to be used with vRealize Codestream.
@@ -1870,17 +1958,18 @@ function run_trivy() {
 			The following environment variables are required:
 
 			- CI_GIT_SRC
-			- \$CI_REGISTRY
-			- \$CI_REGISTRY_USERNAME
-			- \$CI_REGISTRY_PASSWORD
-			- \$CI_IMAGE_NAME
-			- \$CI_IMAGE_TAG
+			- CI_REGISTRY
+			- CI_REGISTRY_USERNAME
+			- CI_REGISTRY_PASSWORD
+			- CI_IMAGE_NAME
 
 			The following environment variables are optional:
 
-			- \$TRIVY_REPORT_THRESHOLD
+			- CI_IMAGE_TAG
+			- CI_TRIVY_REPORT_THRESHOLD
 
 			Additional arguments and overrides can be passed as shown below.
+		
 		EOF
 
 		"${BIN_NAME}" --help || {
@@ -1897,12 +1986,35 @@ function run_trivy() {
 	# START
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
+	checkVarEmpty "CI_REGISTRY" "Image registry" && return 1
+	checkVarEmpty "CI_REGISTRY_USERNAME" "Image registry username" && return 1
+	checkVarEmpty "CI_REGISTRY_PASSWORD" "Image registry password" && return 1
+	checkVarEmpty "CI_IMAGE_NAME" "Image name" && return 1
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
+	
+	# Strip the project and group from the registry URL
+	# shellcheck disable=SC2034	
+	#local REGISTRY_PROTOCOL="${CI_REGISTRY%%://*}"
+	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
+	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
+	
+	export DOCKER_CONFIG="/kaniko/.docker/config.json"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+	
+	cat <<-EOF > "${DOCKER_CONFIG}"
+		{
+		  "auths": {
+		    "${CI_REGISTRY_HOST}": {
+		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
+		    }
+		  }
+		}
+	EOF
 
-	TRIVY_IMAGE_NAME="${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG}"
-
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" image ${TRIVY_IMAGE_NAME} -- || {
+	"${BIN_NAME}" \
+		"${BIN_ARGS[@]:-}" \
+		image "${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}

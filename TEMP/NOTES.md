@@ -22,7 +22,7 @@
 - [x] secretscanner
 - [x] shellcheck
 - [x] skopeo
-- [x] synk
+- [x] snyk
 - [x] tflint
 - [x] tfsec
 - [x] trivy
@@ -40,7 +40,7 @@
 - [ ] brakeman
 - [ ] grype
 - [ ] secretscanner
-- [ ] synk
+- [ ] snyk
 
 ### BUILD & PUBLISH (latest)
 

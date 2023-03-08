@@ -1061,7 +1061,6 @@ function run_kaniko() {
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
 	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
 	
-	export DOCKER_CONFIG="/kaniko/.docker/config.json"
 	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
 	
 	cat <<-EOF > "${DOCKER_CONFIG}"
@@ -1071,8 +1070,14 @@ function run_kaniko() {
 		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
 		    }
 		  }
-		}
+		E}}
 	EOF
+
+	if [[ "${LOGLEVEL}" == "DEBUG" ]];
+	then
+		writeLog "DEBUG" "Displaying secrets."
+		cat "${DOCKER_CONFIG}"
+	fi
 
 	writeLog "INFO" "Building image ${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}"
 

@@ -419,7 +419,7 @@ function run_cosign() {
 	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 
 	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
-		{s
+		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
 		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
@@ -1071,7 +1071,7 @@ function run_kaniko() {
 		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
 		    }
 		  }
-		E}}
+		}
 	EOF
 
 	if [[ "${LOGLEVEL}" == "DEBUG" ]];

@@ -415,11 +415,11 @@ function run_cosign() {
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
 	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
 
-	export DOCKER_CONFIG="/.docker/config.json"
-	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+	export DOCKER_CONFIG="${HOME}/.docker"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 
-	cat <<-EOF > "${DOCKER_CONFIG}"
-		{
+	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
+		{s
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
 		      "auth": "$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')"
@@ -817,10 +817,10 @@ function run_grype() {
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
 	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
 
-	export DOCKER_CONFIG="/.docker/config.json"
-	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+	export DOCKER_CONFIG="${HOME}/.docker"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 
-	cat <<-EOF > "${DOCKER_CONFIG}"
+	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
@@ -1077,7 +1077,7 @@ function run_kaniko() {
 	if [[ "${LOGLEVEL}" == "DEBUG" ]];
 	then
 		writeLog "DEBUG" "Displaying secrets."
-		cat "${DOCKER_CONFIG}"
+		cat "${DOCKER_CONFIG}/config.json"
 	fi
 
 	writeLog "INFO" "Building image ${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}"
@@ -1719,10 +1719,10 @@ function run_syft() {
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
 	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
 
-	export DOCKER_CONFIG="${HOME}/.docker/config.json"
-	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+	export DOCKER_CONFIG="${HOME}/.docker"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 
-	cat <<-EOF > "${DOCKER_CONFIG}"
+	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {
@@ -2005,10 +2005,10 @@ function run_trivy() {
 	local CI_REGISTRY_PATH="${CI_REGISTRY#*://}"
 	local CI_REGISTRY_HOST="${CI_REGISTRY_PATH%%/*}"
 	
-	export DOCKER_CONFIG="/kaniko/.docker/config.json"
-	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}"
+	export DOCKER_CONFIG="${HOME}/.docker"
+	writeLog "INFO" "Writing registry credentials to ${DOCKER_CONFIG}/config.json"
 	
-	cat <<-EOF > "${DOCKER_CONFIG}"
+	cat <<-EOF > "${DOCKER_CONFIG}/config.json"
 		{
 		  "auths": {
 		    "${CI_REGISTRY_HOST}": {

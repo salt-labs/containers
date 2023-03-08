@@ -1,5 +1,9 @@
-{pkgs, ...}: let
-  product_name = "tanzu";
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
+  product_name = "tanzu_2";
   product_version = "2.1.0";
   filename = "tanzu-cli-bundle-linux-amd64.tar.gz";
   checksum = "03c9b77e65ef8ba0b7d7b51df583fdb32d47171bcc8c1a67536aa2d2afad9f0a";
@@ -42,7 +46,7 @@ in
 
       source=unpack/cli/core/*/tanzu-core-linux_amd64
 
-      install --verbose $source $out/bin/tanzu
+      install --verbose $source $out/bin/tanzu-${product_version}
     '';
 
     meta = {

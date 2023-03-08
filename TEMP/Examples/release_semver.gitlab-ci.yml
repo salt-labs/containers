@@ -1,0 +1,18 @@
+---
+#########################
+# Name: release_semver
+# Description: An example using the Workflow for Semantic releases.
+# Notes:
+#   * This workflow depends on conventional commit messages.
+# Usage:
+#   * Copy and paste the below into .gitlab-ci.yml
+#   * Copy the included release config file from .gitlab/release/config.yaml
+#   * Optionally copy the changelog templates from .gitlab/release/changelog
+#   * Include the changes through the MR process.
+#########################
+
+stages:
+  - release
+
+include:
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Workflows/release_semver.gitlab-ci.yml"

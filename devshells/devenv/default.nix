@@ -27,6 +27,10 @@ inputs.devenv.lib.mkShell {
 
         bash
         bash-completion
+
+        trivy
+        #clair
+        license_finder
       ];
 
       env = {
@@ -131,7 +135,7 @@ inputs.devenv.lib.mkShell {
 
               # Unordered list intendation.
               MD007 = {
-                indent = 4;
+                indent = 2;
               };
 
               # Training spaces
@@ -151,8 +155,13 @@ inputs.devenv.lib.mkShell {
             };
           };
 
+          prettier = {
+            output = "check";
+            write = false;
+          };
+
           yamllint = {
-            configPath = builtins.toString (./. + "/.linters/yaml-lint.yaml");
+            configPath = builtins.toString (./. + "/.linters/.yaml-lint.yaml");
           };
         };
       };
@@ -184,15 +193,15 @@ inputs.devenv.lib.mkShell {
         nix = {enable = true;};
 
         python = {
-          enable = false;
+          enable = true;
           package = pkgs.python3;
 
           poetry = {
-            enable = false;
+            enable = true;
             package = pkgs.poetry;
           };
 
-          venv = {enable = false;};
+          venv = {enable = true;};
         };
 
         rust = {

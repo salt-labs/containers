@@ -1,0 +1,21 @@
+---
+#########################
+# Name: debug
+# Description: An example of the debug workflow.
+# Notes:
+#   * This will print additional debug information during CI runs.
+# Usage:
+#   * Copy and paste the below into .gitlab-ci.yml
+#   * Include the changes through the MR process.
+#########################
+
+stages:
+  - debug
+
+include:
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Workflows/debug.gitlab-ci.yml"
+
+debug:
+  stage: debug
+  extends:
+    - ".environment"

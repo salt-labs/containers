@@ -1,0 +1,117 @@
+---
+##################################################
+# Name: buildah
+# Description: Creates OCI images with Buildah
+# https://www.mankier.com/1/buildah-build
+##################################################
+
+.buildah-base:
+  image:
+    name: artefacts.saltlabs.cloud/docker/debian:bullseye-slim
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+    SSLCERT_PATH: "/usr/local/share/ca-certificates"
+  before_script:
+    # Install packages
+    - apt-get update
+    - apt-get install --yes apt-utils buildah ca-certificates
+    # Registry credentials
+    - echo "Configuring Registry credentials"
+    - mkdir --parents .docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > .docker/config.json
+    # Certificates
+    - echo "Adding additional certs to ${SSLCERT_PATH}"
+    - mkdir --parents ${SSLCERT_PATH}
+    - |
+      if [[ ! "${ADDITIONAL_CA_CERT_BUNDLE:-EMPTY}" == "EMPTY" ]];
+      then
+        echo "Adding Additional CA Cert Bundle"
+        echo "${ADDITIONAL_CA_CERT_BUNDLE}" | tee -a "${SSLCERT_PATH}/additional-ca-cert-bundle.crt" >/dev/null
+      fi
+    - |
+      if [[ ! "${CI_SERVER_TLS_CA_FILE:-EMPTY}" == "EMPTY" ]];
+      then
+        echo "Adding CI Server CA Cert Bundle"
+        echo "${CI_SERVER_TLS_CA_FILE}" | tee -a "${SSLCERT_PATH}/ci-ca-cert-bundle.crt" >/dev/null
+      fi
+    - |
+      if [[ ! "${ARTIFACTORY_CERT_CHAIN:-EMPTY}" == "EMPTY" ]];
+      then
+        echo "Adding Artifactory CA Cert Chain"
+        echo "${ARTIFACTORY_CERT_CHAIN}" | tee -a "${SSLCERT_PATH}/artifactory.crt" >/dev/null
+      fi
+    - update-ca-certificates
+  allow_failure: false
+  timeout: 1h
+
+.buildah-build:
+  extends:
+    - ".buildah-base"
+  script:
+    - export OCI_DOCKERFILE="${OCI_DOCKERFILE:=Dockerfile}"
+    - |
+      [[ "${PLATFORM:-EMPTY}" == "EMPTY" ]] && (echo "PLATFORM must be set" >&2; exit 1)
+      [[ "${OCI_NAME:-EMPTY}" == "EMPTY" ]] && (echo "OCI_NAME must be set" >&2; exit 1)
+      [[ "${OCI_CONTEXT:-EMPTY}" == "EMPTY" ]] && (echo "OCI_CONTEXT must be set" >&2; exit 1)
+      [[ "${OCI_IMAGE:-EMPTY}" == "EMPTY" ]] && (echo "OCI_IMAGE must be set" >&2; exit 1)
+      [[ "${OCI_TAG:-EMPTY}" == "EMPTY" ]] && (echo "OCI_TAG must be set" >&2; exit 1)
+      [[ ! -f "${OCI_CONTEXT}/${OCI_NAME}/${OCI_DOCKERFILE}" ]] && (echo "A valid Dockerfile is required at ${OCI_CONTEXT}/${OCI_NAME}/${OCI_DOCKERFILE}" >&2; exit 1)
+    - buildah bud
+      --authfile .docker/config.json
+      --cert-dir="${SSLCERT_PATH}"
+      --file ${OCI_CONTEXT}/${OCI_NAME}/${OCI_DOCKERFILE}
+      --format oci
+      --platform=${PLATFORM}
+      --squash
+      --tag ${OCI_IMAGE}:${OCI_TAG}
+      --tls-verify=false
+      --no-cache
+      --squash
+      ${OCI_CONTEXT}/${OCI_NAME}
+    - buildah images
+    - buildah push
+      --authfile .docker/config.json
+      --format oci
+      --cert-dir="${SSLCERT_PATH}"
+      --creds ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}
+      --tls-verify=false
+      ${OCI_IMAGE}:${OCI_TAG}
+
+.buildah-linux-amd64:
+  extends:
+    - ".buildah-build"
+  variables:
+    PLATFORM: "linux/amd64"
+  rules:
+    - if: '$PLATFORM_AMD64 == "TRUE"'
+      changes:
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "containers/**"
+      when: on_success
+
+.buildah-linux-arm64:
+  extends:
+    - ".buildah-build"
+  variables:
+    PLATFORM: "linux/arm64"
+  rules:
+    - if: '$PLATFORM_ARM64 == "TRUE"'
+      changes:
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "containers/**"
+      when: on_success
+
+.buildah-linux-arm:
+  extends:
+    - ".buildah-build"
+  variables:
+    PLATFORM: "linux/arm"
+  rules:
+    - if: '$PLATFORM_ARM == "TRUE"'
+      changes:
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "containers/**"
+      when: on_success

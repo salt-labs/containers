@@ -1,0 +1,50 @@
+---
+##################################################
+# Name: lint
+# Description: Bundles common linters.
+# Notes:
+#   * This workflow is configured to run on MRs.
+#
+##################################################
+
+stages:
+  - test
+
+include:
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/markdownlint.gitlab-ci.yml"
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/megalinter.gitlab-ci.yml"
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/message.gitlab-ci.yml"
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/super-linter.gitlab-ci.yml"
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/yamllint.gitlab-ci.yml"
+  - remote: "https://git.saltlabs.cloud/templates/gitlab-ci/-/raw/main/Jobs/pythonlint.gitlab-ci.yml"
+
+linters:
+  stage: test
+  extends:
+    - ".message"
+  variables:
+    MESSAGE: "Executing configured linters"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+
+markdown-lint:
+  stage: test
+  extends:
+    - ".markdownlint"
+  variables:
+    # TODO: Enable strict mode in a future PBI when the environment is more mature.
+    MARKDOWNLINT_ENABLE_STRICT: "FALSE"
+
+yaml-lint:
+  stage: test
+  extends:
+    - ".yamllint"
+  # TODO: Enable strict mode in a future PBI when the environment is more mature.
+  variables:
+    YAMLLINT_ENABLE_STRICT: "FALSE"
+
+.python-lint:
+  stage: test
+  extends:
+    - ".pythonlint"

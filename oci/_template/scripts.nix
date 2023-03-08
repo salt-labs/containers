@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
   src = ./scripts;
 in
   pkgs.stdenv.mkDerivation {

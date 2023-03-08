@@ -1,0 +1,13 @@
+---
+#########################
+# Name: debug
+# Description: Prints env vars.
+#########################
+
+.environment:
+  image:
+    name: docker:20.10.21@sha256:0e3e7e2033cf7779ab6985e24ad18d6ec415c9dd944acef5ca56119a3a0dda2e
+  variables:
+    DOCKER_CLI_EXPERIMENTAL: "enabled"
+  script:
+    - env

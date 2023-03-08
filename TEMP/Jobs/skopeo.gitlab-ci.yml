@@ -1,0 +1,107 @@
+---
+##################################################
+# Name: skopeo
+# Description: Tags containers with Skopeo
+##################################################
+
+.skopeo-base:
+  image:
+    name: artefacts.saltlabs.cloud/docker/debian:bullseye-slim
+  variables:
+    GIT_STRATEGY: none
+    DEBIAN_FRONTEND: "noninteractive"
+    SSLCERT_PATH: "/usr/local/share/ca-certificates"
+  before_script:
+    # Install packages
+    - apt-get update
+    - apt-get install --yes apt-utils skopeo ca-certificates
+    # Certificates
+    - echo "Adding additional certs to ${SSLCERT_PATH}"
+    - mkdir --parents ${SSLCERT_PATH}
+    - |
+      if [[ ! "${ADDITIONAL_CA_CERT_BUNDLE:-EMPTY}" == "EMPTY" ]];
+      then
+        echo "Adding Additional CA Cert Bundle"
+        echo "${ADDITIONAL_CA_CERT_BUNDLE}" | tee -a "${SSLCERT_PATH}/additional-ca-cert-bundle.crt" >/dev/null
+      fi
+    - |
+      if [[ ! "${CI_SERVER_TLS_CA_FILE:-EMPTY}" == "EMPTY" ]];
+      then
+        echo "Adding CI Server CA Cert Bundle"
+        echo "${CI_SERVER_TLS_CA_FILE}" | tee -a "${SSLCERT_PATH}/ci-ca-cert-bundle.crt" >/dev/null
+      fi
+    - |
+      if [[ ! "${ARTIFACTORY_CERT_CHAIN:-EMPTY}" == "EMPTY" ]];
+      then
+        echo "Adding Artifactory CA Cert Chain"
+        echo "${ARTIFACTORY_CERT_CHAIN}" | tee -a "${SSLCERT_PATH}/artifactory.crt" >/dev/null
+      fi
+    - update-ca-certificates
+  allow_failure: false
+  timeout: 1h
+
+.skopeo-inspect:
+  extends:
+    - ".skopeo-base"
+  script:
+    - |
+      [[ "${OCI_IMAGE:-EMPTY}" == "EMPTY" ]] && (echo "OCI_IMAGE must be set" >&2; exit 1)
+      [[ "${OCI_TAG:-EMPTY}" == "EMPTY" ]] && (echo "OCI_TAG must be set" >&2; exit 1)
+    - skopeo inspect
+      --creds ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}
+      --cert-dir="${SSLCERT_PATH}"
+      --tls-verify=false
+      docker://${OCI_IMAGE}:${OCI_TAG}
+
+.skopeo-tag:
+  extends:
+    - ".skopeo-base"
+  script:
+    - |
+      [[ "${OCI_IMAGE:-EMPTY}" == "EMPTY" ]] && (echo "OCI_IMAGE must be set" >&2; exit 1)
+      [[ "${OCI_TAG:-EMPTY}" == "EMPTY" ]] && (echo "OCI_TAG must be set" >&2; exit 1)
+    - skopeo copy
+      --src-cert-dir="${SSLCERT_PATH}"
+      --src-tls-verify=true
+      --src-creds ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}
+      --dest-cert-dir="${SSLCERT_PATH}"
+      --dest-tls-verify=true
+      --dest-creds ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}
+      --format oci
+      docker://${OCI_IMAGE}:${OCI_TAG}
+      docker://${OCI_IMAGE}:${NEW_TAG}
+
+.skopeo-copy:
+  extends:
+    - ".skopeo-base"
+  script:
+    - |
+      [[ "${OCI_SOURCE_IMAGE:-EMPTY}" == "EMPTY" ]] && (echo "OCI_SOURCE_IMAGE must be set" >&2; exit 1)
+      [[ "${OCI_SOURCE_TAG:-EMPTY}" == "EMPTY" ]] && (echo "OCI_SOURCE_TAG must be set" >&2; exit 1)
+      [[ "${OCI_DEST_IMAGE:-EMPTY}" == "EMPTY" ]] && (echo "OCI_DEST_IMAGE must be set" >&2; exit 1)
+      [[ "${OCI_DEST_TAG:-EMPTY}" == "EMPTY" ]] && (echo "OCI_DEST_TAG must be set" >&2; exit 1)
+    - |
+      if [[ "${OCI_SOURCE_CREDS:-EMPTY}" == "EMPTY" ]];
+      then
+        echo "Setting default source credentials as none were provided"
+        export OCI_SOURCE_CREDS="${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}"
+      fi
+      if [[ "${OCI_DEST_CREDS:-EMPTY}" == "EMPTY" ]];
+      then
+        echo "Setting default destination credentials as none were provided"
+        export OCI_DEST_CREDS="${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}"
+      fi
+    - |
+      export OCI_SOURCE="${OCI_SOURCE_IMAGE}:${OCI_SOURCE_TAG}"
+      export OCI_DEST="${OCI_DEST_IMAGE}:${OCI_DEST_TAG}"
+    - echo "Copying image ${OCI_SOURCE} to ${OCI_DEST}"
+    - skopeo copy
+      --src-cert-dir="${SSLCERT_PATH}"
+      --src-tls-verify=true
+      --src-creds ${OCI_SOURCE_CREDS}
+      --dest-cert-dir="${SSLCERT_PATH}"
+      --dest-tls-verify=true
+      --dest-creds ${OCI_DEST_CREDS}
+      --format oci
+      docker://${OCI_SOURCE}
+      docker://${OCI_DEST}

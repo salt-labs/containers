@@ -1,10 +1,17 @@
-{pkgs, ...}: let
-  pivnet = pkgs.callPackage ./pivnet.nix {};
+{
+  pkgs,
+  crossPkgs,
+  ...
+}: let
+  pivnet = pkgs.callPackage ./pivnet.nix {
+    inherit pkgs;
+    inherit crossPkgs;
+  };
 in
   pkgs.dockerTools.buildImage {
     name = "pivnet";
     tag = "latest";
-    created = "now";
+    #created = "now";
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

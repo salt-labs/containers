@@ -1,0 +1,79 @@
+---
+##################################################
+# Name: semver
+# Description: Determines semantic version based on conventional commits.
+# Notes:
+#   * This Job is configured to run on merges into the mainline branch.
+#
+#   * This Job requires a release config file and optional changelog templates.
+##################################################
+
+# Determine the correct semantic version by looking at the latest conventional
+# commit message as per the format from https://www.conventionalcommits.org/
+.semver:
+  image:
+    name: artefacts.saltlabs.cloud/docker/convco/convco:latest
+    entrypoint: [""]
+  needs: []
+  dependencies: null
+  variables:
+    GIT_SSL_NO_VERIFY: "true"
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 0
+    GIT_SUBMODULE_STRATEGY: recursive
+    RELEASE_CONFIG: ".gitlab/release/config.yaml"
+    RELEASE_CHANGELOG: ".gitlab/release/changelog"
+    RELEASE_PREFIX: "v"
+  before_script:
+    - apk update
+    - apk add git
+  script:
+    - |
+      [[ ! -f "${RELEASE_CONFIG}" ]] && (echo "No release config file found at ${RELEASE_CONFIG}" >&2; exit 1)
+    - |
+      # NOTES:
+      #       * If the variable 'PROJECT_RELEASED' is FALSE or empty, v0.X.X versioning.
+      #       * If the variable 'PROJECT_RELEASED' is TRUE, use v1.X.X versioning.
+      #       * During the cutover from preMajor to Major, creation of v1.0.0 tag is required manually.
+      #       * This will only match if the file has 'AUTOMATED' as in the template submodule, thus ignoring any user customised files.
+      if [[ "${PROJECT_RELEASED:-FALSE}" == "TRUE" ]];
+      then
+        sed -i "s/preMajor: AUTOMATED/preMajor: false/g" "${RELEASE_CONFIG}"
+      else
+        sed -i "s/preMajor: AUTOMATED/preMajor: true/g" "${RELEASE_CONFIG}"
+      fi
+    - git fetch --tags
+    - git tag --list -n1
+    - /entrypoint check --config "${RELEASE_CONFIG}" || true
+    - LAST_VERSION=$(/entrypoint version --config "${RELEASE_CONFIG}" --prefix "${RELEASE_PREFIX}")
+    - NEXT_VERSION=$(/entrypoint version --config "${RELEASE_CONFIG}" --prefix "${RELEASE_PREFIX}" --bump)
+    - echo "Recording Next version as ${RELEASE_PREFIX}${NEXT_VERSION}"
+    - echo "NEXT_VERSION=${RELEASE_PREFIX}${NEXT_VERSION}" >> variables.env
+    - echo "Recording Last version as ${RELEASE_PREFIX}${LAST_VERSION}"
+    - echo "LAST_VERSION=${RELEASE_PREFIX}${LAST_VERSION}" >> variables.env
+    - |
+      if [[ -f "${RELEASE_CHANGELOG}/template.hbs" ]];
+      then
+        echo "Updating Changelog..."
+        /entrypoint changelog --config "${RELEASE_CONFIG}" --prefix "${RELEASE_PREFIX}" --skip-empty > CHANGELOG.md || true
+      else
+        echo "No Changelog template found, skipping changelog update..."
+      fi
+  artifacts:
+    reports:
+      dotenv: variables.env
+    paths:
+      - CHANGELOG.md
+  rules:
+    # Never run on schedules
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    # Never run on manual
+    - if: '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"'
+      when: never
+    # Always run on commits to mainline.
+    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+      when: on_success
+    # Don't run for anything else.
+    - when: never
+  allow_failure: false

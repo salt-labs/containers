@@ -1,8 +1,8 @@
-# DevSecOps
+# Containers
 
 ## Overview
 
-A collection of small container images used for CI tooling.
+A collection of container images used for CI tooling.
 
 **NOTE:** In order for use in vRealise Aria, Codestream requires that each container has at least the following available;
 

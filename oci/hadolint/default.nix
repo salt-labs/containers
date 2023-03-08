@@ -1,8 +1,12 @@
-{pkgs, ...}:
+{
+  pkgs,
+  crossPkgs,
+  ...
+}:
 pkgs.dockerTools.buildImage {
   name = "hadolint";
   tag = "latest";
-  created = "now";
+  #created = "now";
 
   copyToRoot = pkgs.buildEnv {
     name = "image-root";

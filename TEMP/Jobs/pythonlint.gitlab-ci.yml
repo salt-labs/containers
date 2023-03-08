@@ -1,0 +1,49 @@
+---
+#########################
+# Name: pythonlint
+# Description: Executes pylint
+# Notes:
+#   * A simple job that executes pylint.
+#
+#   * The job assumes default configuration file location within the local
+#   repository which can be overridden if required.
+#
+#   * Defaults to running during the MR process only.
+#########################
+
+.pythonlint:
+  needs: []
+  dependencies: null
+  image:
+    name: artefacts.saltlabs.cloud/docker/python:3.11@sha256:b941b836b18734f4992a168b579b7c16ff4c3b544782953eeab3a590a7338765
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    PIP_DISABLE_PIP_VERSION_CHECK: 1
+    PYTHON_VENV_REQUIREMENTS: ""
+    PYTHONLINT_CONFIG: ".gitlab/linters/.python-lint"
+  cache:
+    paths:
+      - .cache/pip
+      - .venv/
+  before_script:
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install pylint-gitlab --quiet
+    - |
+      if [[ -s "${PYTHON_VENV_REQUIREMENTS}" ]];
+      then
+        echo "Installing Python packages..."
+        pip install -r "${PYTHON_VENV_REQUIREMENTS}" --quiet
+      fi
+  script:
+    - |
+      [[ ! -f "${PYTHONLINT_CONFIG}" ]] && (echo "Missing linter config ${PYTHONLINT_CONFIG}" >&2; exit 1)
+    - pylint --rcfile="${PYTHONLINT_CONFIG}" $(git ls-files "*.py")
+  rules:
+    # Lint on changes to MRs
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "**/*.py"
+      when: on_success
+  allow_failure: false

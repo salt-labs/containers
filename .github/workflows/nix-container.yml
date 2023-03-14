@@ -219,7 +219,7 @@ jobs:
   ##################################################
 
   thumbs:
-    name: PR Status Checks
+    name: Thumbs Up
 
     runs-on: ${{ matrix.os }}
 

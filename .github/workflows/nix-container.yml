@@ -50,6 +50,10 @@ defaults:
     shell: bash
 
 jobs:
+  ##################################################
+  # Check for success / failure
+  ##################################################
+
   check:
     name: Check
     runs-on: ubuntu-latest
@@ -68,6 +72,10 @@ jobs:
         run: |
           echo Nix Flake check failed, cancelling container builds.
           exit 1
+
+  ##################################################
+  # Generate a matrix of possible containers.
+  ##################################################
 
   matrix:
     name: Matrix
@@ -98,6 +106,10 @@ jobs:
 
     outputs:
       container_matrix: ${{ steps.generate_matrix.outputs.CONTAINER_MATRIX }}
+
+  ##################################################
+  # Build container images from the generated Matrix.
+  ##################################################
 
   nix:
     name: ${{ matrix.container }}-${{ matrix.nix_system }}
@@ -201,3 +213,31 @@ jobs:
           IMAGE_NAME: ${{ matrix.container }}
           SYSTEM: ${{ matrix.nix_system }}
           IMAGE_TAG: "${{ steps.calver.outputs.package_version }}"
+
+  ##################################################
+  # Giphy thumbs up or down
+  ##################################################
+
+  thumbs:
+    name: PR Status Checks
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+
+    needs: nix
+
+    steps:
+      - name: PR Status Giphy
+        id: pr-status-giphy
+        uses: dgteixeira/pr-status-giphy-action@v2
+        if: github.event_name == 'pull_request'
+        env:
+          GIPHY_API_KEY: ${{ secrets.GIPHY_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -22,7 +22,7 @@
     GIT_SUBMODULE_STRATEGY: recursive
     SSLCERT_PATH: "/usr/local/share/ca-certificates"
     GIT_BOT_NAME: "Git Bot"
-    GIT_BOT_EMAIL: "git-bot@saltlabs.cloud"
+    GIT_BOT_EMAIL: "git-bot@saltlabs.tech"
     GIT_BOT_USERNAME: "git-bot"
     GIT_BOT_TOKEN: "${GIT_BOT_TOKEN}"
   before_script:

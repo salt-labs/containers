@@ -29,7 +29,7 @@ updates:
       - "dependencies"
       - "dependabot"
       - "actions"
-    target-branch: "master"
+    target-branch: "trunk"
     commit-message:
       prefix: "github-actions"
     rebase-strategy: "auto"
@@ -54,7 +54,7 @@ updates:
       - "dependencies"
       - "dependabot"
       - "submodules"
-    target-branch: "master"
+    target-branch: "trunk"
     commit-message:
       prefix: "gitsubmodules"
     rebase-strategy: "auto"
@@ -79,7 +79,7 @@ updates:
       - "dependencies"
       - "dependabot"
       - "docker"
-    target-branch: "master"
+    target-branch: "trunk"
     commit-message:
       prefix: "docker"
     rebase-strategy: "auto"
@@ -104,7 +104,7 @@ updates:
       - "dependencies"
       - "dependabot"
       - "gomod"
-    target-branch: "master"
+    target-branch: "trunk"
     commit-message:
       prefix: "gomodules"
     rebase-strategy: "auto"
@@ -129,7 +129,7 @@ updates:
       - "dependencies"
       - "dependabot"
       - "cargo"
-    target-branch: "master"
+    target-branch: "trunk"
     commit-message:
       prefix: "cargo"
     rebase-strategy: "auto"

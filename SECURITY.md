@@ -1,6 +1,6 @@
 # Security Policy
 
-Security information for the @Salt-Labs organization.
+Security information for the @salt-labs organization.
 
 ## Reporting a Vulnerability
 

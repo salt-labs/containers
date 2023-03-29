@@ -4,7 +4,6 @@ name: Nix Flake check
 on:
   push:
     branches:
-      - $default-branch
       - trunk
     paths:
       - .github/workflows/nix-flake-check.yml
@@ -16,7 +15,6 @@ on:
 
   pull_request:
     branches:
-      - $default-branch
       - "trunk"
     paths:
       - .github/workflows/nix-flake-check.yml

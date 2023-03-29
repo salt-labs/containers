@@ -54,6 +54,22 @@
       ref = "master";
       flake = true;
     };
+
+    codestream-cli = {
+      type = "github";
+      owner = "salt-labs";
+      repo = "codestream-cli";
+      ref = "trunk";
+      flake = true;
+    };
+
+    loopy = {
+      type = "github";
+      owner = "salt-labs";
+      repo = "loopy";
+      ref = "trunk";
+      flake = true;
+    };
   };
 
   outputs = {
@@ -62,6 +78,8 @@
     nixpkgs-unstable,
     devenv,
     poetry2nix,
+    codestream-cli,
+    loopy,
     ...
   } @ inputs: let
     inherit (self) outputs;
@@ -125,6 +143,12 @@
       inherit hostPlatform;
       crossPkgs = pkgsImportCrossSystem system hostPlatform;
       crossPkgsUnstable = pkgsImportCrossSystem system hostPlatform;
+
+      # codestream-cli
+      pkgCodestreamCLI = codestream-cli.packages.${hostPlatform}.codestream-cli;
+
+      # Loopy
+      pkgLoopy = loopy.packages.${hostPlatform}.loopy;
     in {
       brakeman = import ./oci/brakeman {
         inherit pkgs;
@@ -156,6 +180,7 @@
         inherit pkgsUnstable;
         inherit crossPkgs;
         inherit crossPkgsUnstable;
+        inherit pkgCodestreamCLI;
       };
 
       codeql = import ./oci/codeql {
@@ -256,6 +281,14 @@
       license_finder = import ./oci/license_finder {
         inherit pkgs;
         inherit crossPkgs;
+      };
+
+      loopy = import ./oci/loopy {
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+        inherit crossPkgsUnstable;
+        inherit pkgLoopy;
       };
 
       packer = import ./oci/packer {

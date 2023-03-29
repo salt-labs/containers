@@ -2,6 +2,7 @@
   pkgs,
   pkgsUnstable,
   crossPkgs,
+  pkgCodestreamCLI,
   ...
 }: let
   containerUser = "codestream-ci";
@@ -157,6 +158,9 @@ in
 
           # Entrypoint
           entrypoint
+
+          # Codestream CLI
+          pkgCodestreamCLI
         ]
         ++ unstablePkgs
         ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "codestream-ci"; };

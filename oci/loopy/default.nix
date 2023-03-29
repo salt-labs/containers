@@ -1,25 +1,17 @@
+#########################
+# References:
+#       https://ryantm.github.io/nixpkgs/builders/images/dockertools/
+#       https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/docker/examples.nix
+#########################
 {
-  nixpkgs,
   pkgs,
-  system,
-  poetry2nix,
+  pkgLoopy,
   ...
 }: let
-  overlay = self: super: {
-    app = self.poetry2nix.mkPoetryApplication {
-      projectDir = ./poetry;
-      inherit system;
-      inherit poetry2nix;
-    };
-  };
-
-  overlayPkgs = import nixpkgs {
-    inherit system;
-    overlays = [overlay];
-  };
+  app = pkgLoopy;
 in
   pkgs.dockerTools.buildImage {
-    name = "idem";
+    name = "loopy";
     tag = "latest";
     #created = "now";
 
@@ -36,16 +28,16 @@ in
         ]
         ++ [
           # Tools
-          overlayPkgs.app
+          app
         ];
     };
 
     config = {
       Labels = {
-        "org.opencontainers.image.description" = "Idem";
+        "org.opencontainers.image.description" = "DESCRIPTION";
       };
       Entrypoint = [
-        "${overlayPkgs.app}/bin/entrypoint"
+        "${app}/bin/loopy"
       ];
       Cmd = [
       ];

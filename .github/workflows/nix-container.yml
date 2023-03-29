@@ -4,7 +4,6 @@ name: Nix container
 on:
   push:
     branches:
-      - $default-branch
       - trunk
     paths:
       - .github/workflows/nix-container.yml
@@ -16,7 +15,6 @@ on:
 
   pull_request:
     branches:
-      - $default-branch
       - "trunk"
     paths:
       - .github/workflows/nix-container.yml
@@ -157,6 +155,16 @@ jobs:
         with:
           name: salt-labs
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - id: configure_nix
+        name: Configure Nix
+        env:
+          NIX_CONFIG_HOME: "~/.config/nix"
+        run: |
+          mkdir --parents "$NIX_CONFIG_HOME"
+          cat <<- EOF >> "$NIX_CONFIG_HOME/nix.conf"
+          access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+          EOF
 
       - id: check_flake
         name: Nix Flake check

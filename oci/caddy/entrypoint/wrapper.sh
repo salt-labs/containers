@@ -177,10 +177,7 @@ create_trigger || {
 }
 
 # Ensure required environment variables are set
-checkVarEmpty "GIT_REPO" "Git repository" || {
-	writeLog "ERROR" "Failed to find Git repository"
-	exit 8
-}
+checkVarEmpty "GIT_REPO" "Git repository" && exit 8
 
 # Wait for Public directory to be ready
 wait_for_index || {

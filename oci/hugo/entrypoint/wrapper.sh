@@ -84,25 +84,46 @@ function build_site() {
 #########################
 
 # Check log level
-checkLogLevel "${LOGLEVEL}" || exit 1
+checkLogLevel "${LOGLEVEL}" || {
+	writeLog "ERROR" "Invalid log level ${LOGLEVEL}"
+	exit 1
+}
 
 # Check required binaries
-checkReqs || exit 1
+checkReqs || {
+	writeLog "ERROR" "Missing required binaries"
+	exit 2
+}
 
 # Create working directory
-create_workdir || exit 1
+create_workdir || {
+	writeLog "ERROR" "Failed to create working directory"
+	exit 3
+}
 
 # Create public directory
-create_publicdir || exit 1
+create_publicdir || {
+	writeLog "ERROR" "Failed to create public directory"
+	exit 4
+}
 
 # Change to the working directory
-cd "${WORKDIR}"
+cd "${WORKDIR}" || {
+	writeLog "ERROR" "Failed to change to working directory ${WORKDIR}"
+	exit 5
+}
 
 # Ensure required environment variables are set
-checkVarEmpty "GIT_REPO" "Git repository" && exit 1
+checkVarEmpty "GIT_REPO" "Git repository" && exit 6
 
 # Update or clone the git repository
-update_or_clone_repo || exit 1
+update_or_clone_repo || {
+	writeLog "ERROR" "Failed to update or clone git repository"
+	exit 7
+}
 
 # Build the site
-build_site || exit 1
+build_site || {
+	writeLog "ERROR" "Failed to build site"
+	exit 8
+}

@@ -19,7 +19,7 @@ export LAST_UPDATE=0
 export CONTAINER_RESTART="false"
 export WORKDIR="/workdir"
 export PUBLIC_DIR="/public"
-export RESTART_TRIGGER="/workdir/restart-trigger"
+export RESTART_TRIGGER="${WORKDIR}/restart-trigger"
 export REQ_BINS=(
 	"caddy"
 )
@@ -62,6 +62,22 @@ function check_caddy_config() {
 		writeLog "INFO" "Caddy config file ${CADDY_CONFIG} exists"
 	fi
 	return 0
+}
+
+function create_trigger() {
+
+	# If there is no restart trigger, create an empty file.
+	if [[ ! -f ${RESTART_TRIGGER} ]]; then
+		writeLog "INFO" "Creating restart trigger file ${RESTART_TRIGGER}"
+		touch "${RESTART_TRIGGER}" || {
+			writeLog "ERROR" "Failed to create restart trigger file ${RESTART_TRIGGER}"
+			exit 1
+		}
+	else
+		writeLog "INFO" "Restart trigger file ${RESTART_TRIGGER} already exists"
+	fi
+	return 0
+
 }
 
 function wait_for_index() {
@@ -135,22 +151,15 @@ create_publicdir || exit 4
 check_caddy_config || exit 5
 
 # Change to the working directory
-cd "${WORKDIR}"
+cd "${WORKDIR}" || exit 6
 
-# If there is no restart trigger, create an empty file.
-if [ ! -f "${RESTART_TRIGGER}" ]; then
-	writeLog "INFO" "Creating restart trigger file ${RESTART_TRIGGER}"
-	touch "${RESTART_TRIGGER}" || {
-		writeLog "ERROR" "Failed to create restart trigger file ${RESTART_TRIGGER}"
-		exit 1
-	}
-fi
+create_trigger || exit 7
 
 # Ensure required environment variables are set
-checkVarEmpty "GIT_REPO" "Git repository" || exit 6
+checkVarEmpty "GIT_REPO" "Git repository" || exit 8
 
 # Wait for Public directory to be ready
-wait_for_index || exit 7
+wait_for_index || exit 9
 
 # Serve files with Caddy in the background
 serve_with_caddy &

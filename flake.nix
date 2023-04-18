@@ -165,6 +165,12 @@
         inherit crossPkgs;
       };
 
+      caddy = import ./oci/caddy {
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+      };
+
       clair = import ./oci/clair {
         inherit pkgs;
         inherit crossPkgs;
@@ -235,6 +241,12 @@
 
       helm = import ./oci/helm {
         inherit pkgs;
+        inherit crossPkgs;
+      };
+
+      hugo = import ./oci/hugo {
+        inherit pkgs;
+        inherit pkgsUnstable;
         inherit crossPkgs;
       };
 

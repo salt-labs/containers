@@ -28,9 +28,8 @@ inputs.devenv.lib.mkShell {
         bash
         bash-completion
 
-        trivy
-        #clair
-        license_finder
+        kind
+        kubectl
       ];
 
       env = {

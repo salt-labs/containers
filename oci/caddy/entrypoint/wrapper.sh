@@ -136,30 +136,57 @@ function check_restart_trigger() {
 #########################
 
 # Check log level
-checkLogLevel "${LOGLEVEL}" || exit 1
+checkLogLevel "${LOGLEVEL}" || {
+	writeLog "ERROR" "Invalid log level: ${LOGLEVEL}"
+	exit 1
+}
 
 # Check required binaries
-checkReqs || exit 2
+checkReqs || {
+	writeLog "ERROR" "Failed to find required binaries"
+	exit 2
+}
 
 # Create working directory
-create_workdir || exit 3
+create_workdir || {
+	writeLog "ERROR" "Failed to create working directory"
+	exit 3
+}
 
 # Create public directory
-create_publicdir || exit 4
+create_publicdir || {
+	writeLog "ERROR" "Failed to create public directory"
+	exit 4
+}
 
 # Check Caddy config file
-check_caddy_config || exit 5
+check_caddy_config || {
+	writeLog "ERROR" "Failed to find Caddy config file"
+	exit 5
+}
 
 # Change to the working directory
-cd "${WORKDIR}" || exit 6
+cd "${WORKDIR}" || {
+	writeLog "ERROR" "Failed to change to working directory ${WORKDIR}"
+	exit 6
+}
 
-create_trigger || exit 7
+create_trigger || {
+	writeLog "ERROR" "Failed to create restart trigger"
+	exit 7
+}
 
 # Ensure required environment variables are set
-checkVarEmpty "GIT_REPO" "Git repository" || exit 8
+checkVarEmpty "GIT_REPO" "Git repository" || {
+	writeLog "ERROR" "Failed to find Git repository"
+	exit 8
+}
 
 # Wait for Public directory to be ready
-wait_for_index || exit 9
+wait_for_index || {
+	writeLog "ERROR" "Failed to wait for public directory"
+	exit 9
+}
 
 # Serve files with Caddy in the background
 serve_with_caddy &

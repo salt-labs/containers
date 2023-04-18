@@ -64,13 +64,13 @@ function check_caddy_config() {
 	return 0
 }
 
-function wait_for_public_dir() {
+function wait_for_index() {
 	writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
-	while [ ! -d "${PUBLIC_DIR}" ] || [ ! -f "${PUBLIC_DIR}/index.html" ]; do
+	while [ ! -f "${PUBLIC_DIR}/index.html" ]; do
 		writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
 		sleep 30
 	done
-	writeLog "INFO" "Public directory ${PUBLIC_DIR} is ready!"
+	writeLog "INFO" "Public directory ${PUBLIC_DIR} contains index.html"
 	return 0
 }
 
@@ -150,7 +150,7 @@ fi
 checkVarEmpty "GIT_REPO" "Git repository" || exit 6
 
 # Wait for Public directory to be ready
-wait_for_public_dir || exit 7
+wait_for_index || exit 7
 
 # Serve files with Caddy in the background
 serve_with_caddy &

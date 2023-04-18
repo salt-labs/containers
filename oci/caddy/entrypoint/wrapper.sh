@@ -35,6 +35,8 @@ function create_workdir() {
 			writeLog "ERROR" "Failed to create working directory ${WORKDIR}"
 			return 1
 		}
+	else
+		writeLog "INFO" "Working directory ${WORKDIR} already exists"
 	fi
 	return 0
 }
@@ -46,6 +48,8 @@ function create_publicdir() {
 			writeLog "ERROR" "Failed to create public directory ${PUBLIC_DIR}"
 			return 1
 		}
+	else
+		writeLog "INFO" "Public directory ${PUBLIC_DIR} already exists"
 	fi
 	return 0
 }
@@ -54,6 +58,8 @@ function check_caddy_config() {
 	if [ ! -f "${CADDY_CONFIG}" ]; then
 		writeLog "ERROR" "Caddy config file ${CADDY_CONFIG} does not exist"
 		return 1
+	else
+		writeLog "INFO" "Caddy config file ${CADDY_CONFIG} exists"
 	fi
 	return 0
 }
@@ -117,16 +123,16 @@ function check_restart_trigger() {
 checkLogLevel "${LOGLEVEL}" || exit 1
 
 # Check required binaries
-checkReqs || exit 1
+checkReqs || exit 2
 
 # Create working directory
-create_workdir || exit 1
+create_workdir || exit 3
 
 # Create public directory
-create_publicdir || exit 1
+create_publicdir || exit 4
 
 # Check Caddy config file
-check_caddy_config || exit 1
+check_caddy_config || exit 5
 
 # Change to the working directory
 cd "${WORKDIR}"
@@ -141,10 +147,10 @@ if [ ! -f "${RESTART_TRIGGER}" ]; then
 fi
 
 # Ensure required environment variables are set
-checkVarEmpty "GIT_REPO" "Git repository" || exit 1
+checkVarEmpty "GIT_REPO" "Git repository" || exit 6
 
 # Wait for Public directory to be ready
-wait_for_public_dir || exit 1
+wait_for_public_dir || exit 7
 
 # Serve files with Caddy in the background
 serve_with_caddy &

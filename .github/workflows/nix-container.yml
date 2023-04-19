@@ -152,7 +152,7 @@ jobs:
 
       - id: calver
         name: Set Calver Version
-        uses: Nelyx/action-calver@v1.0.0
+        uses: Nelyx/action-calver@v1.1.0
         with:
           default_branch: "refs/heads/trunk"
           format: "YYYY.MM.DD"

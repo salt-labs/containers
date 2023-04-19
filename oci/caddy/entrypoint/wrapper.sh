@@ -84,7 +84,7 @@ function wait_for_index() {
 	writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
 	while [ ! -f "${PUBLIC_DIR}/index.html" ]; do
 		writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
-		sleep 30
+		sleep 60
 	done
 	writeLog "INFO" "Public directory ${PUBLIC_DIR} contains index.html"
 	return 0

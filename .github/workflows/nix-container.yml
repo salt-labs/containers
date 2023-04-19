@@ -2,27 +2,10 @@
 name: Nix container
 
 on:
-  push:
-    branches:
-      - trunk
-    paths:
-      - .github/workflows/nix-container.yml
-      - flake.nix
-      - flake.lock
-      - oci/*
-      - devshells/*
-      - scripts/*
-
-  pull_request:
-    branches:
-      - "trunk"
-    paths:
-      - .github/workflows/nix-container.yml
-      - flake.nix
-      - flake.lock
-      - oci/*
-      - devshells/*
-      - scripts/*
+  workflow_run:
+    workflows: ["Nix Flake check"]
+    types:
+      - completed
 
 permissions:
   contents: write
@@ -165,16 +148,6 @@ jobs:
           cat <<- EOF >> "$NIX_CONFIG_HOME/nix.conf"
           access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
           EOF
-
-      - id: check_flake
-        name: Nix Flake check
-        run: >-
-          nix flake check
-          --no-build
-          --refresh
-          --keep-going
-          --verbose
-          --impure
 
       - id: calver
         name: Set Calver Version

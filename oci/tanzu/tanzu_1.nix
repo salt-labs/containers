@@ -25,6 +25,8 @@ in
         Once you have downloaded the file, please use the following command and re-run the installation:
 
         nix-prefetch-url file://\$PWD/${filename}
+
+        If you are using cachix,
       '';
     };
 

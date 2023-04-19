@@ -27,6 +27,10 @@ env:
   CONTAINER_BUILD: "true"
   CONTAINER_PUBLISH: "true"
 
+  BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
+  BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
+  BRANCH_NAME_WORKFLOW: ${{ github.event.workflow_run.head_branch }}
+
 defaults:
   run:
     shell: bash
@@ -54,6 +58,13 @@ jobs:
         run: |
           echo Nix Flake check failed, cancelling container builds.
           exit 1
+
+      - id: debug
+        name: DEBUG
+        run: |
+          echo "$BRANCH_NAME_CURRENT"
+          echo "$BRANCH_NAME_DEFAULT"
+          echo "$BRANCH_NAME_WORKFLOW"
 
   ##################################################
   # Generate a matrix of possible containers.

@@ -3,7 +3,8 @@ name: Nix container
 
 on:
   workflow_run:
-    workflows: ["Nix Flake check"]
+    workflows:
+      - "Nix Flake check"
     types:
       - completed
 

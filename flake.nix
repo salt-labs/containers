@@ -30,7 +30,6 @@
       flake = true;
     };
 
-    # https://devenv.sh/
     devenv = {
       type = "github";
       owner = "cachix";
@@ -181,13 +180,13 @@
         inherit crossPkgs;
       };
 
-      codestream-ci = import ./oci/codestream-ci {
-        inherit pkgs;
-        inherit pkgsUnstable;
-        inherit crossPkgs;
-        inherit crossPkgsUnstable;
-        inherit pkgCodestreamCLI;
-      };
+      #codestream-ci = import ./oci/codestream-ci {
+      #  inherit pkgs;
+      #  inherit pkgsUnstable;
+      #  inherit crossPkgs;
+      #  inherit crossPkgsUnstable;
+      #  inherit pkgCodestreamCLI;
+      #};
 
       codeql = import ./oci/codeql {
         inherit pkgs;

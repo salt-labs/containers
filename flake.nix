@@ -294,13 +294,13 @@
         inherit crossPkgs;
       };
 
-      loopy = import ./oci/loopy {
-        inherit pkgs;
-        inherit pkgsUnstable;
-        inherit crossPkgs;
-        inherit crossPkgsUnstable;
-        inherit pkgLoopy;
-      };
+      #loopy = import ./oci/loopy {
+      #  inherit pkgs;
+      #  inherit pkgsUnstable;
+      #  inherit crossPkgs;
+      #  inherit crossPkgsUnstable;
+      #  inherit pkgLoopy;
+      #};
 
       packer = import ./oci/packer {
         inherit pkgs;

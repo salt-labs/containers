@@ -1,25 +1,16 @@
 {
-  nixpkgs,
   pkgs,
-  system,
-  poetry2nix,
+  pkgsUnstable,
   ...
 }: let
-  overlay = self: super: {
-    app = self.poetry2nix.mkPoetryApplication {
-      projectDir = ./poetry;
-      inherit system;
-      inherit poetry2nix;
-    };
-  };
+  entrypoint = pkgs.callPackage ./entrypoint {};
 
-  overlayPkgs = import nixpkgs {
-    inherit system;
-    overlays = [overlay];
-  };
+  unstablePkgs = with pkgsUnstable; [
+    caddy
+  ];
 in
   pkgs.dockerTools.buildImage {
-    name = "idem";
+    name = "caddy";
     tag = "latest";
     #created = "now";
 
@@ -34,22 +25,21 @@ in
           curlFull
           cacert
         ]
-        ++ [
-          # Tools
-          overlayPkgs.app
-        ];
+        ++ unstablePkgs;
     };
 
     config = {
       Labels = {
-        "org.opencontainers.image.description" = "Idem";
+        "org.opencontainers.image.description" = "Caddy";
       };
       Entrypoint = [
-        "${overlayPkgs.app}/bin/entrypoint"
+        "${entrypoint}/bin/entrypoint"
       ];
       Cmd = [
       ];
       ExposedPorts = {
+        "80/tcp" = {};
+        "443/tcp" = {};
       };
       Env = [
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"

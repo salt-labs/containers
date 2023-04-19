@@ -30,7 +30,6 @@
       flake = true;
     };
 
-    # https://devenv.sh/
     devenv = {
       type = "github";
       owner = "cachix";
@@ -54,6 +53,22 @@
       ref = "master";
       flake = true;
     };
+
+    codestream-cli = {
+      type = "github";
+      owner = "salt-labs";
+      repo = "codestream-cli";
+      ref = "trunk";
+      flake = true;
+    };
+
+    loopy = {
+      type = "github";
+      owner = "salt-labs";
+      repo = "loopy";
+      ref = "trunk";
+      flake = true;
+    };
   };
 
   outputs = {
@@ -62,6 +77,8 @@
     nixpkgs-unstable,
     devenv,
     poetry2nix,
+    codestream-cli,
+    loopy,
     ...
   } @ inputs: let
     inherit (self) outputs;
@@ -125,6 +142,12 @@
       inherit hostPlatform;
       crossPkgs = pkgsImportCrossSystem system hostPlatform;
       crossPkgsUnstable = pkgsImportCrossSystem system hostPlatform;
+
+      # codestream-cli
+      pkgCodestreamCLI = codestream-cli.packages.${hostPlatform}.codestream-cli;
+
+      # Loopy
+      pkgLoopy = loopy.packages.${hostPlatform}.loopy;
     in {
       brakeman = import ./oci/brakeman {
         inherit pkgs;
@@ -141,6 +164,12 @@
         inherit crossPkgs;
       };
 
+      caddy = import ./oci/caddy {
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+      };
+
       clair = import ./oci/clair {
         inherit pkgs;
         inherit crossPkgs;
@@ -151,12 +180,13 @@
         inherit crossPkgs;
       };
 
-      codestream-ci = import ./oci/codestream-ci {
-        inherit pkgs;
-        inherit pkgsUnstable;
-        inherit crossPkgs;
-        inherit crossPkgsUnstable;
-      };
+      #codestream-ci = import ./oci/codestream-ci {
+      #  inherit pkgs;
+      #  inherit pkgsUnstable;
+      #  inherit crossPkgs;
+      #  inherit crossPkgsUnstable;
+      #  inherit pkgCodestreamCLI;
+      #};
 
       codeql = import ./oci/codeql {
         inherit pkgs;
@@ -213,6 +243,12 @@
         inherit crossPkgs;
       };
 
+      hugo = import ./oci/hugo {
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+      };
+
       # TODO: fix
       #idem = import ./oci/idem {
       #  inherit nixpkgs;
@@ -257,6 +293,14 @@
         inherit pkgs;
         inherit crossPkgs;
       };
+
+      #loopy = import ./oci/loopy {
+      #  inherit pkgs;
+      #  inherit pkgsUnstable;
+      #  inherit crossPkgs;
+      #  inherit crossPkgsUnstable;
+      #  inherit pkgLoopy;
+      #};
 
       packer = import ./oci/packer {
         inherit pkgs;

@@ -28,9 +28,8 @@ inputs.devenv.lib.mkShell {
         bash
         bash-completion
 
-        trivy
-        #clair
-        license_finder
+        kind
+        kubectl
       ];
 
       env = {
@@ -157,7 +156,7 @@ inputs.devenv.lib.mkShell {
 
           prettier = {
             output = "check";
-            write = false;
+            write = true;
           };
 
           yamllint = {

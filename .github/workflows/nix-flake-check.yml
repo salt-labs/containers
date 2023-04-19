@@ -6,10 +6,10 @@ on:
     branches:
       - trunk
     paths:
-      - .github/workflows/nix-flake-check.yml
+      - .github/workflows/*
       - flake.nix
       - flake.lock
-      - containers/*
+      - oci/*
       - devshells/*
       - scripts/*
 
@@ -17,10 +17,10 @@ on:
     branches:
       - "trunk"
     paths:
-      - .github/workflows/nix-flake-check.yml
+      - .github/workflows/*
       - flake.nix
       - flake.lock
-      - containers/*
+      - oci/*
       - devshells/*
       - scripts/*
 

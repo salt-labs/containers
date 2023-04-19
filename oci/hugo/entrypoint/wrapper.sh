@@ -8,6 +8,7 @@ set -euo pipefail
 
 export LOGLEVEL="${LOGLEVEL:=INFO}"
 export GIT_REPO="${GIT_REPO:-}"
+export GIT_BRANCH="${GIT_BRANCH:-}"
 
 #########################
 # Constants
@@ -50,21 +51,47 @@ function create_publicdir() {
 }
 
 function update_or_clone_repo() {
+
 	# If a folder named "src" exists, run git pull to update the repo.
 	if [[ -d "${WORKDIR}/src" ]]; then
+
+		# Make sure the correct branch is checked out
+		if [[ -n ${GIT_BRANCH} ]]; then
+			writeLog "INFO" "Checking out branch ${GIT_BRANCH}"
+			git -C "${WORKDIR}/src" checkout "${GIT_BRANCH}" || {
+				writeLog "ERROR" "Failed to checkout branch ${GIT_BRANCH}"
+				return 1
+			}
+		fi
+
+		# Update the repo
 		writeLog "INFO" "Updating git repository"
 		git -C "${WORKDIR}/src" pull || {
 			writeLog "ERROR" "Failed to update git repository"
 			return 1
 		}
+
 	else
+
+		# Clone the repo
 		writeLog "INFO" "Cloning git repository"
 		git clone "${GIT_REPO}" src || {
 			writeLog "ERROR" "Failed to clone git repository"
 			return 1
 		}
+
+		# If a branch is specified, check it out
+		if [[ -n ${GIT_BRANCH} ]]; then
+			writeLog "INFO" "Checking out branch ${GIT_BRANCH}"
+			git -C "${WORKDIR}/src" checkout "${GIT_BRANCH}" || {
+				writeLog "ERROR" "Failed to checkout branch ${GIT_BRANCH}"
+				return 1
+			}
+		fi
+
 	fi
 	return 0
+
 }
 
 function build_site() {

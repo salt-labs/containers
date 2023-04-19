@@ -156,7 +156,7 @@ inputs.devenv.lib.mkShell {
 
           prettier = {
             output = "check";
-            write = false;
+            write = true;
           };
 
           yamllint = {

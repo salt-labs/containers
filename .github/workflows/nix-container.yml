@@ -27,6 +27,10 @@ env:
   CONTAINER_BUILD: "true"
   CONTAINER_PUBLISH: "true"
 
+  BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
+  BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
+  BRANCH_NAME_WORKFLOW: ${{ github.event.workflow_run.head_branch }}
+
 defaults:
   run:
     shell: bash
@@ -178,7 +182,7 @@ jobs:
 
       - id: publish_container_latest
         name: "Publish container image ${{ matrix.container }}:latest"
-        if: ${{ github.event_name == 'pull_request' }}
+        if: env.BRANCH_NAME_WORKFLOW != env.BRANCH_NAME_DEFAULT
         run: ./scripts/oci.sh
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"
@@ -188,7 +192,7 @@ jobs:
 
       - id: publish_container_release
         name: "Publish container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
-        if: ${{ github.event_name == 'push'  && github.ref == 'refs/heads/trunk' }}
+        if: env.BRANCH_NAME_WORKFLOW == env.BRANCH_NAME_DEFAULT
         run: ./scripts/oci.sh
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"

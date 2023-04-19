@@ -59,13 +59,6 @@ jobs:
           echo Nix Flake check failed, cancelling container builds.
           exit 1
 
-      - id: debug
-        name: DEBUG
-        run: |
-          echo "$BRANCH_NAME_CURRENT"
-          echo "$BRANCH_NAME_DEFAULT"
-          echo "$BRANCH_NAME_WORKFLOW"
-
   ##################################################
   # Generate a matrix of possible containers.
   ##################################################
@@ -189,7 +182,7 @@ jobs:
 
       - id: publish_container_latest
         name: "Publish container image ${{ matrix.container }}:latest"
-        if: ${{ github.event_name == 'pull_request' }}
+        if: env.BRANCH_NAME_WORKFLOW != env.BRANCH_NAME_DEFAULT
         run: ./scripts/oci.sh
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"
@@ -199,7 +192,7 @@ jobs:
 
       - id: publish_container_release
         name: "Publish container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
-        if: ${{ github.event_name == 'push'  && github.ref == 'refs/heads/trunk' }}
+        if: env.BRANCH_NAME_WORKFLOW == env.BRANCH_NAME_DEFAULT
         run: ./scripts/oci.sh
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"

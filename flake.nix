@@ -343,10 +343,10 @@
         inherit crossPkgs;
       };
 
-      tanzu = import ./oci/tanzu {
-        inherit pkgs;
-        inherit crossPkgs;
-      };
+      #tanzu = import ./oci/tanzu {
+      #  inherit pkgs;
+      #  inherit crossPkgs;
+      #};
 
       terraform = import ./oci/terraform {
         inherit pkgs;

@@ -89,7 +89,7 @@ function wait_for_index() {
 		if [[ -f "${PUBLIC_DIR}/index.html" ]]; then
 			writeLog "INFO" "Public directory ${PUBLIC_DIR} is ready to be served"
 			READY="TRUE"
-			continue
+			break
 		else
 			writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
 			sleep 60
@@ -126,14 +126,14 @@ function check_restart_trigger() {
 
 	if [ "${LAST_COMMIT:-EMPTY_1}" != "${PREV_COMMIT:-EMPTY_2}" ]; then
 
-		writeLog "INFO" "Restart trigger has been updated!"
-
 		echo "${LAST_COMMIT}" >"${RESTART_TRIGGER}"
-		export RESTART="true"
+		export CONTAINER_RESTART="true"
+
+		writeLog "INFO" "A git commit update was detected."
 
 	else
 
-		writeLog "INFO" "Restart trigger has not been updated"
+		writeLog "INFO" "No git commit update detected."
 
 	fi
 
@@ -233,7 +233,7 @@ while true; do
 	}
 
 	if [ "${CONTAINER_RESTART}" == "true" ]; then
-		writeLog "INFO" "Container restart has been triggered"
+		writeLog "INFO" "A container restart has been triggered"
 		exit 0
 	fi
 

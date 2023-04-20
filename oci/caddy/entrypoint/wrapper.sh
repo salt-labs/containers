@@ -102,9 +102,16 @@ function wait_for_index() {
 
 function serve_with_caddy() {
 
+	writeLog "INFO" "Validating Caddy config file ${CADDY_CONFIG}"
+
+	caddy validate --config "${CADDY_CONFIG}" || {
+		writeLog "ERROR" "Failed to validate Caddy config file ${CADDY_CONFIG}"
+		return 1
+	}
+
 	writeLog "INFO" "Starting Caddy server with config: ${CADDY_CONFIG}"
 
-	caddy run --config "${CADDY_CONFIG}" || {
+	caddy start --config "${CADDY_CONFIG}" || {
 		writeLog "ERROR" "Failed to start Caddy server with config ${CADDY_CONFIG}"
 		return 1
 	}
@@ -146,13 +153,6 @@ function check_restart_trigger() {
 }
 
 function cleanup() {
-	writeLog "INFO" "Cleaning up"
-	kill -9 "${CADDY_PID}" || {
-		writeLog "ERROR" "Failed to kill Caddy process ${CADDY_PID}"
-	}
-}
-
-cleanup() {
 
 	writeLog "WARN" "Caught Trap signal, attempting to gracefully shutting down Caddy..."
 
@@ -225,8 +225,10 @@ wait_for_index || {
 }
 
 # Serve files with Caddy in the background
-serve_with_caddy &
-export CADDY_PID=$!
+serve_with_caddy || {
+	writeLog "ERROR" "Failed to serve files with Caddy"
+	exit 10
+}
 
 # Loop to check for restart trigger updates
 while true; do

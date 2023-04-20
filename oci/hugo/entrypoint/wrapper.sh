@@ -56,6 +56,11 @@ function update_or_clone_repo() {
 	local COMMIT_BEFORE
 	local COMMIT_AFTER
 
+	# Set git configuration
+	git config --global user.email "hugo@localhost"
+	git config --global user.name "Hugo"
+	git config --global http.sslVerify "false"
+
 	# If a folder named "src" exists and is a valid git repository, run git pull to update the repo.
 	if [[ -d "${WORKDIR}/src" ]] && git -C "${WORKDIR}/src" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 

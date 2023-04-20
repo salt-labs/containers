@@ -144,7 +144,7 @@ function cleanup() {
 
 cleanup() {
 
-	writeLog "WARN" "Caught Trap signal, gracefully shutting down Caddy..."
+	writeLog "WARN" "Caught Trap signal, attempting to gracefully shutting down Caddy..."
 
 	caddy stop || {
 		writeLog "ERROR" "Failed to stop Caddy process ${CADDY_PID}"

@@ -170,8 +170,8 @@ function cleanup() {
 
 	writeLog "WARN" "Caught Trap signal, performing cleanup..."
 
-	rm -rf "${WORKDIR}" || {
-		writeLog "ERROR" "Failed to remove working directory ${WORKDIR}"
+	rm -rf "${WORKDIR}/src" || {
+		writeLog "ERROR" "Failed to remove working directory ${WORKDIR}/src"
 		exit 1
 	}
 
@@ -186,7 +186,7 @@ function cleanup() {
 #########################
 
 # Setup a trap.
-trap cleanup SIGTERM EXIT
+trap cleanup SIGTERM
 
 # Check log level
 checkLogLevel "${LOGLEVEL}" || {

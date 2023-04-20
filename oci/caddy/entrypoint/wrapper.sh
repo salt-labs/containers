@@ -169,7 +169,7 @@ cleanup() {
 #########################
 
 # Setup a trap.
-trap cleanup SIGTERM EXIT
+trap cleanup SIGTERM
 
 # Check log level
 checkLogLevel "${LOGLEVEL}" || {

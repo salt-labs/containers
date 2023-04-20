@@ -122,6 +122,12 @@ function update_or_clone_repo() {
 }
 
 function build_site() {
+
+	if [[ ${BUILD_SITE} == "FALSE" ]]; then
+		writeLog "INFO" "Skipping site build"
+		return 0
+	fi
+
 	writeLog "INFO" "Building site"
 	_pushd "src"
 	hugo --destination "${PUBLIC_DIR}" || {
@@ -131,6 +137,7 @@ function build_site() {
 	}
 	_popd
 	return 0
+
 }
 
 #########################

@@ -82,7 +82,7 @@ function create_trigger() {
 
 function wait_for_index() {
 	writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
-	while [ ! -f "${PUBLIC_DIR}/index.html" ]; do
+	while [ ! -f "${PUBLIC_DIR}/index.html" ] || [ ! -f "${PUBLIC_DIR}/index.xml" ]; do
 		writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
 		sleep 60
 	done

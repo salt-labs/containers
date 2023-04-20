@@ -24,6 +24,7 @@ in
           busybox
           curlFull
           cacert
+          git
         ]
         ++ unstablePkgs;
     };

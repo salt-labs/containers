@@ -77,8 +77,6 @@ checkVarEmpty "SYSTEM" "Nix system architecture" && exit 1
 #	exit 1
 #}
 
-tree || true
-
 #########################
 # Build and Push
 #########################

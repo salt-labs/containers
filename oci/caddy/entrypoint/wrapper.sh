@@ -81,13 +81,17 @@ function create_trigger() {
 }
 
 function wait_for_index() {
-	writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
+
 	while [ ! -f "${PUBLIC_DIR}/index.html" ] || [ ! -f "${PUBLIC_DIR}/index.xml" ]; do
-		writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
+
+		writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html or index.xml"
 		sleep 60
+
 	done
-	writeLog "INFO" "Public directory ${PUBLIC_DIR} contains index.html"
+
+	writeLog "INFO" "Public directory ${PUBLIC_DIR} is ready to be served"
 	return 0
+
 }
 
 function serve_with_caddy() {

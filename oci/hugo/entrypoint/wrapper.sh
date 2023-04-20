@@ -83,6 +83,14 @@ function update_or_clone_repo() {
 			return 1
 		}
 
+		# If there is a .gitmodules file, update the submodules.
+		if [[ -f "${WORKDIR}/src/.gitmodules" ]]; then
+			git -C "${WORKDIR}/src" submodule update --remote --recursive || {
+				writeLog "ERROR" "Failed to update git submodules"
+				return 1
+			}
+		fi
+
 		# Capture the commit after the update.
 		COMMIT_AFTER=$(git -C "${WORKDIR}/src" rev-parse HEAD)
 
@@ -115,6 +123,19 @@ function update_or_clone_repo() {
 			writeLog "INFO" "Checking out branch ${GIT_BRANCH}"
 			git -C "${WORKDIR}/src" checkout "${GIT_BRANCH}" || {
 				writeLog "ERROR" "Failed to checkout branch ${GIT_BRANCH}"
+				return 1
+			}
+		fi
+
+		# If there is a .gitmodules file, init the submodules.
+		if [[ -f "${WORKDIR}/src/.gitmodules" ]]; then
+			writeLog "INFO" "Initializing git submodules"
+			git -C "${WORKDIR}/src" submodule init || {
+				writeLog "ERROR" "Failed to initialize git submodules"
+				return 1
+			}
+			git -C "${WORKDIR}/src" submodule update --remote --recursive || {
+				writeLog "ERROR" "Failed to update git submodules"
 				return 1
 			}
 		fi

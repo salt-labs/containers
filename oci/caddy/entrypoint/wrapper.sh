@@ -82,14 +82,21 @@ function create_trigger() {
 
 function wait_for_index() {
 
-	while [ ! -f "${PUBLIC_DIR}/index.html" ] || [ ! -f "${PUBLIC_DIR}/index.xml" ]; do
+	local READY="FALSE"
 
-		writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html or index.xml"
-		sleep 60
+	while "${READY}" != "TRUE"; do
+
+		if [[ -f "${PUBLIC_DIR}/index.html" ]]; then
+			writeLog "INFO" "Public directory ${PUBLIC_DIR} is ready to be served"
+			READY="TRUE"
+			continue
+		else
+			writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
+			sleep 60
+		fi
 
 	done
 
-	writeLog "INFO" "Public directory ${PUBLIC_DIR} is ready to be served"
 	return 0
 
 }

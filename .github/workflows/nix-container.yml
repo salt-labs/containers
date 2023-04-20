@@ -68,6 +68,8 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    needs: check
+
     timeout-minutes: 30
     continue-on-error: false
 
@@ -78,6 +80,13 @@ jobs:
           - ubuntu-latest
 
     steps:
+      - id: check_result
+        name: Exit if check failed
+        if: ${{ needs.check.result == 'failure' }}
+        run: |
+          echo Nix Flake check failed, cancelling container builds.
+          exit 1
+
       - id: checkout_repository
         name: Checkout repository
         uses: actions/checkout@v3

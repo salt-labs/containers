@@ -135,9 +135,34 @@ function check_restart_trigger() {
 
 }
 
+function cleanup() {
+	writeLog "INFO" "Cleaning up"
+	kill -9 "${CADDY_PID}" || {
+		writeLog "ERROR" "Failed to kill Caddy process ${CADDY_PID}"
+	}
+}
+
+cleanup() {
+
+	writeLog "WARN" "Caught Trap signal, gracefully shutting down Caddy..."
+
+	caddy stop || {
+		writeLog "ERROR" "Failed to stop Caddy process ${CADDY_PID}"
+		exit 1
+	}
+
+	writeLog "INFO" "Caddy has stopped, exiting."
+
+	exit 0
+
+}
+
 #########################
 # Main
 #########################
+
+# Setup a trap.
+trap cleanup SIGTERM EXIT
 
 # Check log level
 checkLogLevel "${LOGLEVEL}" || {

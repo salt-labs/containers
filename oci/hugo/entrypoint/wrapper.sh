@@ -140,9 +140,27 @@ function build_site() {
 
 }
 
+function cleanup() {
+
+	writeLog "WARN" "Caught Trap signal, performing cleanup..."
+
+	rm -rf "${WORKDIR}" || {
+		writeLog "ERROR" "Failed to remove working directory ${WORKDIR}"
+		exit 1
+	}
+
+	writeLog "WARN" "Cleanup complete"
+
+	exit 0
+
+}
+
 #########################
 # Main
 #########################
+
+# Setup a trap.
+trap cleanup SIGTERM EXIT
 
 # Check log level
 checkLogLevel "${LOGLEVEL}" || {

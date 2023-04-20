@@ -52,8 +52,8 @@ function create_publicdir() {
 
 function update_or_clone_repo() {
 
-	# If a folder named "src" exists, run git pull to update the repo.
-	if [[ -d "${WORKDIR}/src" ]]; then
+	# If a folder named "src" exists and is a valid git repository, run git pull to update the repo.
+	if [[ -d "${WORKDIR}/src" ]] && git -C "${WORKDIR}/src" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 
 		# Make sure the correct branch is checked out
 		if [[ -n ${GIT_BRANCH} ]]; then
@@ -72,6 +72,12 @@ function update_or_clone_repo() {
 		}
 
 	else
+
+		# Remove the "src" directory if it's not a valid git repository
+		if [[ -d "${WORKDIR}/src" ]]; then
+			writeLog "WARNING" "The 'src' directory exists but is not a valid git repository. Removing it."
+			rm -rf "${WORKDIR}/src"
+		fi
 
 		# Clone the repo
 		writeLog "INFO" "Cloning git repository"

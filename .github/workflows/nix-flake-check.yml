@@ -5,13 +5,6 @@ on:
   push:
     branches:
       - trunk
-    paths:
-      - .github/workflows/*
-      - flake.nix
-      - flake.lock
-      - oci/*
-      - devshells/*
-      - scripts/*
 
   pull_request:
     branches:
@@ -20,8 +13,8 @@ on:
       - .github/workflows/*
       - flake.nix
       - flake.lock
-      - oci/*
-      - devshells/*
+      - oci/**
+      - devshells/**
       - scripts/*
 
 permissions:

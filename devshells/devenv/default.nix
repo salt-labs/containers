@@ -37,6 +37,10 @@ inputs.devenv.lib.mkShell {
       };
 
       enterShell = ''
+        # Linters
+        export HUNSPELL_CONFIG=''${PROJECT_DIR}/.linters/config/hunspell.conf
+        export PRETTIER_CONFIG=''${PROJECT_DIR}/.linters/config/.prettierrc.yaml
+        export YAMLLINT_CONFIG_FILE=''${PROJECT_DIR}/.linters/config/.yamllint.yml
 
         figlet $PROJECT_SHELL
 
@@ -45,10 +49,10 @@ inputs.devenv.lib.mkShell {
           "
           Welcome ''${USER}!
 
-          Shell: ''${PROJECT_SHELL:-Unknown}
           Project: ''${PROJECT_NAME:-Unknown}
+          Shell: ''${PROJECT_SHELL:-Unknown}
+          Directory: ''${PROJECT_DIR:-Unknown}
           "
-
       '';
 
       pre-commit = {
@@ -160,7 +164,6 @@ inputs.devenv.lib.mkShell {
           };
 
           yamllint = {
-            configPath = builtins.toString (./. + "/.linters/.yaml-lint.yaml");
           };
         };
       };

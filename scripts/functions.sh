@@ -272,7 +272,7 @@ function publish_container() {
 
 	DESTINATION="${REGISTRY_PATH}/${IMAGE_NAME}"
 
-	writeLog "INFO" "Publishing OCI image ${IMAGE_NAME}:${IMAGE_TAG}"
+	writeLog "INFO" "Publishing OCI image ${DESTINATION}:${IMAGE_TAG}"
 
 	# Create the provided tag.
 	skopeo copy \
@@ -285,7 +285,7 @@ function publish_container() {
 
 	if [[ ${IMAGE_TAG} != "latest" ]]; then
 
-		writeLog "INFO" "Publishing OCI image ${IMAGE_NAME}:latest"
+		writeLog "INFO" "Publishing OCI image ${DESTINATION}:latest"
 
 		# Always push a latest tag.
 		skopeo copy \

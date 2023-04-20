@@ -17,6 +17,7 @@ export GIT_BRANCH="${GIT_BRANCH:-}"
 export SCRIPT="${0##*/}"
 export WORKDIR="/workdir"
 export PUBLIC_DIR="/public"
+export BUILD_SITE="FALSE"
 export REQ_BINS=(
 	"hugo"
 	"git"
@@ -52,8 +53,19 @@ function create_publicdir() {
 
 function update_or_clone_repo() {
 
+	local COMMIT_BEFORE
+	local COMMIT_AFTER
+
+	# Set git configuration
+	git config --global user.email "hugo@localhost"
+	git config --global user.name "Hugo"
+	git config --global http.sslVerify "false"
+
 	# If a folder named "src" exists and is a valid git repository, run git pull to update the repo.
 	if [[ -d "${WORKDIR}/src" ]] && git -C "${WORKDIR}/src" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+
+		# Capture the commit before the update.
+		COMMIT_BEFORE=$(git -C "${WORKDIR}/src" rev-parse HEAD)
 
 		# Make sure the correct branch is checked out
 		if [[ -n ${GIT_BRANCH} ]]; then
@@ -70,6 +82,26 @@ function update_or_clone_repo() {
 			writeLog "ERROR" "Failed to update git repository"
 			return 1
 		}
+
+		# If there is a .gitmodules file, update the submodules.
+		if [[ -f "${WORKDIR}/src/.gitmodules" ]]; then
+			git -C "${WORKDIR}/src" submodule update --remote --recursive || {
+				writeLog "ERROR" "Failed to update git submodules"
+				return 1
+			}
+		fi
+
+		# Capture the commit after the update.
+		COMMIT_AFTER=$(git -C "${WORKDIR}/src" rev-parse HEAD)
+
+		# If the commit has changed, we'll need to rebuild the site.
+		if [[ ${COMMIT_BEFORE} != "${COMMIT_AFTER}" ]]; then
+			writeLog "INFO" "Git repository updated. Rebuilding site."
+			BUILD_SITE="TRUE"
+		else
+			writeLog "INFO" "Git repository is up to date. Skipping site build."
+			BUILD_SITE="FALSE"
+		fi
 
 	else
 
@@ -95,12 +127,33 @@ function update_or_clone_repo() {
 			}
 		fi
 
+		# If there is a .gitmodules file, init the submodules.
+		if [[ -f "${WORKDIR}/src/.gitmodules" ]]; then
+			writeLog "INFO" "Initializing git submodules"
+			git -C "${WORKDIR}/src" submodule init || {
+				writeLog "ERROR" "Failed to initialize git submodules"
+				return 1
+			}
+			git -C "${WORKDIR}/src" submodule update --remote --recursive || {
+				writeLog "ERROR" "Failed to update git submodules"
+				return 1
+			}
+		fi
+
+		BUILD_SITE="TRUE"
+
 	fi
 	return 0
 
 }
 
 function build_site() {
+
+	if [[ ${BUILD_SITE} == "FALSE" ]]; then
+		writeLog "INFO" "Skipping site build"
+		return 0
+	fi
+
 	writeLog "INFO" "Building site"
 	_pushd "src"
 	hugo --destination "${PUBLIC_DIR}" || {
@@ -110,11 +163,30 @@ function build_site() {
 	}
 	_popd
 	return 0
+
+}
+
+function cleanup() {
+
+	writeLog "WARN" "Caught Trap signal, performing cleanup..."
+
+	rm -rf "${WORKDIR}" || {
+		writeLog "ERROR" "Failed to remove working directory ${WORKDIR}"
+		exit 1
+	}
+
+	writeLog "WARN" "Cleanup complete"
+
+	exit 0
+
 }
 
 #########################
 # Main
 #########################
+
+# Setup a trap.
+trap cleanup SIGTERM EXIT
 
 # Check log level
 checkLogLevel "${LOGLEVEL}" || {

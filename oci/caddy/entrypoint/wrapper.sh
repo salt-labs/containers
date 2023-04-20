@@ -81,13 +81,24 @@ function create_trigger() {
 }
 
 function wait_for_index() {
-	writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
-	while [ ! -f "${PUBLIC_DIR}/index.html" ]; do
-		writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
-		sleep 60
+
+	local READY="FALSE"
+
+	while "${READY}" != "TRUE"; do
+
+		if [[ -f "${PUBLIC_DIR}/index.html" ]]; then
+			writeLog "INFO" "Public directory ${PUBLIC_DIR} is ready to be served"
+			READY="TRUE"
+			break
+		else
+			writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
+			sleep 60
+		fi
+
 	done
-	writeLog "INFO" "Public directory ${PUBLIC_DIR} contains index.html"
+
 	return 0
+
 }
 
 function serve_with_caddy() {
@@ -115,14 +126,14 @@ function check_restart_trigger() {
 
 	if [ "${LAST_COMMIT:-EMPTY_1}" != "${PREV_COMMIT:-EMPTY_2}" ]; then
 
-		writeLog "INFO" "Restart trigger has been updated!"
-
 		echo "${LAST_COMMIT}" >"${RESTART_TRIGGER}"
-		export RESTART="true"
+		export CONTAINER_RESTART="true"
+
+		writeLog "INFO" "A git commit update was detected."
 
 	else
 
-		writeLog "INFO" "Restart trigger has not been updated"
+		writeLog "INFO" "No git commit update detected."
 
 	fi
 
@@ -131,9 +142,34 @@ function check_restart_trigger() {
 
 }
 
+function cleanup() {
+	writeLog "INFO" "Cleaning up"
+	kill -9 "${CADDY_PID}" || {
+		writeLog "ERROR" "Failed to kill Caddy process ${CADDY_PID}"
+	}
+}
+
+cleanup() {
+
+	writeLog "WARN" "Caught Trap signal, attempting to gracefully shutting down Caddy..."
+
+	caddy stop || {
+		writeLog "ERROR" "Failed to stop Caddy process ${CADDY_PID}"
+		exit 1
+	}
+
+	writeLog "INFO" "Caddy has stopped, exiting."
+
+	exit 0
+
+}
+
 #########################
 # Main
 #########################
+
+# Setup a trap.
+trap cleanup SIGTERM EXIT
 
 # Check log level
 checkLogLevel "${LOGLEVEL}" || {
@@ -197,7 +233,7 @@ while true; do
 	}
 
 	if [ "${CONTAINER_RESTART}" == "true" ]; then
-		writeLog "INFO" "Container restart has been triggered"
+		writeLog "INFO" "A container restart has been triggered"
 		exit 0
 	fi
 

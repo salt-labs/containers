@@ -2,11 +2,20 @@
 name: Nix container
 
 on:
-  workflow_run:
-    workflows:
-      - "Nix Flake check"
-    types:
-      - completed
+  push:
+    branches:
+      - trunk
+
+  pull_request:
+    branches:
+      - "trunk"
+    paths:
+      - .github/workflows/*
+      - flake.nix
+      - flake.lock
+      - oci/**
+      - devshells/**
+      - scripts/*
 
 permissions:
   contents: write
@@ -29,36 +38,12 @@ env:
 
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
   BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
-  BRANCH_NAME_WORKFLOW: ${{ github.event.workflow_run.head_branch }}
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  ##################################################
-  # Check for success / failure
-  ##################################################
-
-  check:
-    name: Check
-    runs-on: ubuntu-latest
-    continue-on-error: false
-    steps:
-      - id: check_success
-        name: Nix Flake check was successful
-        if: ${{ github.event.workflow_run.conclusion == 'success' }}
-        run: |
-          echo Nix Flake check was successful, continuing container builds.
-          exit 0
-
-      - id: check_failure
-        name: Nix Flake check has failed
-        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-        run: |
-          echo Nix Flake check failed, cancelling container builds.
-          exit 1
-
   ##################################################
   # Generate a matrix of possible containers.
   ##################################################
@@ -67,8 +52,6 @@ jobs:
     name: Matrix
 
     runs-on: ${{ matrix.os }}
-
-    needs: check
 
     timeout-minutes: 30
     continue-on-error: false
@@ -80,13 +63,6 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - id: check_result
-        name: Exit if check failed
-        if: ${{ needs.check.result == 'failure' }}
-        run: |
-          echo Nix Flake check failed, cancelling container builds.
-          exit 1
-
       - id: checkout_repository
         name: Checkout repository
         uses: actions/checkout@v3
@@ -191,7 +167,7 @@ jobs:
 
       - id: publish_container_latest
         name: "Publish container image ${{ matrix.container }}:latest"
-        if: env.BRANCH_NAME_WORKFLOW != env.BRANCH_NAME_DEFAULT
+        if: env.BRANCH_NAME_CURRENT != env.BRANCH_NAME_DEFAULT
         run: ./scripts/oci.sh
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"
@@ -201,7 +177,7 @@ jobs:
 
       - id: publish_container_release
         name: "Publish container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
-        if: env.BRANCH_NAME_WORKFLOW == env.BRANCH_NAME_DEFAULT
+        if: env.BRANCH_NAME_CURRENT == env.BRANCH_NAME_DEFAULT
         run: ./scripts/oci.sh
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"
@@ -229,10 +205,10 @@ jobs:
     needs: nix
 
     steps:
-      - name: PR Status Giphy
-        id: pr-status-giphy
-        uses: dgteixeira/pr-status-giphy-action@v2
+      - id: pr-status-giphy
+        name: PR Status Giphy
         if: github.event_name == 'pull_request'
+        uses: dgteixeira/pr-status-giphy-action@v2
         env:
           GIPHY_API_KEY: ${{ secrets.GIPHY_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

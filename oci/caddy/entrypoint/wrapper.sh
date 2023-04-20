@@ -84,12 +84,11 @@ function wait_for_index() {
 
 	local READY="FALSE"
 
-	while "${READY}" != "TRUE"; do
+	while [[ ${READY} != "TRUE" ]]; do
 
 		if [[ -f "${PUBLIC_DIR}/index.html" ]]; then
 			writeLog "INFO" "Public directory ${PUBLIC_DIR} is ready to be served"
 			READY="TRUE"
-			break
 		else
 			writeLog "INFO" "Waiting for public directory ${PUBLIC_DIR} to contain index.html"
 			sleep 60
@@ -102,12 +101,23 @@ function wait_for_index() {
 }
 
 function serve_with_caddy() {
+
+	writeLog "INFO" "Validating Caddy config file ${CADDY_CONFIG}"
+
+	caddy validate --config "${CADDY_CONFIG}" || {
+		writeLog "ERROR" "Failed to validate Caddy config file ${CADDY_CONFIG}"
+		return 1
+	}
+
 	writeLog "INFO" "Starting Caddy server with config: ${CADDY_CONFIG}"
-	caddy run --config "${CADDY_CONFIG}" || {
+
+	caddy start --config "${CADDY_CONFIG}" || {
 		writeLog "ERROR" "Failed to start Caddy server with config ${CADDY_CONFIG}"
 		return 1
 	}
+
 	return 0
+
 }
 
 function check_restart_trigger() {
@@ -143,13 +153,6 @@ function check_restart_trigger() {
 }
 
 function cleanup() {
-	writeLog "INFO" "Cleaning up"
-	kill -9 "${CADDY_PID}" || {
-		writeLog "ERROR" "Failed to kill Caddy process ${CADDY_PID}"
-	}
-}
-
-cleanup() {
 
 	writeLog "WARN" "Caught Trap signal, attempting to gracefully shutting down Caddy..."
 
@@ -169,7 +172,7 @@ cleanup() {
 #########################
 
 # Setup a trap.
-trap cleanup SIGTERM EXIT
+trap cleanup SIGTERM
 
 # Check log level
 checkLogLevel "${LOGLEVEL}" || {
@@ -222,8 +225,10 @@ wait_for_index || {
 }
 
 # Serve files with Caddy in the background
-serve_with_caddy &
-export CADDY_PID=$!
+serve_with_caddy || {
+	writeLog "ERROR" "Failed to serve files with Caddy"
+	exit 10
+}
 
 # Loop to check for restart trigger updates
 while true; do
@@ -232,7 +237,7 @@ while true; do
 		writeLog "WARN" "Failed to check the restart trigger, retrying in 60 seconds"
 	}
 
-	if [ "${CONTAINER_RESTART}" == "true" ]; then
+	if [[ ${CONTAINER_RESTART} == "true" ]]; then
 		writeLog "INFO" "A container restart has been triggered"
 		exit 0
 	fi

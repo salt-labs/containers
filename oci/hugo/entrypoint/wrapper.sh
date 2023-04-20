@@ -17,6 +17,7 @@ export GIT_BRANCH="${GIT_BRANCH:-}"
 export SCRIPT="${0##*/}"
 export WORKDIR="/workdir"
 export PUBLIC_DIR="/public"
+export BUILD_SITE="FALSE"
 export REQ_BINS=(
 	"hugo"
 	"git"
@@ -52,8 +53,14 @@ function create_publicdir() {
 
 function update_or_clone_repo() {
 
+	local COMMIT_BEFORE
+	local COMMIT_AFTER
+
 	# If a folder named "src" exists and is a valid git repository, run git pull to update the repo.
 	if [[ -d "${WORKDIR}/src" ]] && git -C "${WORKDIR}/src" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+
+		# Capture the commit before the update.
+		COMMIT_BEFORE=$(git -C "${WORKDIR}/src" rev-parse HEAD)
 
 		# Make sure the correct branch is checked out
 		if [[ -n ${GIT_BRANCH} ]]; then
@@ -70,6 +77,18 @@ function update_or_clone_repo() {
 			writeLog "ERROR" "Failed to update git repository"
 			return 1
 		}
+
+		# Capture the commit after the update.
+		COMMIT_AFTER=$(git -C "${WORKDIR}/src" rev-parse HEAD)
+
+		# If the commit has changed, we'll need to rebuild the site.
+		if [[ ${COMMIT_BEFORE} != "${COMMIT_AFTER}" ]]; then
+			writeLog "INFO" "Git repository updated. Rebuilding site."
+			BUILD_SITE="TRUE"
+		else
+			writeLog "INFO" "Git repository is up to date. Skipping site build."
+			BUILD_SITE="FALSE"
+		fi
 
 	else
 
@@ -94,6 +113,8 @@ function update_or_clone_repo() {
 				return 1
 			}
 		fi
+
+		BUILD_SITE="TRUE"
 
 	fi
 	return 0

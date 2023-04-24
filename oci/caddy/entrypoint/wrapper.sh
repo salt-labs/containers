@@ -9,6 +9,7 @@ set -euo pipefail
 export LOGLEVEL="${LOGLEVEL:=INFO}"
 export GIT_REPO="${GIT_REPO:-}"
 export CADDY_CONFIG="${CADDY_CONFIG:-/etc/caddy/Caddyfile}"
+export CADDY_RELOAD="FALSE"
 
 #########################
 # Constants
@@ -16,7 +17,6 @@ export CADDY_CONFIG="${CADDY_CONFIG:-/etc/caddy/Caddyfile}"
 
 export SCRIPT="${0##*/}"
 export LAST_UPDATE=0
-export CONTAINER_RESTART="false"
 export WORKDIR="/workdir"
 export PUBLIC_DIR="/public"
 export RESTART_TRIGGER="${WORKDIR}/restart-trigger"
@@ -137,7 +137,7 @@ function check_restart_trigger() {
 	if [ "${LAST_COMMIT:-EMPTY_1}" != "${PREV_COMMIT:-EMPTY_2}" ]; then
 
 		echo "${LAST_COMMIT}" >"${RESTART_TRIGGER}"
-		export CONTAINER_RESTART="true"
+		export CADDY_RELOAD="TRUE"
 
 		writeLog "INFO" "A git commit update was detected."
 
@@ -237,9 +237,12 @@ while true; do
 		writeLog "WARN" "Failed to check the restart trigger, retrying in 60 seconds"
 	}
 
-	if [[ ${CONTAINER_RESTART} == "true" ]]; then
-		writeLog "INFO" "A container restart has been triggered"
-		exit 0
+	if [[ ${CADDY_RELOAD} == "TRUE" ]]; then
+		writeLog "INFO" "A Caddy reload has been triggered"
+		caddy reload --config "${CADDY_CONFIG}" || {
+			writeLog "ERROR" "Failed to reload Caddy server with config ${CADDY_CONFIG}"
+			exit 1
+		}
 	fi
 
 	sleep 60

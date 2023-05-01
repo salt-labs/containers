@@ -149,6 +149,7 @@ in
           license_finder
           nodePackages.snyk
           packer
+          pandoc
           safety-cli
           secretscanner
           semgrep

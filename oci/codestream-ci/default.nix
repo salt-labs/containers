@@ -131,6 +131,7 @@ in
           brakeman
           buildah
           clair
+          clamav
           cosign
           docker-credential-gcr
           docker-credential-helpers
@@ -148,13 +149,20 @@ in
           license_finder
           nodePackages.snyk
           packer
+          safety-cli
           secretscanner
+          semgrep
           shellcheck
           skopeo
+          sonar-scanner-cli
           syft
           tflint
           tfsec
           trivy
+
+          # Python
+          python310
+          python310Packages.bandit
 
           # Entrypoint
           entrypoint

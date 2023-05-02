@@ -169,7 +169,7 @@ in
           entrypoint
 
           # Codestream CLI
-          pkgCodestreamCLI
+          #pkgCodestreamCLI
         ]
         ++ unstablePkgs
         ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "codestream-ci"; };
@@ -195,7 +195,8 @@ in
         "org.opencontainers.image.description" = "Codestream CI";
       };
       Entrypoint = [
-        "${entrypoint}/bin/codestream-ci"
+        #"${entrypoint}/bin/codestream-ci"
+        "${entrypoint}/bin/bash"
       ];
       Cmd = [
       ];

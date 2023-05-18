@@ -7,6 +7,11 @@ on:
 
   workflow_dispatch:
 
+  # TODO: Remove before merging
+  pull_request:
+    branches:
+      - "trunk"
+
 defaults:
   run:
     shell: bash
@@ -70,24 +75,44 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - id: cleanup_untagged
-        name: Cleanup Untagged Packages
-        uses: duskmoon314/action-delete-ghcr-untagged@v1
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          owner_type: org
-          owner: ${{ github.repository_owner }}
-          package_name: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
-          expiration: 7
+      #- id: cleanup_untagged
+      #  name: Cleanup Untagged Packages
+      #  uses: duskmoon314/action-delete-ghcr-untagged@v1
+      #  with:
+      #    token: ${{ secrets.PAT_PACKAGES }}
+      #    owner_type: org
+      #    owner: ${{ github.repository_owner }}
+      #    package_name: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
+      #    expiration: 7
 
-      - id: prune_containers
-        name: Prune expired containers
+      #- id: prune_containers
+      #  name: Prune expired containers
+      #  uses: vlaurin/action-ghcr-prune@v0.5.0
+      #  with:
+      #    token: ${{ secrets.PAT_PACKAGES }}
+      #    organization: salt-labs
+      #    container: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
+      #    dry-run: false
+      #    keep-younger-than: 7
+      #    keep-last: 3
+      #    prune-untagged: true
+
+      - name: Prune all untagged images
         uses: vlaurin/action-ghcr-prune@v0.5.0
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           organization: salt-labs
           container: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
-          dry-run: false
-          keep-younger-than: 7d
-          keep-last: 3
           prune-untagged: true
+          dry-run: true
+
+      - name: Prune week old tagged images
+        uses: vlaurin/action-ghcr-prune@v0.5.0
+        with:
+          token: ${{ secrets.PAT_PACKAGES }}
+          organization: salt-labs
+          container: ${{ needs.matrix.outputs.repository_name }}/${{ matrix.container }}
+          keep-younger-than: 7
+          prune-tags-regexes: |
+            ^2023.*
+          dry-run: true

@@ -71,7 +71,7 @@ jobs:
         name: Generating a matrix of container names
         run: |
           echo "Generating matrix of container names..."
-          CONTAINER_NAMES=$(find oci -mindepth 1 -maxdepth 1 -type d ! -name "_template" ! -name "_disabled*" -printf "%f\n" | jq -R -s -c 'split("\n")[:-1]')
+          CONTAINER_NAMES=$(find nix/oci -mindepth 1 -maxdepth 1 -type d ! -name "_template" ! -name "_disabled*" -printf "%f\n" | jq -R -s -c 'split("\n")[:-1]')
           echo "${CONTAINER_NAMES}" | jq .
           echo "CONTAINER_MATRIX=${CONTAINER_NAMES}" >> "$GITHUB_OUTPUT"
 

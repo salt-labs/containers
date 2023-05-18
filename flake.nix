@@ -150,108 +150,108 @@
       # Loopy
       pkgLoopy = loopy.packages.${hostPlatform}.loopy;
     in {
-      brakeman = import ./oci/brakeman {
+      brakeman = import ./nix/oci/brakeman {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      buildah = import ./oci/buildah {
+      buildah = import ./nix/oci/buildah {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      carvel = import ./oci/carvel {
+      carvel = import ./nix/oci/carvel {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      caddy = import ./oci/caddy {
+      caddy = import ./nix/oci/caddy {
         inherit pkgs;
         inherit pkgsUnstable;
         inherit crossPkgs;
       };
 
-      clair = import ./oci/clair {
+      clair = import ./nix/oci/clair {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      cmake = import ./oci/cmake {
+      cmake = import ./nix/oci/cmake {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      #codestream-ci = import ./oci/codestream-ci {
-      #  inherit pkgs;
-      #  inherit pkgsUnstable;
-      #  inherit crossPkgs;
-      #  inherit crossPkgsUnstable;
-      #  inherit pkgCodestreamCLI;
-      #};
+      codestream-ci = import ./nix/oci/codestream-ci {
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+        inherit crossPkgsUnstable;
+        inherit pkgCodestreamCLI;
+      };
 
-      codeql = import ./oci/codeql {
+      codeql = import ./nix/oci/codeql {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      cosign = import ./oci/cosign {
+      cosign = import ./nix/oci/cosign {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      flawfinder = import ./oci/flawfinder {
+      flawfinder = import ./nix/oci/flawfinder {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      gitleaks = import ./oci/gitleaks {
+      gitleaks = import ./nix/oci/gitleaks {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      gnumake = import ./oci/gnumake {
+      gnumake = import ./nix/oci/gnumake {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      gosec = import ./oci/gosec {
+      gosec = import ./nix/oci/gosec {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      govc = import ./oci/govc {
+      govc = import ./nix/oci/govc {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      grype = import ./oci/grype {
+      grype = import ./nix/oci/grype {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      hadolint = import ./oci/hadolint {
+      hadolint = import ./nix/oci/hadolint {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      hello = import ./oci/hello {
+      hello = import ./nix/oci/hello {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      helm = import ./oci/helm {
+      helm = import ./nix/oci/helm {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      hugo = import ./oci/hugo {
+      hugo = import ./nix/oci/hugo {
         inherit pkgs;
         inherit pkgsUnstable;
         inherit crossPkgs;
       };
 
       # TODO: fix
-      #idem = import ./oci/idem {
+      #idem = import ./nix/oci/idem {
       #  inherit nixpkgs;
       #  inherit pkgs;
       #  inherit system;
@@ -259,43 +259,43 @@
       #  inherit crossPkgs;
       #};
 
-      kaniko = import ./oci/kaniko {
+      kaniko = import ./nix/oci/kaniko {
         inherit pkgs;
         inherit pkgsUnstable;
         inherit crossPkgs;
       };
 
-      kics = import ./oci/kics {
+      kics = import ./nix/oci/kics {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      kpack = import ./oci/kpack {
+      kpack = import ./nix/oci/kpack {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      kube-linter = import ./oci/kube-linter {
+      kube-linter = import ./nix/oci/kube-linter {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      kubectl = import ./oci/kubectl {
+      kubectl = import ./nix/oci/kubectl {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      kubesec = import ./oci/kubesec {
+      kubesec = import ./nix/oci/kubesec {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      license_finder = import ./oci/license_finder {
+      license_finder = import ./nix/oci/license_finder {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      #loopy = import ./oci/loopy {
+      #loopy = import ./nix/oci/loopy {
       #  inherit pkgs;
       #  inherit pkgsUnstable;
       #  inherit crossPkgs;
@@ -303,72 +303,72 @@
       #  inherit pkgLoopy;
       #};
 
-      packer = import ./oci/packer {
+      packer = import ./nix/oci/packer {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      pivnet = import ./oci/pivnet {
+      pivnet = import ./nix/oci/pivnet {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      salt = import ./oci/salt {
+      salt = import ./nix/oci/salt {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      secretscanner = import ./oci/secretscanner {
+      secretscanner = import ./nix/oci/secretscanner {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      semgrep = import ./oci/semgrep {
+      semgrep = import ./nix/oci/semgrep {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      skopeo = import ./oci/skopeo {
+      skopeo = import ./nix/oci/skopeo {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      snyk = import ./oci/snyk {
+      snyk = import ./nix/oci/snyk {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      syft = import ./oci/syft {
+      syft = import ./nix/oci/syft {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      #tanzu = import ./oci/tanzu {
+      #tanzu = import ./nix/oci/tanzu {
       #  inherit pkgs;
       #  inherit crossPkgs;
       #};
 
-      terraform = import ./oci/terraform {
+      terraform = import ./nix/oci/terraform {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      terraform-ls = import ./oci/terraform-ls {
+      terraform-ls = import ./nix/oci/terraform-ls {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      tflint = import ./oci/tflint {
+      tflint = import ./nix/oci/tflint {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      tfsec = import ./oci/tfsec {
+      tfsec = import ./nix/oci/tfsec {
         inherit pkgs;
         inherit crossPkgs;
       };
 
-      trivy = import ./oci/trivy {
+      trivy = import ./nix/oci/trivy {
         inherit pkgs;
         inherit crossPkgs;
       };
@@ -377,7 +377,7 @@
     devShells = forAllSystems (system: let
       pkgs = pkgsImportSystem system;
     in {
-      devenv = import ./devshells/devenv {
+      devenv = import ./nix/devshells/devenv {
         inherit inputs;
         inherit pkgs;
       };

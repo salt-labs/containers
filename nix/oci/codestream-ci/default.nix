@@ -131,6 +131,7 @@ in
           brakeman
           buildah
           clair
+          clamav
           cosign
           docker-credential-gcr
           docker-credential-helpers
@@ -148,19 +149,27 @@ in
           license_finder
           nodePackages.snyk
           packer
+          pandoc
+          safety-cli
           secretscanner
+          semgrep
           shellcheck
           skopeo
+          sonar-scanner-cli
           syft
           tflint
           tfsec
           trivy
 
+          # Python
+          python310
+          python310Packages.bandit
+
           # Entrypoint
           entrypoint
 
           # Codestream CLI
-          pkgCodestreamCLI
+          #pkgCodestreamCLI
         ]
         ++ unstablePkgs
         ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "codestream-ci"; };
@@ -186,7 +195,8 @@ in
         "org.opencontainers.image.description" = "Codestream CI";
       };
       Entrypoint = [
-        "${entrypoint}/bin/codestream-ci"
+        #"${entrypoint}/bin/codestream-ci"
+        "${entrypoint}/bin/bash"
       ];
       Cmd = [
       ];

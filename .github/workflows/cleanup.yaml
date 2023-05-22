@@ -7,11 +7,6 @@ on:
 
   workflow_dispatch:
 
-  # TODO: Remove before merging
-  pull_request:
-    branches:
-      - "trunk"
-
 defaults:
   run:
     shell: bash

@@ -18,6 +18,9 @@ in
       pathsToLink = [
         "/bin"
         "/tmp"
+        "/home"
+        "/workdir"
+        "/github"
       ];
 
       paths = with pkgs; [

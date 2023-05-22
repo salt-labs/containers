@@ -25,6 +25,17 @@ in
 
         # Tools
         carvel
+        clusterctl
+        kail
+        kube-bench
+        kube-linter
+        kubectl
+        kubernetes-helm
+        kustomize
+        kustomize-sops
+        sonobuoy
+        sops
+        velero
       ];
     };
 

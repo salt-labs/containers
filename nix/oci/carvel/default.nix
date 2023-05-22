@@ -15,7 +15,10 @@ in
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";
-      pathsToLink = ["/bin"];
+      pathsToLink = [
+        "/bin"
+        "/tmp"
+      ];
 
       paths = with pkgs; [
         # Common

@@ -55,13 +55,13 @@
       flake = true;
     };
 
-    codestream-cli = {
-      type = "github";
-      owner = "salt-labs";
-      repo = "codestream-cli";
-      ref = "trunk";
-      flake = true;
-    };
+    #codestream-cli = {
+    #  type = "github";
+    #  owner = "salt-labs";
+    #  repo = "codestream-cli";
+    #  ref = "trunk";
+    #  flake = true;
+    #};
 
     loopy = {
       type = "github";
@@ -78,7 +78,7 @@
     nixpkgs-unstable,
     devenv,
     poetry2nix,
-    codestream-cli,
+    #codestream-cli,
     loopy,
     ...
   } @ inputs: let
@@ -145,7 +145,7 @@
       crossPkgsUnstable = pkgsImportCrossSystem system hostPlatform;
 
       # codestream-cli
-      pkgCodestreamCLI = codestream-cli.packages.${hostPlatform}.codestream-cli;
+      #pkgCodestreamCLI = codestream-cli.packages.${hostPlatform}.codestream-cli;
 
       # Loopy
       pkgLoopy = loopy.packages.${hostPlatform}.loopy;
@@ -181,13 +181,13 @@
         inherit crossPkgs;
       };
 
-      codestream-ci = import ./nix/oci/codestream-ci {
-        inherit pkgs;
-        inherit pkgsUnstable;
-        inherit crossPkgs;
-        inherit crossPkgsUnstable;
-        inherit pkgCodestreamCLI;
-      };
+      #codestream-ci = import ./nix/oci/codestream-ci {
+      #  inherit pkgs;
+      #  inherit pkgsUnstable;
+      #  inherit crossPkgs;
+      #  inherit crossPkgsUnstable;
+      #  #inherit pkgCodestreamCLI;
+      #};
 
       codeql = import ./nix/oci/codeql {
         inherit pkgs;

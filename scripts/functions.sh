@@ -241,10 +241,10 @@ function build_container() {
 		writeLog "ERROR" "No container provided to build_container function"
 		return 1
 	else
-		CONTAINER="${2}"
+		CONTAINER="${3}"
 	fi
 
-	writeLog "DEBUG" "Building container ${CONTAINER} for ${HOST_SYSTEM} on ${BUILD_SYSTEM}"
+	writeLog "DEBUG" "Building nix package .#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${CONTAINER}"
 
 	nix build --impure ".#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${CONTAINER}" || {
 		writeLog "ERROR" "Failed to build container ${CONTAINER}"

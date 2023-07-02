@@ -4,22 +4,24 @@
   ...
 }: let
   carvel = {
-    ytt = pkgs.fetchurl {
-      name = "ytt";
-      url = "https://github.com/carvel-dev/ytt/releases/download/v0.45.1/ytt-linux-amd64";
-      sha256 = "sha256-AWBtiFzbzgI0D6rcKag7VBUoC8YQ58/z9jk4XY9QSuo=";
-    };
+    # ytt now in Nixpkgs
+    #ytt = pkgs.fetchurl {
+    #  name = "ytt";
+    #  url = "https://github.com/carvel-dev/ytt/releases/download/v0.45.1/ytt-linux-amd64";
+    #  sha256 = "";
+    #};
 
-    kapp = pkgs.fetchurl {
-      name = "kapp";
-      url = "https://github.com/carvel-dev/kapp/releases/download/v0.56.0/kapp-linux-amd64";
-      sha256 = "sha256-J2Sqw4Q1sReKnCMsBytuGEv8iAImhYCrkRoehO68QsE=";
-    };
+    # kapp now in Nixpkgs
+    #kapp = pkgs.fetchurl {
+    #  name = "kapp";
+    #  url = "https://github.com/carvel-dev/kapp/releases/download/v0.56.0/kapp-linux-amd64";
+    #  sha256 = "";
+    #};
 
     kapp-controller = pkgs.fetchurl {
       name = "kctrl";
-      url = "https://github.com/carvel-dev/kapp-controller/releases/download/v0.45.1/kctrl-linux-amd64";
-      sha256 = "sha256-hlov/BCjJZfPAmZWOCgp6bM7tC9V+tcDOLTFmqXeM+U=";
+      url = "https://github.com/carvel-dev/kapp-controller/releases/download/v0.46.1/kctrl-linux-amd64";
+      sha256 = "sha256-+NsFTbieIE0rHKsWWZisFDSp9fqPxP/q5SpMF7HlKUI=";
     };
 
     kbld = pkgs.fetchurl {
@@ -30,15 +32,16 @@
 
     imgpkg = pkgs.fetchurl {
       name = "imgpkg";
-      url = "https://github.com/carvel-dev/imgpkg/releases/download/v0.36.2/imgpkg-linux-amd64";
-      sha256 = "sha256-VpaXZr+yN5esmCXhtXgiFf7gtMbyinuBlrq+TT7Fw2U=";
+      url = "https://github.com/carvel-dev/imgpkg/releases/download/v0.37.2/imgpkg-linux-amd64";
+      sha256 = "sha256-GjuBui8nv8e36/B6uiLA5XRZZQg1PXfm1jPqk4NB+/w=";
     };
 
-    vendir = pkgs.fetchurl {
-      name = "vendir";
-      url = "https://github.com/carvel-dev/vendir/releases/download/v0.33.2/vendir-linux-amd64";
-      sha256 = "sha256-LMj42zF2hffScCZHErsx77/eFOlbBl8xzR4tjJ7rLTQ=";
-    };
+    # vendir now in Nixpkgs
+    #vendir = pkgs.fetchurl {
+    #  name = "vendir";
+    #  url = "https://github.com/carvel-dev/vendir/releases/download/v0.33.2/vendir-linux-amd64";
+    #  sha256 = "";
+    #};
   };
 in
   pkgs.stdenv.mkDerivation {
@@ -50,12 +53,12 @@ in
     installPhase = ''
       mkdir --parents $out/bin
 
-      install --verbose ${carvel.ytt} $out/bin/ytt
-      install --verbose ${carvel.kapp} $out/bin/kapp
+      #install --verbose $\{carvel.ytt} $out/bin/ytt
+      #install --verbose $\{carvel.kapp} $out/bin/kapp
       install --verbose ${carvel.kapp-controller} $out/bin/kctrl
       install --verbose ${carvel.kbld} $out/bin/kbld
       install --verbose ${carvel.imgpkg} $out/bin/imgpkg
-      install --verbose ${carvel.vendir} $out/bin/vendir
+      #install --verbose $\{carvel.vendir} $out/bin/vendir
     '';
 
     meta = {

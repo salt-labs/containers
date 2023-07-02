@@ -19,7 +19,7 @@
       type = "github";
       owner = "NixOS";
       repo = "nixpkgs";
-      ref = "nixos-22.11";
+      ref = "nixos-23.05";
       flake = true;
     };
 
@@ -84,44 +84,63 @@
   } @ inputs: let
     inherit (self) outputs;
 
-    system = "x86_64-linux";
-
-    systems = [
-      "aarch64-darwin"
-      "aarch64-linux"
-      "x86_64-darwin"
+    supportedSystems = [
+      #"aarch64-darwin"
+      #"aarch64-linux"
+      #"x86_64-darwin"
       "x86_64-linux"
     ];
 
     forAllSystems = f:
-      builtins.listToAttrs (map (name: {
-          inherit name;
-          value = f name;
+      builtins.listToAttrs (map (buildPlatform: {
+          name = buildPlatform;
+          value = builtins.listToAttrs (map (hostPlatform: {
+              name = hostPlatform;
+              value = f buildPlatform hostPlatform;
+            })
+            supportedSystems);
         })
-        systems);
-
-    pkgsImportSystem = system:
-      import inputs.nixpkgs {
-        inherit system;
-      };
-
-    pkgsImportSystemUnstable = system:
-      import inputs.nixpkgs-unstable {inherit system;};
+        supportedSystems);
 
     pkgsImportCrossSystem = buildPlatform: hostPlatform:
-      if buildPlatform == hostPlatform
-      then
-        import inputs.nixpkgs {
-          system = buildPlatform;
-          localSystem = buildPlatform;
-          crossSystem = buildPlatform;
-        }
-      else
-        import inputs.nixpkgs {
-          system = buildPlatform;
-          localSystem = buildPlatform;
-          crossSystem = hostPlatform;
+      import nixpkgs {
+        system = buildPlatform;
+        overlays = [];
+        config = {
+          allowUnfree = true;
+          allowUnfreePredicate = _: true;
         };
+        crossSystem =
+          if buildPlatform == hostPlatform
+          then null
+          else {
+            config = hostPlatform;
+          };
+      };
+
+    pkgsImportCrossSystemUnstable = buildPlatform: hostPlatform:
+      import nixpkgs-unstable {
+        system = buildPlatform;
+        overlays = [];
+        config = {
+          allowUnfree = true;
+          allowUnfreePredicate = _: true;
+        };
+        crossSystem =
+          if buildPlatform == hostPlatform
+          then null
+          else {
+            config = hostPlatform;
+          };
+      };
+
+    flattenPackages = systems:
+      builtins.foldl' (acc: system:
+        builtins.foldl' (
+          innerAcc: hostPlatform:
+            innerAcc // {"${system}.${hostPlatform}" = systems.${system}.${hostPlatform};}
+        )
+        acc (builtins.attrNames systems.${system})) {} (builtins.attrNames systems);
 
     pkgsAllowUnfree = {
       nixpkgs = {
@@ -132,17 +151,18 @@
       };
     };
   in {
-    packages = forAllSystems (hostPlatform: let
+    ###############
+    # Packages
+    ###############
+    packages = flattenPackages (forAllSystems (buildPlatform: hostPlatform: let
       # Build Platform
-      inherit system;
-      inherit (self.packages.${system}) default;
-      pkgs = pkgsImportSystem system;
-      pkgsUnstable = pkgsImportSystemUnstable system;
+      system = buildPlatform;
+      pkgs = pkgsImportCrossSystem buildPlatform buildPlatform;
+      pkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform buildPlatform;
 
       # Host Platform
-      inherit hostPlatform;
-      crossPkgs = pkgsImportCrossSystem system hostPlatform;
-      crossPkgsUnstable = pkgsImportCrossSystem system hostPlatform;
+      crossPkgs = pkgsImportCrossSystem buildPlatform hostPlatform;
+      crossPkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform hostPlatform;
 
       # codestream-cli
       #pkgCodestreamCLI = codestream-cli.packages.${hostPlatform}.codestream-cli;
@@ -162,6 +182,7 @@
 
       carvel = import ./nix/oci/carvel {
         inherit pkgs;
+        inherit pkgsUnstable;
         inherit crossPkgs;
       };
 
@@ -372,15 +393,36 @@
         inherit pkgs;
         inherit crossPkgs;
       };
-    });
+    }));
 
-    devShells = forAllSystems (system: let
-      pkgs = pkgsImportSystem system;
+    ###############
+    # DevShells
+    ###############
+    devShells = flattenPackages (forAllSystems (buildPlatform: hostPlatform: let
+      # Build Platform
+      system = buildPlatform;
+      pkgs = pkgsImportCrossSystem buildPlatform buildPlatform;
+      pkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform buildPlatform;
+
+      # Host Platform
+      crossPkgs = pkgsImportCrossSystem buildPlatform hostPlatform;
+      crossPkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform hostPlatform;
     in {
       devenv = import ./nix/devshells/devenv {
         inherit inputs;
+        inherit system;
         inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+        inherit crossPkgsUnstable;
       };
-    });
+    }));
+
+    # Set the default devshell to the one for the current system.
+    devShell = builtins.listToAttrs (map (system: {
+        name = system;
+        value = self.devShells."${system}.${system}".devenv;
+      })
+      supportedSystems);
   };
 }

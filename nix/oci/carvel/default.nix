@@ -1,5 +1,6 @@
 {
   pkgs,
+  pkgsUnstable,
   crossPkgs,
   ...
 }: let
@@ -30,7 +31,6 @@ in
         cacert
 
         # Tools
-        carvel
         clusterctl
         kail
         kube-bench
@@ -42,6 +42,12 @@ in
         sonobuoy
         sops
         velero
+
+        # Carvel
+        carvel
+        pkgsUnstable.ytt
+        pkgsUnstable.kapp
+        pkgsUnstable.vendir
       ];
     };
 

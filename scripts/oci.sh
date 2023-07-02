@@ -90,15 +90,14 @@ fi
 
 writeLog "INFO" "Processing system images for ${IMAGE_NAME} ${BUILD_SYSTEM}-${HOST_SYSTEM}"
 
-# Verify there is a package section in the flake matching the image.
-#PACKAGE_NAME=".\"packages\".\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".\"${IMAGE_NAME}\" | keys[]"
-PACKAGE_NAME=".packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${IMAGE_NAME}"
-
-writeLog "INFO" "Looking for package ${PACKAGE_NAME} in flake.nix"
-
 nix --version
 
-nix flake show --all-systems --json | jq -r "${PACKAGE_NAME}" || {
+# .#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${IMAGE_NAME}"
+nix flake show --all-systems --json | jq \
+	--arg build_system "$BUILD_SYSTEM" \
+	--arg host_system "$HOST_SYSTEM" \
+	--arg image_name "$IMAGE_NAME" \
+	'.#packages."$build_system.$host_system".$image_name' || {
 	writeLog "ERROR" "No package found for $IMAGE_NAME in $SYSTEM. Have you added it to flake.nix?"
 	exit 1
 }

@@ -92,11 +92,13 @@ writeLog "INFO" "Processing system images for ${IMAGE_NAME} ${BUILD_SYSTEM}-${HO
 
 # Verify there is a package section in the flake matching the image.
 #PACKAGE_NAME=".\"packages\".\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".\"${IMAGE_NAME}\" | keys[]"
-PACKAGE_NAME=".\"packages\".\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".\"${IMAGE_NAME}\""
+PACKAGE_NAME=".packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${IMAGE_NAME}"
 
 writeLog "INFO" "Looking for package ${PACKAGE_NAME} in flake.nix"
 
-nix flake show --json | jq -r "${PACKAGE_NAME}" || {
+nix --version
+
+nix flake show --all-systems --json | jq -r "${PACKAGE_NAME}" || {
 	writeLog "ERROR" "No package found for $IMAGE_NAME in $SYSTEM. Have you added it to flake.nix?"
 	exit 1
 }

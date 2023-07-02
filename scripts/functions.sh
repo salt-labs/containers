@@ -219,24 +219,34 @@ function checkResult() {
 
 function build_container() {
 
-	local SYSTEM
+	local BUILD_SYSTEM
+	local HOST_SYSTEM
 	local CONTAINER
 
 	if [[ ${1:-EMPTY} == "EMPTY" ]]; then
-		writeLog "ERROR" "No system provided to build_container function"
+		writeLog "ERROR" "No build system provided to build_container function"
 		return 1
 	else
-		SYSTEM="${1}"
+		BUILD_SYSTEM="${1}"
 	fi
 
 	if [[ ${2:-EMPTY} == "EMPTY" ]]; then
+		writeLog "ERROR" "No host system provided to build_container function"
+		return 1
+	else
+		HOST_SYSTEM="${2}"
+	fi
+
+	if [[ ${3:-EMPTY} == "EMPTY" ]]; then
 		writeLog "ERROR" "No container provided to build_container function"
 		return 1
 	else
-		CONTAINER="${2}"
+		CONTAINER="${3}"
 	fi
 
-	nix build --impure ".#packages.${SYSTEM}.${CONTAINER}" || {
+	writeLog "DEBUG" "Building nix package .#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${CONTAINER}"
+
+	nix build --impure ".#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${CONTAINER}" || {
 		writeLog "ERROR" "Failed to build container ${CONTAINER}"
 		exit 1
 	}

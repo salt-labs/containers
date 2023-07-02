@@ -66,7 +66,8 @@ checkVarEmpty "REGISTRY_PASSWORD" "Password" && exit 1
 checkVarEmpty "REGISTRY_PATH" "Registry Path" && exit 1
 checkVarEmpty "IMAGE_NAME" "Image Name" && exit 1
 checkVarEmpty "IMAGE_TAG" "Image Tag" && exit 1
-checkVarEmpty "SYSTEM" "Nix system architecture" && exit 1
+checkVarEmpty "BUILD_SYSTEM" "Nix build system architecture" && exit 1
+checkVarEmpty "HOST_SYSTEM" "Nix host system architecture" && exit 1
 
 #########################
 # Prepare
@@ -87,12 +88,16 @@ if [[ ! -f "flake.nix" ]]; then
 	exit 1
 fi
 
-writeLog "INFO" "Processing system images for ${IMAGE_NAME} ${SYSTEM}"
+writeLog "INFO" "Processing system images for ${IMAGE_NAME} ${BUILD_SYSTEM}-${HOST_SYSTEM}"
 
-# Verify there is a package section in the flake matching the image.
-PACKAGE_NAME=".\"packages\".\"${SYSTEM}\".\"${IMAGE_NAME}\" | keys[]"
+nix --version
 
-nix flake show --json | jq -r "${PACKAGE_NAME}" || {
+# .#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${IMAGE_NAME}"
+nix flake show --all-systems --json | jq \
+	--arg build_system "$BUILD_SYSTEM" \
+	--arg host_system "$HOST_SYSTEM" \
+	--arg image_name "$IMAGE_NAME" \
+	'.#packages."$build_system.$host_system".$image_name' || {
 	writeLog "ERROR" "No package found for $IMAGE_NAME in $SYSTEM. Have you added it to flake.nix?"
 	exit 1
 }
@@ -101,7 +106,7 @@ if [[ ${CONTAINER_BUILD^^} == "TRUE" ]]; then
 
 	writeLog "INFO" "Building container image ${IMAGE_NAME}"
 
-	build_container "${SYSTEM}" "${IMAGE_NAME}" || {
+	build_container "${BUILD_SYSTEM}" "${HOST_SYSTEM}" "${IMAGE_NAME}" || {
 		echo "Failed to build container image ${IMAGE_NAME}"
 		exit 1
 	}

@@ -97,6 +97,7 @@ in
         "/usr"
         "/var"
         "/tmp"
+        "/workdir"
       ];
 
       paths = with pkgs;

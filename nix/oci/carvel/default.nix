@@ -1,5 +1,6 @@
 {
   pkgs,
+  pkgsUnstable,
   crossPkgs,
   ...
 }: let
@@ -15,7 +16,13 @@ in
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";
-      pathsToLink = ["/bin"];
+      pathsToLink = [
+        "/bin"
+        "/tmp"
+        "/home"
+        "/workdir"
+        "/github"
+      ];
 
       paths = with pkgs; [
         # Common
@@ -24,7 +31,23 @@ in
         cacert
 
         # Tools
+        clusterctl
+        kail
+        kube-bench
+        kube-linter
+        kubectl
+        kubernetes-helm
+        kustomize
+        kustomize-sops
+        sonobuoy
+        sops
+        velero
+
+        # Carvel
         carvel
+        pkgsUnstable.ytt
+        pkgsUnstable.kapp
+        pkgsUnstable.vendir
       ];
     };
 

@@ -16,7 +16,7 @@ function checkBin() {
 	local COMMAND="$1"
 
 	#if ( command -v "${COMMAND}" 1> /dev/null ) ; # command breaks with aliases
-	if (type -P "${COMMAND}" &>/dev/null); then
+	if (type -P "${COMMAND}" &> /dev/null); then
 		writeLog "DEBUG" "The command $COMMAND is available in the Path"
 		return 0
 	else
@@ -68,36 +68,36 @@ function checkLogLevel() {
 	# LOGLEVEL="$( echo "${1}" | tr '[:lower:]' '[:upper:]' )"
 	case "${LEVEL^^}" in
 
-	"DEBUG" | "TRACE")
+		"DEBUG" | "TRACE")
 
-		export LOGLEVEL="DEBUG"
+			export LOGLEVEL="DEBUG"
 
-		;;
+			;;
 
-	"INFO" | "INFORMATION")
+		"INFO" | "INFORMATION")
 
-		export LOGLEVEL="INFO"
+			export LOGLEVEL="INFO"
 
-		;;
+			;;
 
-	"WARN" | "WARNING")
+		"WARN" | "WARNING")
 
-		export LOGLEVEL="WARN"
+			export LOGLEVEL="WARN"
 
-		;;
+			;;
 
-	"ERR" | "ERROR")
+		"ERR" | "ERROR")
 
-		export LOGLEVEL="ERR"
+			export LOGLEVEL="ERR"
 
-		;;
+			;;
 
-	*)
+		*)
 
-		writeLog "INFO" "An unknown log level of ${LEVEL^^} was provided, defaulting to INFO"
-		export LOGLEVEL="INFO"
+			writeLog "INFO" "An unknown log level of ${LEVEL^^} was provided, defaulting to INFO"
+			export LOGLEVEL="INFO"
 
-		;;
+			;;
 
 	esac
 
@@ -124,53 +124,53 @@ function writeLog() {
 
 	case "${LEVEL^^}" in
 
-	"DEBUG" | "TRACE")
+		"DEBUG" | "TRACE")
 
-		LEVEL="DEBUG"
+			LEVEL="DEBUG"
 
-		# Do not show debug messages if the level is > debug
-		if [ ! "${LEVEL^^}" = "${LOGLEVEL^^}" ]; then
-			return 0
-		fi
+			# Do not show debug messages if the level is > debug
+			if [ ! "${LEVEL^^}" = "${LOGLEVEL^^}" ]; then
+				return 0
+			fi
 
-		;;
+			;;
 
-	"INFO" | "INFORMATION")
+		"INFO" | "INFORMATION")
 
-		LEVEL="INFO"
+			LEVEL="INFO"
 
-		# Do not show info messages if the level is > info
-		if [ "${LOGLEVEL^^}" = "WARN" ] || [ "${LOGLEVEL^^}" = "ERR" ]; then
-			return 0
-		fi
+			# Do not show info messages if the level is > info
+			if [ "${LOGLEVEL^^}" = "WARN" ] || [ "${LOGLEVEL^^}" = "ERR" ]; then
+				return 0
+			fi
 
-		;;
+			;;
 
-	"WARN" | "WARNING")
+		"WARN" | "WARNING")
 
-		LEVEL="WARN"
+			LEVEL="WARN"
 
-		# Do not show warn messages if the level is > warn
-		if [ "${LOGLEVEL^^}" = "ERR" ]; then
-			return 0
-		fi
+			# Do not show warn messages if the level is > warn
+			if [ "${LOGLEVEL^^}" = "ERR" ]; then
+				return 0
+			fi
 
-		;;
+			;;
 
-	"ERR" | "ERROR")
+		"ERR" | "ERROR")
 
-		LEVEL="ERR"
+			LEVEL="ERR"
 
-		# Errors are always shown
+			# Errors are always shown
 
-		;;
+			;;
 
-	*)
+		*)
 
-		MESSAGE="Unknown log level ${LEVEL^^} provided to log function. Valid options are DEBUG, INFO, WARN, ERR"
-		LEVEL="ERR"
+			MESSAGE="Unknown log level ${LEVEL^^} provided to log function. Valid options are DEBUG, INFO, WARN, ERR"
+			LEVEL="ERR"
 
-		;;
+			;;
 
 	esac
 
@@ -244,7 +244,7 @@ function build_container() {
 		CONTAINER="${2}"
 	fi
 
-	nix build --impure ".#packages.${BUILD_SYSTEM}.${HOST_SYSTEM}.${CONTAINER}" || {
+	nix build --impure ".#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${CONTAINER}" || {
 		writeLog "ERROR" "Failed to build container ${CONTAINER}"
 		exit 1
 	}

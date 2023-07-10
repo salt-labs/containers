@@ -3,20 +3,10 @@
   crossPkgs,
   ...
 }: let
-  tanzu_1 = pkgs.callPackage ./tanzu_1.nix {
+  tanzu = pkgs.callPackage ./tanzu.nix {
     inherit pkgs;
     inherit crossPkgs;
   };
-
-  tanzu_2 = pkgs.callPackage ./tanzu_2.nix {
-    inherit pkgs;
-    inherit crossPkgs;
-  };
-
-  tanzu = pkgs.writeShellScriptBin "tanzu" ''
-    #!/bin/sh
-    /bin/tanzu-2.1.0 "$@"
-  '';
 in
   pkgs.dockerTools.buildImage {
     name = "tanzu";
@@ -35,8 +25,6 @@ in
 
         # Tools
         tanzu
-        tanzu_1
-        tanzu_2
       ];
     };
 

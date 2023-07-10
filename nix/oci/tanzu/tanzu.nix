@@ -1,13 +1,9 @@
-{
-  pkgs,
-  crossPkgs,
-  ...
-}: let
-  product_name = "tanzu_2";
-  product_version = "2.1.0";
+{pkgs, ...}: let
+  product_name = "tkg";
+  product_version = "2.2.0";
   filename = "tanzu-cli-bundle-linux-amd64.tar.gz";
-  checksum = "03c9b77e65ef8ba0b7d7b51df583fdb32d47171bcc8c1a67536aa2d2afad9f0a";
-  homepage = "https://customerconnect.vmware.com/downloads/details?downloadGroup=TKG-210&productId=1400";
+  checksum = "0j640sq4yfidmzr4rbdrqnjczm7xsrnkagsaz9hnrg57sxlzii7h";
+  homepage = "https://customerconnect.vmware.com/downloads/details?downloadGroup=TKG-220&productId=1400";
 in
   pkgs.stdenv.mkDerivation {
     name = product_name;
@@ -25,6 +21,7 @@ in
         Once you have downloaded the file, please use the following command and re-run the installation:
 
         nix-prefetch-url file://\$PWD/${filename}
+        nix-hash --type sha256 --flat --base32 ${filename}
       '';
     };
 
@@ -46,7 +43,7 @@ in
 
       source=unpack/cli/core/*/tanzu-core-linux_amd64
 
-      install --verbose $source $out/bin/tanzu-${product_version}
+      install --verbose $source $out/bin/tanzu
     '';
 
     meta = {

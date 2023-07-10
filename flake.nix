@@ -2,7 +2,7 @@
 # Notes:
 #
 #   # Build & run container
-#   nix build --impure ".#${CONTAINER}"
+#   nix build --impure ".#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${CONTAINER}"
 #   docker load < result
 #   docker run -it --rm ${CONTAINER}:latest
 #   Examples: https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/docker/examples.nix
@@ -10,9 +10,12 @@
 #   # Use devShell
 #   nix develop
 #
+#   # Pre-fetch into cache
+#   nix build X | cachix push
+#
 ##################################################
 {
-  description = "Container images built with Nix";
+  description = "Containers";
 
   inputs = {
     nixpkgs = {
@@ -364,10 +367,10 @@
         inherit crossPkgs;
       };
 
-      #tanzu = import ./nix/oci/tanzu {
-      #  inherit pkgs;
-      #  inherit crossPkgs;
-      #};
+      tanzu = import ./nix/oci/tanzu {
+        inherit pkgs;
+        inherit crossPkgs;
+      };
 
       terraform = import ./nix/oci/terraform {
         inherit pkgs;

@@ -44,6 +44,7 @@ in
         "/sbin"
         "/tmp"
         "/usr"
+        "/usr/bin"
         "/var"
         "/workdir"
       ];
@@ -175,14 +176,6 @@ in
 
     # Run extra commands after the container is created in the final layer.
     extraCommands = ''
-      # For usr/bin/env
-      mkdir usr
-      ln -s ../bin usr/bin
-
-      mkdir -m 1777 tmp
-
-      mkdir -vp root
-
       # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
       chmod +w lib64
       ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2

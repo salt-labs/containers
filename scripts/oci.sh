@@ -97,11 +97,16 @@ if [[ -f "${HOME}/.config/nix/nix.conf" ]]; then
 	cat "${HOME}/.config/nix/nix.conf"
 fi
 
-if rm "${HOME}"/.cache/nix/binary-cache-v*.sqlite*; then
-	writeLog "INFO" "Removed existing Nix binary cache"
-else
-	writeLog "WARNING" "No existing Nix binary cache found"
-fi
+NIX_BIN_CACHE="${HOME}/.cache/nix/"
+COUNT=0
+while IFS= read -r -d '' FILE; do
+	((COUNT++))
+	writeLog "INFO" "Deleting binary cache file ${FILE}"
+	rm -f "${FILE}" || {
+		writeLog "WARN" "Failed to delete binary cache file ${FILE}, skipping"
+	}
+done < <(find "${NIX_BIN_CACHE}" -type f -name "binary-cacye-v*.sqlite" -print0)
+writeLog "INFO" "Deleted ${COUNT} binary cache files"
 
 # .#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${IMAGE_NAME}"
 nix flake show --all-systems --json | jq \

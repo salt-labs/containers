@@ -11,7 +11,7 @@
 #   nix develop
 #
 #   # Pre-fetch into cache
-#   nix build X | cachix push
+#   nix build X --json | jq '.[0].outputs.out' | cachix push salt-labs
 #
 ##################################################
 {

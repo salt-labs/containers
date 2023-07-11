@@ -70,12 +70,16 @@ in
       pathsToLink = [
         "/bin"
         "/etc"
+        "/github"
         "/home"
         "/lib"
         "/lib64"
         "/root"
+        "/run"
+        "/sbin"
         "/tmp"
         "/usr"
+        "/var"
         "/workdir"
         "/workspaces"
         "/tmp"
@@ -83,19 +87,65 @@ in
 
       paths = with pkgs;
         [
-          bashInteractive
+          # Common
           bash-completion
-          coreutils-full
-          which
+          bashInteractive
           cacert
+          coreutils-full
+          curlFull
+          figlet
+          git
+          gnugrep
+          gnused
+          gnutar
+          gzip
+          jq
+          less
+          procps
+          ripgrep
+          shadow
+          starship
+          su
+          tree
+          unzip
+          wget
+          which
+          xz
+          yq
 
           # VSCode
-          iproute
-          glibc
-          getent
           findutils
           gcc-unwrapped
+          glibc
+          iproute
           nodejs
+
+          # Docker Tools
+          #dive
+          #docker
+          #docker-buildx
+          #docker-gc
+          #docker-ls
+
+          # Kubernetes Tools
+          #clusterctl
+          #kail
+          #kapp
+          #kube-bench
+          #kube-linter
+          #kubectl
+          #kubernetes-helm
+          #kustomize
+          #kustomize-sops
+          #sonobuoy
+          #sops
+          #velero
+          #vendir
+          #ytt
+
+          # Custom derivations
+          #carvel
+          #tanzu
         ]
         ++ environmentHelpers;
     };
@@ -131,111 +181,10 @@ in
     '';
 
     /*
-
-    contents = pkgs.buildEnv {
-      name = "image-root";
-
-      pathsToLink = [
-        "/bin"
-        "/etc"
-        "/github"
-        "/home"
-        "/lib"
-        "/lib64"
-        "/root"
-        "/run"
-        "/sbin"
-        "/tmp"
-        "/usr"
-        "/usr/bin"
-        "/usr/lib"
-        "/var"
-        "/workdir"
-        "/workspace"
-      ];
-
-      paths = with pkgs;
-        [
-          # Common
-          acl
-          bash-completion
-          bashInteractive
-          cacert
-          coreutils-full
-          curlFull
-          findutils
-          figlet
-          gcc-unwrapped
-          getent
-          git
-          glibc
-          gnugrep
-          gnused
-          gnutar
-          gzip
-          iproute
-          jq
-          less
-          procps
-          ripgrep
-          nodejs
-          shadow
-          starship
-          su
-          tree
-          unzip
-          wget
-          which
-          xz
-          yq
-
-          # Docker Tools
-          dive
-          docker
-          docker-buildx
-          docker-gc
-          docker-ls
-
-          # Kubernetes Tools
-          clusterctl
-          kail
-          kapp
-          kube-bench
-          kube-linter
-          kubectl
-          kubernetes-helm
-          kustomize
-          kustomize-sops
-          sonobuoy
-          sops
-          velero
-          vendir
-          ytt
-
-          # Custom derivations
-          carvel
-          tanzu
-        ]
-        ++ environmentHelpers;
-    };
-
-    enableFakechroot = true;
-
     fakeRootCommands = ''
       #!${pkgs.runtimeShell}
 
       ${pkgs.dockerTools.shadowSetup}
-
-      cat << EOF > /etc/os-release
-      NAME="SaltOS"
-      VERSION_ID="1"
-      VERSION="1"
-      VERSION_CODENAME="base"
-      ID=saltos
-      HOME_URL="https://www.saltlabs.tech/"
-      SUPPORT_URL="https://www.saltlabs.tech/"
-      BUG_REPORT_URL="https://github.com/salt-labs/containers/issues"
-      EOF
 
       groupadd \
         ${containerUser} || {
@@ -276,18 +225,6 @@ in
       chmod --verbose --recursive 1777 /tmp || exit 1
     '';
 
-    # Run extra commands after the container is created in the final layer.
-    extraCommands = ''
-      # Symlink bin to usr/bin
-      ln -s ../bin usr/bin
-
-      # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
-      chmod +w lib64
-      ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
-      ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
-      chmod -w lib64
-    '';
-
     */
 
     config = {
@@ -299,6 +236,7 @@ in
         "${pkgs.bashInteractive}/bin/bash"
       ];
       Cmd = [
+        "/bin/bash"
       ];
       ExposedPorts = {
       };

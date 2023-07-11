@@ -178,7 +178,7 @@ in
       EOF
 
       # Setup the .bashrc for the vscode user.
-      cat << EOF > "/home/vscode/.bashrc"
+      cat << 'EOF' > "/home/vscode/.bashrc"
       figlet "VSCode"
       if [[ "''${VSCODE:-FALSE}" == "TRUE" ]];
       then
@@ -219,7 +219,6 @@ in
       Env = [
         "CHARSET=UTF-8"
         "DOCKER_CONFIG=/home/${containerUser}/.docker"
-        "HOME=/home/${containerUser}"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
         "LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib;${pkgs.gcc-unwrapped.lib}/lib64"
@@ -230,7 +229,6 @@ in
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "TERM=xterm"
         "TZ=UTC"
-        "USER=${containerUser}"
         "WORKDIR=/workdir"
       ];
       WorkingDir = "/workdir";

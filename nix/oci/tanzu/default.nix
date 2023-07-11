@@ -37,6 +37,7 @@
         "/sbin"
         "/usr"
         "/usr/bin"
+        "/usr/lib"
         "/var"
       ];
       paths = with pkgs; [
@@ -77,6 +78,7 @@ in
         "/tmp"
         "/usr"
         "/usr/bin"
+        "/usr/lib"
         "/var"
         "/workdir"
       ];

@@ -80,31 +80,31 @@ in
           iproute
 
           # Docker Tools
-          #dive
-          #docker
-          #docker-buildx
-          #docker-gc
-          #docker-ls
+          dive
+          docker
+          docker-buildx
+          docker-gc
+          docker-ls
 
           # Kubernetes Tools
-          #clusterctl
-          #kail
-          #kapp
-          #kube-bench
-          #kube-linter
-          #kubectl
-          #kubernetes-helm
-          #kustomize
-          #kustomize-sops
-          #sonobuoy
-          #sops
-          #velero
-          #vendir
-          #ytt
+          clusterctl
+          kail
+          kapp
+          kube-bench
+          kube-linter
+          kubectl
+          kubernetes-helm
+          kustomize
+          kustomize-sops
+          sonobuoy
+          sops
+          velero
+          vendir
+          ytt
 
           # Custom derivations
-          #carvel
-          #tanzu
+          carvel
+          tanzu
         ]
         ++ environmentHelpers;
     };
@@ -177,6 +177,21 @@ in
       figlet "Tanzu CLI"
       EOF
 
+      # Setup the .bashrc for the vscode user.
+      cat << EOF > "/home/vscode/.bashrc"
+      figlet "VSCode"
+      if [[ "$\{VSCODE:=FALSE\}" == "TRUE" ]];
+      then
+        while true;
+        do
+          echo "Running VSCode devcontainer loop..."
+          sleep 300
+        done
+      else
+        echo "Running VSCode devcontainer interactively..."
+      fi
+      EOF
+
       # Set permissions on required directories
       mkdir --parents --mode 0777 /tmp || exit 1
       mkdir --parents --mode 0777 /workdir || exit 1
@@ -189,60 +204,12 @@ in
     extraCommands = ''
     '';
 
-    /*
-    fakeRootCommands = ''
-      #!${pkgs.runtimeShell}
-
-      ${pkgs.dockerTools.shadowSetup}
-
-      groupadd \
-        ${containerUser} || {
-          echo "Failed to create group ${containerUser}"
-          exit 1
-        }
-
-      groupadd \
-        docker || {
-          echo "Failed to create group docker"
-          exit 1
-        }
-
-      useradd \
-        --home-dir /home/${containerUser} \
-        --shell ${pkgs.bashInteractive}/bin/bash \
-        --create-home \
-        --user-group \
-        --groups docker \
-        ${containerUser} || {
-          echo "Failed to create user ${containerUser}"
-          exit 1
-        }
-
-      cat << EOF > /home/${containerUser}/.bashrc
-      eval "\$(starship init bash)"
-      tanzu plugin clean || {
-        echo "Failed to clean the Tanzu CLI plugins"
-      }
-      tanzu init || {
-        echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
-      }
-      figlet "Tanzu CLI"
-      EOF
-
-      chmod --verbose --recursive 0777 /home/${containerUser} || exit 1
-      chmod --verbose --recursive 0777 /workdir /workspace || exit 1
-      chmod --verbose --recursive 1777 /tmp || exit 1
-    '';
-
-    */
-
     config = {
       User = containerUser;
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };
       Entrypoint = [
-        #"${pkgs.bashInteractive}/bin/bash"
       ];
       Cmd = [
         "${pkgs.bashInteractive}/bin/bash"

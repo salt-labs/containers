@@ -70,6 +70,7 @@ in
       pathsToLink = [
         "/bin"
         "/etc"
+        "/home"
         "/lib"
         "/lib64"
         "/root"
@@ -77,6 +78,7 @@ in
         "/usr"
         "/workdir"
         "/workspaces"
+        "/tmp"
       ];
 
       paths = with pkgs;
@@ -89,6 +91,7 @@ in
           # VSCode
           findutils
           gcc-unwrapped
+          nodejs
         ]
         ++ environmentHelpers;
     };
@@ -109,6 +112,9 @@ in
       SUPPORT_URL="https://www.saltlabs.tech/"
       BUG_REPORT_URL="https://github.com/salt-labs/containers/issues"
       EOF
+
+      # Set permissions
+      chmod --verbose --recursive 1777 /tmp || exit 1
     '';
 
     # Runs in the final layer, on top of other layers.

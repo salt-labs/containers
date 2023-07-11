@@ -72,8 +72,8 @@ in
         "/etc"
         "/github"
         "/home"
-        "/lib"
-        "/lib64"
+        #"/lib"
+        #"/lib64"
         "/root"
         "/run"
         "/sbin"
@@ -83,6 +83,7 @@ in
         "/workdir"
         "/workspaces"
         "/tmp"
+        "/vscode"
       ];
 
       paths = with pkgs;
@@ -93,14 +94,18 @@ in
           cacert
           coreutils-full
           curlFull
+          diffutils
           figlet
+          gawk
           git
+          gnupg
           gnugrep
           gnused
           gnutar
           gzip
           jq
           less
+          openssh
           procps
           ripgrep
           shadow
@@ -118,7 +123,6 @@ in
           gcc-unwrapped
           glibc
           iproute
-          nodejs
 
           # Docker Tools
           #dive
@@ -167,17 +171,22 @@ in
       BUG_REPORT_URL="https://github.com/salt-labs/containers/issues"
       EOF
 
+      # VSCode includes a bundled nodejs binary which is hardcoded to look in /lib
+      ln -s ${pkgs.glibc}/lib /lib
+
       # Set permissions
-      chmod --verbose --recursive 1777 /tmp || exit 1
+      chmod --verbose --recursive 0777 /tmp || exit 1
+      chmod --verbose --recursive 0744 /vscode || exit 1
     '';
 
     # Runs in the final layer, on top of other layers.
     extraCommands = ''
       # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
-      chmod +w lib64
-      ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
-      ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
-      chmod -w lib64
+      #chmod +w lib64
+      #ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
+      #ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
+      #chmod -w lib64
+
     '';
 
     /*
@@ -247,7 +256,8 @@ in
         "HOME=/root"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        "LD_LIBRARY_PATH=${pkgs.gcc-unwrapped.lib}/lib64"
+        #"LD_LIBRARY_PATH=${pkgs.gcc-unwrapped.lib}/lib64"
+        "LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib"
         "PAGER=less"
         "NIX_PAGER=less"
         "PATH=/workdir:/usr/bin:/bin:/sbin"
@@ -259,5 +269,8 @@ in
         "WORKDIR=/workdir"
       ];
       WorkingDir = "/workdir";
+      Volumes = {
+        "/vscode" = {};
+      };
     };
   }

@@ -57,6 +57,7 @@ in
           curlFull
           figlet
           getent
+          git
           gnugrep
           gnutar
           gzip
@@ -109,6 +110,22 @@ in
 
       ${pkgs.dockerTools.shadowSetup}
 
+      cat << EOF > /etc/os-release
+      BUG_REPORT_URL="https://github.com/NixOS/nixpkgs/issues"
+      BUILD_ID="container"
+      DOCUMENTATION_URL="https://nixos.org/learn.html"
+      HOME_URL="https://nixos.org/"
+      ID=nixos
+      LOGO="nix-snowflake"
+      NAME=NixOS
+      PRETTY_NAME="NixOS"
+      SUPPORT_END="Unknown"
+      SUPPORT_URL="https://nixos.org/community.html"
+      VERSION="container"
+      VERSION_CODENAME=container
+      VERSION_ID="container"
+      EOF
+
       groupadd \
         ${containerUser} || {
           echo "Failed to create group ${containerUser}"
@@ -138,7 +155,7 @@ in
         echo "Failed to clean the Tanzu CLI plugins"
       }
       tanzu init || {
-        echo "Failed to initialise the Tanzu CLI. Please check network connectivity and try again."
+        echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
       }
       figlet "Tanzu CLI"
       EOF

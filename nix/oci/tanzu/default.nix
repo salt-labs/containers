@@ -36,21 +36,8 @@ in
 
       pathsToLink = [
         "/bin"
-        "/etc"
-        "/github"
-        "/home"
-        #"/lib"
-        #"/lib64"
         "/root"
-        "/run"
-        "/sbin"
-        "/tmp"
-        "/usr"
-        "/var"
-        "/workdir"
-        "/workspaces"
-        "/tmp"
-        "/vscode"
+        "/etc"
       ];
 
       paths = with pkgs;
@@ -60,25 +47,25 @@ in
           bashInteractive
           cacert
           coreutils-full
-          curlFull
-          diffutils
-          figlet
-          gawk
-          git
-          gnupg
-          gnugrep
-          gnused
+          #curlFull
+          #diffutils
+          #figlet
+          #gawk
+          #git
+          #gnupg
+          #gnugrep
+          #gnused
           gnutar
           gzip
           jq
           less
-          openssh
+          #openssh
           procps
-          ripgrep
-          shadow
-          starship
-          su
-          tree
+          #ripgrep
+          #shadow
+          #starship
+          #su
+          #tree
           unzip
           wget
           which
@@ -92,31 +79,31 @@ in
           iproute
 
           # Docker Tools
-          dive
-          docker
-          docker-buildx
-          docker-gc
-          docker-ls
+          #dive
+          #docker
+          #docker-buildx
+          #docker-gc
+          #docker-ls
 
           # Kubernetes Tools
-          clusterctl
-          kail
-          kapp
-          kube-bench
-          kube-linter
-          kubectl
-          kubernetes-helm
-          kustomize
-          kustomize-sops
-          sonobuoy
-          sops
-          velero
-          vendir
-          ytt
+          #clusterctl
+          #kail
+          #kapp
+          #kube-bench
+          #kube-linter
+          #kubectl
+          #kubernetes-helm
+          #kustomize
+          #kustomize-sops
+          #sonobuoy
+          #sops
+          #velero
+          #vendir
+          #ytt
 
           # Custom derivations
-          carvel
-          tanzu
+          #carvel
+          #tanzu
         ]
         ++ environmentHelpers;
     };
@@ -138,22 +125,20 @@ in
       BUG_REPORT_URL="https://github.com/salt-labs/containers/issues"
       EOF
 
-      # VSCode includes a bundled nodejs binary which is hardcoded to look in /lib
+      # VSCode includes a bundled nodejs binary which is
+      # dynamically linked and hardcoded to look in /lib
       ln -s ${pkgs.glibc}/lib /lib
+      ln -s ${pkgs.gcc-unwrapped.lib}/lib64 /lib64
 
-      # Set permissions
-      chmod --verbose --recursive 0777 /tmp || exit 1
-      chmod --verbose --recursive 0744 /vscode || exit 1
+      # Set permissions on required directories
+      mkdir --parents --mode 0777 /tmp || exit 1
+      mkdir --parents --mode 0777 /workdir || exit 1
+      mkdir --parents --mode 0777 /workspace || exit 1
+      mkdir --parents --mode 0777 /vscode || exit 1
     '';
 
     # Runs in the final layer, on top of other layers.
     extraCommands = ''
-      # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
-      #chmod +w lib64
-      #ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
-      #ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
-      #chmod -w lib64
-
     '';
 
     /*
@@ -236,6 +221,7 @@ in
         "WORKDIR=/workdir"
       ];
       WorkingDir = "/workdir";
+      WorkDir = "/workdir";
       Volumes = {
         "/vscode" = {};
       };

@@ -106,6 +106,7 @@ in
           less
           procps
           ripgrep
+          nodejs
           shadow
           starship
           su
@@ -153,6 +154,17 @@ in
 
       ${pkgs.dockerTools.shadowSetup}
 
+      cat << EOF > /etc/os-release
+      NAME="SaltOS"
+      VERSION_ID="1"
+      VERSION="1"
+      VERSION_CODENAME="base"
+      ID=saltos
+      HOME_URL="https://www.saltlabs.tech/"
+      SUPPORT_URL="https://www.saltlabs.tech/"
+      BUG_REPORT_URL="https://github.com/salt-labs/containers/issues"
+      EOF
+
       groupadd \
         ${containerUser} || {
           echo "Failed to create group ${containerUser}"
@@ -186,10 +198,10 @@ in
       }
       figlet "Tanzu CLI"
       EOF
-      chmod 0777 /home/${containerUser}/.bashrc
 
-      chmod --verbose --recursive 777 /workdir || exit 1
-      chmod --verbose --recursive 777 /tmp || exit 1
+      chmod --verbose --recursive 0777 /workdir || exit 1
+      chmod --verbose --recursive 0777 /tmp || exit 1
+      chmod --verbose --recursive 0777 /home/${containerUser} || exit 1
     '';
 
     # Run extra commands after the container is created in the final layer.

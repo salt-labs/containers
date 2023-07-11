@@ -233,10 +233,10 @@ in
         "org.opencontainers.image.description" = "tanzu";
       };
       Entrypoint = [
-        "${pkgs.bashInteractive}/bin/bash"
+        #"${pkgs.bashInteractive}/bin/bash"
       ];
       Cmd = [
-        "/bin/bash"
+        "${pkgs.bashInteractive}/bin/bash"
       ];
       ExposedPorts = {
       };

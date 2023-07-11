@@ -3,8 +3,7 @@
   crossPkgs,
   ...
 }: let
-  #containerUser = "tanzu";
-  containerUser = "root";
+  containerUser = "tanzu";
 
   tanzu = pkgs.callPackage ./tanzu.nix {
     inherit pkgs;
@@ -20,8 +19,7 @@
     usrBinEnv
     binSh
     caCertificates
-    fakeNss
-    #shadowSetup
+    shadowSetup
   ];
 
   baseImage = pkgs.dockerTools.buildImageWithNixDb {
@@ -62,45 +60,7 @@ in
     #created = "now";
 
     #fromImage = baseImage;
-
-    contents = pkgs.buildEnv {
-      name = "image-root";
-
-      pathsToLink = [
-        "/bin"
-        "/etc"
-        "/lib"
-        "/lib64"
-        "/root"
-        "/tmp"
-        "/usr"
-        "/workdir"
-        "/workspaces"
-      ];
-
-      paths = with pkgs;
-        [
-          bashInteractive
-          bash-completion
-          coreutils-full
-          which
-
-          # VSCode
-          findutils
-          gcc-unwrapped
-        ]
-        ++ environmentHelpers;
-    };
-
-    extraCommands = ''
-      # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
-      chmod +w lib64
-      ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
-      ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
-      chmod -w lib64
-    '';
-
-    /*
+    maxLayers = 100;
 
     contents = pkgs.buildEnv {
       name = "image-root";
@@ -258,16 +218,13 @@ in
       chmod -w lib64
     '';
 
-    */
-
     config = {
-      User = containerUser;
+      #User = containerUser;
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };
       Entrypoint = [
         "${pkgs.bashInteractive}/bin/bash"
-        #"/bin/sh"
       ];
       Cmd = [
       ];
@@ -275,20 +232,19 @@ in
       };
       Env = [
         "CHARSET=UTF-8"
-        #"DOCKER_CONFIG=/home/${containerUser}/.docker"
-        #"HOME=/home/${containerUser}"
-        "HOME=/root"
+        "DOCKER_CONFIG=/home/${containerUser}/.docker"
+        "HOME=/home/${containerUser}"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
         "LD_LIBRARY_PATH=${pkgs.gcc-unwrapped.lib}/lib64"
         "PAGER=less"
         "NIX_PAGER=less"
         "PATH=/workdir:/usr/bin:/bin:/sbin"
-        "SHELL=${pkgs.bashInteractive}/bin/bash"
+        "SHELL=${pkgs.bashInteractive}"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "TERM=xterm"
         "TZ=UTC"
-        "USER=${containerUser}"
+        #"USER=${containerUser}"
         "WORKDIR=/workdir"
       ];
       WorkingDir = "/workdir";

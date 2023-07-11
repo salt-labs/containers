@@ -3,8 +3,7 @@
   crossPkgs,
   ...
 }: let
-  #containerUser = "tanzu";
-  containerUser = "root";
+  containerUser = "tanzu";
 
   tanzu = pkgs.callPackage ./tanzu.nix {
     inherit pkgs;
@@ -20,8 +19,8 @@
     usrBinEnv
     binSh
     caCertificates
-    fakeNss
-    #shadowSetup
+    #fakeNss
+    shadowSetup
   ];
 in
   pkgs.dockerTools.buildLayeredImage {
@@ -36,8 +35,10 @@ in
 
       pathsToLink = [
         "/bin"
-        "/root"
         "/etc"
+        "/home"
+        "/root"
+        "/var"
       ];
 
       paths = with pkgs;
@@ -47,25 +48,25 @@ in
           bashInteractive
           cacert
           coreutils-full
-          #curlFull
-          #diffutils
-          #figlet
-          #gawk
-          #git
-          #gnupg
-          #gnugrep
-          #gnused
+          curlFull
+          diffutils
+          figlet
+          gawk
+          git
+          gnupg
+          gnugrep
+          gnused
           gnutar
           gzip
           jq
           less
-          #openssh
+          openssh
           procps
-          #ripgrep
-          #shadow
-          #starship
-          #su
-          #tree
+          ripgrep
+          shadow
+          starship
+          su
+          tree
           unzip
           wget
           which
@@ -113,6 +114,10 @@ in
 
     # Run these commands in fakechroot
     fakeRootCommands = ''
+      #!${pkgs.runtimeShell}
+
+      ${pkgs.dockerTools.shadowSetup}
+
       # Create /etc/os-release
       cat << EOF > /etc/os-release
       NAME="SaltOS"
@@ -130,11 +135,54 @@ in
       ln -s ${pkgs.glibc}/lib /lib
       ln -s ${pkgs.gcc-unwrapped.lib}/lib64 /lib64
 
+      # Create users and groups
+      groupadd docker || {
+        echo "Failed to create group docker"
+        exit 1
+      }
+
+      # Create a container user
+      useradd \
+        --home-dir /home/${containerUser} \
+        --shell ${pkgs.bashInteractive}/bin/bash \
+        --create-home \
+        --user-group \
+        --groups docker \
+        ${containerUser} || {
+          echo "Failed to create user ${containerUser}"
+          exit 1
+        }
+
+      # Create a user for vscode devcontainers
+      useradd \
+        --home-dir /home/vscode \
+        --shell ${pkgs.bashInteractive}/bin/bash \
+        --create-home \
+        --user-group \
+        --groups docker \
+        vscode || {
+          echo "Failed to create user vscode"
+          exit 1
+        }
+
+      # Setup the .bashrc for the container user.
+      cat << EOF > /home/${containerUser}/.bashrc
+      eval "\$(starship init bash)"
+      tanzu plugin clean || {
+        echo "Failed to clean the Tanzu CLI plugins"
+      }
+      tanzu init || {
+        echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
+      }
+      figlet "Tanzu CLI"
+      EOF
+
       # Set permissions on required directories
       mkdir --parents --mode 0777 /tmp || exit 1
       mkdir --parents --mode 0777 /workdir || exit 1
       mkdir --parents --mode 0777 /workspace || exit 1
       mkdir --parents --mode 0777 /vscode || exit 1
+      mkdir --parents --mode 0777 /var/devcontainer || exit 1
     '';
 
     # Runs in the final layer, on top of other layers.
@@ -203,13 +251,11 @@ in
       };
       Env = [
         "CHARSET=UTF-8"
-        #"DOCKER_CONFIG=/home/${containerUser}/.docker"
-        #"HOME=/home/${containerUser}"
-        "HOME=/root"
+        "DOCKER_CONFIG=/home/${containerUser}/.docker"
+        "HOME=/home/${containerUser}"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        #"LD_LIBRARY_PATH=${pkgs.gcc-unwrapped.lib}/lib64"
-        "LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib"
+        "LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib;${pkgs.gcc-unwrapped.lib}/lib64"
         "PAGER=less"
         "NIX_PAGER=less"
         "PATH=/workdir:/usr/bin:/bin:/sbin"

@@ -56,6 +56,7 @@ in
           coreutils-full
           curlFull
           figlet
+          getent
           gnugrep
           gnutar
           gzip

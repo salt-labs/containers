@@ -38,6 +38,7 @@ in
         "/github"
         "/home"
         "/lib"
+        "/lib64"
         "/root"
         "/run"
         "/sbin"
@@ -50,19 +51,25 @@ in
       paths = with pkgs;
         [
           # Common
+          acl
           bash-completion
           bashInteractive
           cacert
           coreutils-full
           curlFull
+          findutils
           figlet
+          gcc-unwrapped
           getent
           git
+          glibc
           gnugrep
           gnutar
           gzip
+          iproute
           jq
           less
+          procps
           ripgrep
           shadow
           starship
@@ -71,6 +78,7 @@ in
           unzip
           wget
           which
+          xz
           yq
 
           # Docker Tools
@@ -165,6 +173,23 @@ in
       chmod --verbose --recursive 777 /tmp || exit 1
     '';
 
+    # Run extra commands after the container is created in the final layer.
+    extraCommands = ''
+      # For usr/bin/env
+      mkdir usr
+      ln -s ../bin usr/bin
+
+      mkdir -m 1777 tmp
+
+      mkdir -vp root
+
+      # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
+      chmod +w lib64
+      ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
+      ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
+      chmod -w lib64
+    '';
+
     config = {
       User = containerUser;
       Labels = {
@@ -183,7 +208,9 @@ in
         "HOME=/home/${containerUser}"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        "PATH=/sbin:/bin:/workdir"
+        "LD_LIBRARY_PATH=${pkgs.gcc-unwrapped.lib}/lib64"
+        "PAGER=less"
+        "PATH=/workdir:/usr/bin:/bin:/sbin"
         "SHELL=${pkgs.bashInteractive}"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "TERM=xterm"

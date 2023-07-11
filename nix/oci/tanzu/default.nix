@@ -180,7 +180,7 @@ in
       # Setup the .bashrc for the vscode user.
       cat << EOF > "/home/vscode/.bashrc"
       figlet "VSCode"
-      if [[ "$\{VSCODE:=FALSE\}" == "TRUE" ]];
+      if [[ "''${VSCODE:-FALSE}" == "TRUE" ]];
       then
         while true;
         do

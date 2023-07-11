@@ -23,46 +23,13 @@
     fakeNss
     #shadowSetup
   ];
-
-  baseImage = pkgs.dockerTools.buildImageWithNixDb {
-    name = "docker.io/debian";
-    tag = "stable-slim";
-    copyToRoot = pkgs.buildEnv {
-      name = "image-root";
-      pathsToLink = [
-        "/bin"
-        "/etc"
-        "/home"
-        "/lib"
-        "/lib64"
-        "/root"
-        "/sbin"
-        "/usr"
-        "/usr/bin"
-        "/usr/lib"
-        "/var"
-      ];
-      paths = with pkgs; [
-        bashInteractive
-        coreutils-full
-        nix
-      ];
-    };
-    config = {
-      Env = [
-        "NIX_PAGER=cat"
-        "USER=nobody"
-      ];
-    };
-  };
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu";
     tag = "latest";
     #created = "now";
 
-    #fromImage = baseImage;
-    maxLayers = 100;
+    maxLayers = 25;
 
     contents = pkgs.buildEnv {
       name = "image-root";
@@ -125,31 +92,31 @@ in
           iproute
 
           # Docker Tools
-          #dive
-          #docker
-          #docker-buildx
-          #docker-gc
-          #docker-ls
+          dive
+          docker
+          docker-buildx
+          docker-gc
+          docker-ls
 
           # Kubernetes Tools
-          #clusterctl
-          #kail
-          #kapp
-          #kube-bench
-          #kube-linter
-          #kubectl
-          #kubernetes-helm
-          #kustomize
-          #kustomize-sops
-          #sonobuoy
-          #sops
-          #velero
-          #vendir
-          #ytt
+          clusterctl
+          kail
+          kapp
+          kube-bench
+          kube-linter
+          kubectl
+          kubernetes-helm
+          kustomize
+          kustomize-sops
+          sonobuoy
+          sops
+          velero
+          vendir
+          ytt
 
           # Custom derivations
-          #carvel
-          #tanzu
+          carvel
+          tanzu
         ]
         ++ environmentHelpers;
     };

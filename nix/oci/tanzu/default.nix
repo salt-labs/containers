@@ -87,8 +87,12 @@ in
           bash-completion
           coreutils-full
           which
+          cacert
 
           # VSCode
+          iproute
+          glibc
+          getent
           findutils
           gcc-unwrapped
           nodejs
@@ -293,7 +297,6 @@ in
       };
       Entrypoint = [
         "${pkgs.bashInteractive}/bin/bash"
-        #"/bin/sh"
       ];
       Cmd = [
       ];

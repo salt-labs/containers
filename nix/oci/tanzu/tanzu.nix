@@ -5,7 +5,7 @@
   checksum = "0j640sq4yfidmzr4rbdrqnjczm7xsrnkagsaz9hnrg57sxlzii7h";
   homepage = "https://customerconnect.vmware.com/downloads/details?downloadGroup=TKG-220&productId=1400";
   # NOTE: Cachix push
-  # nix path-info --all | grep tanzu-cli-bundle-linux-amd64.tar.gz | cachix push salt-labs
+  # nix build --json --impure ".#packages.\"x86_64-linux.x86_64-linux\".tanzu" | jq -r '.[0].outputs.out' | cachix push salt-labs
 in
   pkgs.stdenv.mkDerivation {
     name = product_name;

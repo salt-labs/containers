@@ -92,6 +92,11 @@ writeLog "INFO" "Processing system images for ${IMAGE_NAME} ${BUILD_SYSTEM}-${HO
 
 nix --version
 
+if [[ -f "${HOME}/.config/nix/nix.conf" ]]; then
+	writeLog "DEBUG" "Nix config file present, displaying contents"
+	cat "${HOME}/.config/nix/nix.conf"
+fi
+
 # .#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${IMAGE_NAME}"
 nix flake show --all-systems --json | jq \
 	--arg build_system "$BUILD_SYSTEM" \

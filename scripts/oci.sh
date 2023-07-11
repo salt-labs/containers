@@ -97,6 +97,12 @@ if [[ -f "${HOME}/.config/nix/nix.conf" ]]; then
 	cat "${HOME}/.config/nix/nix.conf"
 fi
 
+if rm "${HOME}"/.cache/nix/binary-cache-v*.sqlite*; then
+	writeLog "INFO" "Removed existing Nix binary cache"
+else
+	writeLog "WARNING" "No existing Nix binary cache found"
+fi
+
 # .#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${IMAGE_NAME}"
 nix flake show --all-systems --json | jq \
 	--arg build_system "$BUILD_SYSTEM" \

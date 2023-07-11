@@ -21,12 +21,37 @@
     caCertificates
     shadowSetup
   ];
+
+  baseImage = pkgs.dockerTools.buildImageWithNixDb {
+    name = "docker.io/debian";
+    tag = "stable-slim";
+    copyToRoot = pkgs.buildEnv {
+      name = "image-root";
+      pathsToLink = [
+        "/bin"
+        "/home"
+        "/var"
+      ];
+      paths = with pkgs; [
+        bash
+        coreutils-full
+        nix
+      ];
+    };
+    config = {
+      Env = [
+        "NIX_PAGER=cat"
+        "USER=nobody"
+      ];
+    };
+  };
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu";
     tag = "latest";
     #created = "now";
 
+    fromImage = baseImage;
     maxLayers = 100;
 
     contents = pkgs.buildEnv {
@@ -119,22 +144,6 @@ in
 
       ${pkgs.dockerTools.shadowSetup}
 
-      cat << EOF > /etc/os-release
-      BUG_REPORT_URL="https://github.com/NixOS/nixpkgs/issues"
-      BUILD_ID="container"
-      DOCUMENTATION_URL="https://nixos.org/learn.html"
-      HOME_URL="https://nixos.org/"
-      ID=nixos
-      LOGO="nix-snowflake"
-      NAME=NixOS
-      PRETTY_NAME="NixOS"
-      SUPPORT_END="Unknown"
-      SUPPORT_URL="https://nixos.org/community.html"
-      VERSION="container"
-      VERSION_CODENAME=container
-      VERSION_ID="container"
-      EOF
-
       groupadd \
         ${containerUser} || {
           echo "Failed to create group ${containerUser}"
@@ -177,10 +186,10 @@ in
     # Run extra commands after the container is created in the final layer.
     extraCommands = ''
       # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
-      chmod +w lib64
-      ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
-      ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
-      chmod -w lib64
+      #chmod +w lib64
+      #ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
+      #ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
+      #chmod -w lib64
     '';
 
     config = {

@@ -72,6 +72,13 @@ in
           which
           yq
 
+          # Docker Tools
+          dive
+          docker
+          docker-buildx
+          docker-gc
+          docker-ls
+
           # Kubernetes Tools
           clusterctl
           kail
@@ -108,11 +115,18 @@ in
           exit 1
         }
 
+      groupadd \
+        docker || {
+          echo "Failed to create group docker"
+          exit 1
+        }
+
       useradd \
         --home-dir /home/${containerUser} \
         --shell ${pkgs.bashInteractive}/bin/bash \
         --create-home \
         --user-group \
+        --groups docker \
         ${containerUser} || {
           echo "Failed to create user ${containerUser}"
           exit 1

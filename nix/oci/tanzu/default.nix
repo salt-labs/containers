@@ -29,11 +29,18 @@
       name = "image-root";
       pathsToLink = [
         "/bin"
+        "/etc"
         "/home"
+        "/lib"
+        "/lib64"
+        "/root"
+        "/sbin"
+        "/usr"
+        "/usr/bin"
         "/var"
       ];
       paths = with pkgs; [
-        bash
+        bashInteractive
         coreutils-full
         nix
       ];
@@ -186,10 +193,10 @@ in
     # Run extra commands after the container is created in the final layer.
     extraCommands = ''
       # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
-      #chmod +w lib64
-      #ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
-      #ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
-      #chmod -w lib64
+      chmod +w lib64
+      ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
+      ln -s ${pkgs.gcc-unwrapped.lib}/lib64/libstdc++.so.6 lib64/libstdc++.so.6
+      chmod -w lib64
     '';
 
     config = {
@@ -212,6 +219,7 @@ in
         "LC_COLLATE=C"
         "LD_LIBRARY_PATH=${pkgs.gcc-unwrapped.lib}/lib64"
         "PAGER=less"
+        "NIX_PAGER=less"
         "PATH=/workdir:/usr/bin:/bin:/sbin"
         "SHELL=${pkgs.bashInteractive}"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"

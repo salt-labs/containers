@@ -56,12 +56,13 @@
     };
   };
 in
-  pkgs.dockerTools.buildImage {
+  pkgs.dockerTools.buildLayeredImage {
     name = "tanzu";
     tag = "latest";
     #created = "now";
 
     #fromImage = baseImage;
+    maxLayers = 100;
 
     contents = pkgs.buildEnv {
       name = "image-root";
@@ -92,6 +93,25 @@ in
         ++ environmentHelpers;
     };
 
+    # Enable fakeRootCommands in fakechroot
+    enableFakechroot = true;
+
+    # Run these commands in fakechroot
+    fakeRootCommands = ''
+      # Create /etc/os-release
+      cat << EOF > /etc/os-release
+      NAME="SaltOS"
+      VERSION_ID="1"
+      VERSION="1"
+      VERSION_CODENAME="base"
+      ID=saltos
+      HOME_URL="https://www.saltlabs.tech/"
+      SUPPORT_URL="https://www.saltlabs.tech/"
+      BUG_REPORT_URL="https://github.com/salt-labs/containers/issues"
+      EOF
+    '';
+
+    # Runs in the final layer, on top of other layers.
     extraCommands = ''
       # Allow ubuntu ELF binaries to run. VSCode copies it's own into the container.
       chmod +w lib64

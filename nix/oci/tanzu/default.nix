@@ -134,6 +134,7 @@ in
       # dynamically linked and hardcoded to look in /lib
       ln -s ${pkgs.glibc}/lib /lib
       ln -s ${pkgs.gcc-unwrapped.lib}/lib64 /lib64
+      ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
 
       # Create users and groups
       groupadd docker || {
@@ -221,7 +222,7 @@ in
         "DOCKER_CONFIG=/home/${containerUser}/.docker"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        "LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib;${pkgs.gcc-unwrapped.lib}/lib64"
+        "LD_LIBRARY_PATH=${pkgs.glibc}/lib;${pkgs.gcc-unwrapped.lib}/lib64"
         "PAGER=less"
         "NIX_PAGER=less"
         "PATH=/workdir:/usr/bin:/bin:/sbin"

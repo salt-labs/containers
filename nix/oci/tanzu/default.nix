@@ -39,6 +39,8 @@ in
         "/home"
         "/root"
         "/var"
+        "/lib"
+        "/lib64"
       ];
 
       paths = with pkgs;
@@ -132,9 +134,11 @@ in
 
       # VSCode includes a bundled nodejs binary which is
       # dynamically linked and hardcoded to look in /lib
-      ln -s ${pkgs.glibc}/lib /lib
-      ln -s ${pkgs.gcc-unwrapped.lib}/lib64 /lib64
-      ln -s ${pkgs.glibc}/lib64/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
+      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib/stdenv
+      ln -s ${pkgs.glibc}/lib /lib/glibc
+      ln -s ${pkgs.stdenv.cc.cc.lib}/lib64 /lib64/stdenv
+      ln -s ${pkgs.glibc}/lib64 /lib64/glibc
+      ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
 
       # Create users and groups
       groupadd docker || {
@@ -222,7 +226,7 @@ in
         "DOCKER_CONFIG=/home/${containerUser}/.docker"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        "LD_LIBRARY_PATH=${pkgs.glibc}/lib;${pkgs.gcc-unwrapped.lib}/lib64"
+        "LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib64;/lib64/stdenv;/lib64/glibc"
         "PAGER=less"
         "NIX_PAGER=less"
         "PATH=/workdir:/usr/bin:/bin:/sbin"

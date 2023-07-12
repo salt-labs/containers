@@ -41,6 +41,7 @@ in
         "/var"
         "/lib"
         "/lib64"
+        "/usr"
       ];
 
       paths = with pkgs;

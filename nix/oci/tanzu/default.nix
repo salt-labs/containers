@@ -5,6 +5,7 @@
 }: let
   containerUser = "tanzu";
   containerUID = "1000";
+  containerGID = "1000";
 
   tanzu = pkgs.callPackage ./tanzu.nix {
     inherit pkgs;
@@ -152,8 +153,9 @@ in
         ]
         ++ environmentHelpers
         ++ nonRootShadowSetup {
-          uid = containerUID;
           user = containerUser;
+          uid = containerUID;
+          gid = containerGID;
         };
     };
 
@@ -237,7 +239,7 @@ in
       EOF
 
       # Fix home permissions
-      chown -R ${containerUID}:${containerUID} /home/${containerUser} || {
+      chown -R ${containerUID}:${containerGID} /home/${containerUser} || {
         echo "Failed to chown home for user ${containerUser}"
         exit 1
       }

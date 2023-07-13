@@ -99,6 +99,7 @@ in
           gnused
           gnutar
           gzip
+          hey
           htop
           jq
           less
@@ -217,7 +218,7 @@ in
                 echo "Failed to clean the Tanzu CLI plugins"
               }
               tanzu init || {
-                echo "Failed to initialise the Tanzu CLI. Please check network connectivity and try again."
+                echo "Failed to initialise the Tanzu CLI. Please check network connectivity and try running 'tanzu init' again."
               }
               break
             ;;
@@ -226,7 +227,8 @@ in
               break
             ;;
             * )
-              echo "Please answer yes or no"
+              echo "Please answer yes or no."
+              sleep 3
             ;;
           esac
 

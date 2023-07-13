@@ -50,6 +50,7 @@ in
           bash-completion
           bashInteractive
           bat
+          bottom
           cacert
           coreutils-full
           curlFull

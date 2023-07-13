@@ -17,6 +17,7 @@ inputs.devenv.lib.mkShell {
 
         nixpkgs-fmt
         statix
+        cachix
 
         sops
         #sops-init-gpg-key
@@ -27,9 +28,11 @@ inputs.devenv.lib.mkShell {
 
         bash
         bash-completion
+        tree
 
         kind
         kubectl
+        dive
       ];
 
       env = {

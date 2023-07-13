@@ -103,7 +103,7 @@ in
       paths = with pkgs;
         [
           # Common
-          bash
+          bashInteractive
           bash-completion
           cacert
           coreutils-full
@@ -192,6 +192,7 @@ in
     '';
 
     config = {
+      User = containerUser;
       Labels = {
         "org.opencontainers.image.description" = "Codestream CI";
       };

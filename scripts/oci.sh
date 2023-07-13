@@ -92,6 +92,22 @@ writeLog "INFO" "Processing system images for ${IMAGE_NAME} ${BUILD_SYSTEM}-${HO
 
 nix --version
 
+if [[ -f "${HOME}/.config/nix/nix.conf" ]]; then
+	writeLog "DEBUG" "Nix config file present, displaying contents"
+	cat "${HOME}/.config/nix/nix.conf"
+fi
+
+NIX_BIN_CACHE="${HOME}/.cache/nix/"
+COUNT=0
+while IFS= read -r -d '' FILE; do
+	((COUNT++))
+	writeLog "INFO" "Deleting binary cache file ${FILE}"
+	rm -f "${FILE}" || {
+		writeLog "WARN" "Failed to delete binary cache file ${FILE}, skipping"
+	}
+done < <(find "${NIX_BIN_CACHE}" -type f -name "binary-cacye-v*.sqlite" -print0)
+writeLog "INFO" "Deleted ${COUNT} binary cache files"
+
 # .#packages.\"${BUILD_SYSTEM}.${HOST_SYSTEM}\".${IMAGE_NAME}"
 nix flake show --all-systems --json | jq \
 	--arg build_system "$BUILD_SYSTEM" \

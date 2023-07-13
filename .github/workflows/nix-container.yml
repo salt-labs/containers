@@ -154,6 +154,8 @@ jobs:
           echo "IMAGE_TAG: $IMAGE_TAG"
           echo "CONTAINER_BUILD: $CONTAINER_BUILD"
           echo "CONTAINER_PUBLISH: $CONTAINER_PUBLISH"
+          echo "Nix conf:"
+          cat "${HOME}/.config/nix/nix.conf"
           echo "##################################################"
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"

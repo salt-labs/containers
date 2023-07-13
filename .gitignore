@@ -18,5 +18,9 @@ bin/**
 # Ignore TODOs
 TODO/
 
+# Ignore local environment variables
+.env
+
 # Ignore the pre-commit hook config
 .pre-commit-config.yaml
+

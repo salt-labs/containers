@@ -185,23 +185,25 @@ in
 
       # Setup the .bashrc for the vscode user.
       cat << 'EOF' > "/home/vscode/.bashrc"
-      figlet "VSCode"
       if [[ "''${VSCODE:-FALSE}" == "TRUE" ]];
       then
-        while true;
-        do
-          echo "Running VSCode devcontainer loop..."
-          sleep 300
-        done
-      else
-        echo "Running VSCode devcontainer interactively..."
+        # sleep infinity
+        pause "Press ENTER to launch devcontainer shell"
       fi
+      eval "\$(starship init bash)"
+      tanzu plugin clean || {
+        echo "Failed to clean the Tanzu CLI plugins"
+      }
+      tanzu init || {
+        echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
+      }
+      figlet "VSCode"
       EOF
 
       # Set permissions on required directories
       mkdir --parents --mode 0777 /tmp || exit 1
       mkdir --parents --mode 0777 /workdir || exit 1
-      mkdir --parents --mode 0777 /workspace || exit 1
+      mkdir --parents --mode 0777 /workspaces || exit 1
       mkdir --parents --mode 0777 /vscode || exit 1
       mkdir --parents --mode 0777 /var/devcontainer || exit 1
     '';

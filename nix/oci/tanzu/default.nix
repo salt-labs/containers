@@ -4,6 +4,7 @@
   ...
 }: let
   containerUser = "tanzu";
+  containerUID = "1000";
 
   tanzu = pkgs.callPackage ./tanzu.nix {
     inherit pkgs;
@@ -20,15 +21,49 @@
     binSh
     caCertificates
     #fakeNss
-    shadowSetup
+    #shadowSetup
   ];
+
+  nonRootShadowSetup = {
+    user,
+    uid,
+    gid ? uid,
+  }:
+    with pkgs; [
+      (
+        writeTextDir "etc/shadow" ''
+          root:!x:::::::
+          ${user}:!:::::::
+        ''
+      )
+      (
+        writeTextDir "etc/passwd" ''
+          root:x:0:0::/root:${runtimeShell}
+          ${user}:x:${toString uid}:${toString gid}::/home/${user}:${runtimeShell}
+        ''
+      )
+      (
+        writeTextDir "etc/group" ''
+          root:x:0:
+          ${user}:x:${toString gid}:
+        ''
+      )
+      (
+        writeTextDir "etc/gshadow" ''
+          root:x::
+          ${user}:x::
+        ''
+      )
+    ];
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu";
     tag = "latest";
     #created = "now";
 
-    maxLayers = 25;
+    architecture = "amd64";
+
+    maxLayers = 100;
 
     contents = pkgs.buildEnv {
       name = "image-root";
@@ -71,6 +106,7 @@ in
           procps
           ripgrep
           shadow
+          shellcheck
           starship
           su
           tree
@@ -114,7 +150,11 @@ in
           carvel
           tanzu
         ]
-        ++ environmentHelpers;
+        ++ environmentHelpers
+        ++ nonRootShadowSetup {
+          uid = containerUID;
+          user = containerUser;
+        };
     };
 
     # Enable fakeRootCommands in fakechroot
@@ -123,8 +163,6 @@ in
     # Run these commands in fakechroot
     fakeRootCommands = ''
       #!${pkgs.runtimeShell}
-
-      ${pkgs.dockerTools.shadowSetup}
 
       # Create /etc/os-release
       cat << EOF > /etc/os-release
@@ -146,97 +184,61 @@ in
       ln -s ${pkgs.glibc}/lib64 /lib64/glibc
       ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
 
-      # Create users and groups
-      groupadd docker || {
-        echo "Failed to create group docker"
-        exit 1
-      }
-
-      # Create a container user
-      useradd \
-        --uid 1001 \
-        --home-dir /home/${containerUser} \
-        --shell ${pkgs.bashInteractive}/bin/bash \
-        --create-home \
-        --user-group \
-        --groups docker \
-        ${containerUser} || {
-          echo "Failed to create user ${containerUser}"
-          exit 1
-        }
-
-      # Create a user for vscode devcontainers
-      useradd \
-        --uid 1002 \
-        --home-dir /home/vscode \
-        --shell ${pkgs.bashInteractive}/bin/bash \
-        --create-home \
-        --user-group \
-        --groups docker \
-        vscode || {
-          echo "Failed to create user vscode"
-          exit 1
-        }
+      # Create the home dir for the container user.
+      mkdir --parents /home/${containerUser}
 
       # Setup the .bashrc for the container user.
-      cat << EOF > /home/${containerUser}/.bashrc
-      source <(/bin/starship init bash --print-full-init)
-      echo "Initialising Tanzu CLI..."
-      tanzu plugin clean || {
-        echo "Failed to clean the Tanzu CLI plugins"
-      }
-      tanzu init || {
-        echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
-      }
-      figlet "Tanzu CLI"
-      EOF
+      cat << 'EOF' > /home/${containerUser}/.bashrc
+      #!/usr/bin/env bash
 
-      # Setup the .bashrc for the vscode user.
-      cat << 'EOF' > "/home/vscode/.bashrc"
+      # shellcheck disable=SC1090
       source <(/bin/starship init bash --print-full-init)
-      if [[ "''${VSCODE:-FALSE}" == "TRUE" ]];
+
+      # Initialise the Tanzu CLI
+      if [[ -f "''${HOME}/.config/tanzu/config.yaml" ]];
       then
+
+        echo "Tanzu CLI is already initialised."
+
+      else
+
         while true;
         do
+
           clear
-          if [[ -f "''${HOME}/.config/tanzu/config.yaml" ]];
-          then
-            echo "Tanzu CLI is already initialised."
-            break
-          else
-            read -p "Initialise the Tanzu CLI? y/n: " CHOICE
-            case $CHOICE in
-              [Yy]* )
-                echo "Initialising Tanzu CLI..."
-                tanzu plugin clean || {
-                  echo "Failed to clean the Tanzu CLI plugins"
-                }
-                tanzu init || {
-                  echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
-                }
-                break
-              ;;
-              [Nn]* )
-                echo "Skipping Tanzu CLI initialisation"
-                break
-              ;;
-              * )
-                echo "Please answer yes or no"
-              ;;
-            esac
-          fi
+          read -r -p "Initialise the Tanzu CLI? y/n: " CHOICE
+
+          case ''$CHOICE in
+            [Yy]* )
+              echo "Initialising Tanzu CLI..."
+              tanzu plugin clean || {
+                echo "Failed to clean the Tanzu CLI plugins"
+              }
+              tanzu init || {
+                echo "Failed to initialise the Tanzu CLI. Please check network connectivity and try again."
+              }
+              break
+            ;;
+            [Nn]* )
+              echo "Skipping Tanzu CLI initialisation"
+              break
+            ;;
+            * )
+              echo "Please answer yes or no"
+            ;;
+          esac
+
         done
+
       fi
+
       figlet "Tanzu CLI"
+
       EOF
 
       # Fix home permissions
-      chown -R 1001:1001 /home/${containerUser} || {
+      chown -R ${containerUID}:${containerUID} /home/${containerUser} || {
         echo "Failed to chown home for user ${containerUser}"
-        exit 1
-      }
-      chown -R 1002:1002 /home/vscode || {
-        echo "Failed to chown home for user vscode"
         exit 1
       }
 

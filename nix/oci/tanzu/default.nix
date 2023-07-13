@@ -173,7 +173,7 @@ in
 
       # Setup the .bashrc for the container user.
       cat << EOF > /home/${containerUser}/.bashrc
-      eval "\$(starship init bash)"
+      source <(/bin/starship init bash --print-full-init)
       tanzu plugin clean || {
         echo "Failed to clean the Tanzu CLI plugins"
       }
@@ -188,9 +188,9 @@ in
       if [[ "''${VSCODE:-FALSE}" == "TRUE" ]];
       then
         # sleep infinity
-        pause "Press ENTER to launch devcontainer shell"
+        read -p "Press ENTER to launch devcontainer shell"
       fi
-      eval "\$(starship init bash)"
+      source <(/bin/starship init bash --print-full-init)
       tanzu plugin clean || {
         echo "Failed to clean the Tanzu CLI plugins"
       }

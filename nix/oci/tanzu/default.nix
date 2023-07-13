@@ -196,30 +196,40 @@ in
         while true;
         do
           clear
-          read -p "Initialise the Tanzu CLI? y/n: " CHOICE
-          case $CHOICE in
-            [Yy]* )
-              echo "Initialising Tanzu CLI..."
-              tanzu plugin clean || {
-                echo "Failed to clean the Tanzu CLI plugins"
-              }
-              tanzu init || {
-                echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
-              }
-              break
-            ;;
-            [Nn]* )
-              echo "Skipping Tanzu CLI initialisation"
-              break
-            ;;
-            * )
-              echo "Please answer yes or no"
-            ;;
-          esac
+          if [[ -f "''${HOME}/.config/tanzu/config.yaml" ]];
+          then
+            echo "Tanzu CLI is already initialised."
+            break
+          else
+            read -p "Initialise the Tanzu CLI? y/n: " CHOICE
+            case $CHOICE in
+              [Yy]* )
+                echo "Initialising Tanzu CLI..."
+                tanzu plugin clean || {
+                  echo "Failed to clean the Tanzu CLI plugins"
+                }
+                tanzu init || {
+                  echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
+                }
+                break
+              ;;
+              [Nn]* )
+                echo "Skipping Tanzu CLI initialisation"
+                break
+              ;;
+              * )
+                echo "Please answer yes or no"
+              ;;
+            esac
+          fi
         done
       fi
-      figlet "VSCode"
+      figlet "Tanzu CLI"
       EOF
+
+      # Fix home dir permissions
+      chown -R ${containerUser}:${containerUser} /home/${containerUser}
+      chown -R vscode:vscode /home/vscode
 
       # Set permissions on required directories
       mkdir --parents --mode 0777 /tmp || exit 1

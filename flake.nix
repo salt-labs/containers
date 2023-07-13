@@ -34,6 +34,14 @@
       flake = true;
     };
 
+    pre-commit-hooks = {
+      type = "github";
+      owner = "cachix";
+      repo = "pre-commit-hooks.nix";
+      ref = "master";
+      flake = true;
+    };
+
     devenv = {
       type = "github";
       owner = "cachix";
@@ -419,6 +427,8 @@
         inherit crossPkgs;
         inherit crossPkgsUnstable;
       };
+
+      default = self.devShells."${system}.${system}".devenv;
     }));
 
     # Set the default devshell to the one for the current system.

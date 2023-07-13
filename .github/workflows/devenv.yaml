@@ -1,0 +1,101 @@
+---
+name: Devenv
+
+on:
+  push:
+    branches:
+      - trunk
+
+  pull_request:
+    branches:
+      - "trunk"
+    paths:
+      - devenv.nix
+      - devenv.yaml
+      - .github/workflows/*
+      - devshells/**
+      - flake.lock
+      - flake.nix
+      - oci/**
+      - scripts/*
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: read
+  statuses: read
+
+env:
+  PROJECT: ${{ github.repository }}
+
+  BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
+  BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ##################################################
+  # Test the Development environment shell
+  ##################################################
+
+  test:
+    name: Test
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+    continue-on-error: false
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          submodules: recursive
+
+      - id: install_nix
+        name: "Install Nix ❄️"
+        uses: cachix/install-nix-action@v22
+
+      - id: cachix
+        name: "Enable Cachix ❄️"
+        uses: cachix/cachix-action@v12
+        with:
+          #name: salt-labs
+          name: devenv
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - id: configure_nix
+        name: Configure Nix
+        env:
+          NIX_CONFIG_HOME: "~/.config/nix"
+        run: |
+          mkdir --parents "$NIX_CONFIG_HOME"
+          cat <<- EOF >> "$NIX_CONFIG_HOME/nix.conf"
+          access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+          EOF
+
+      - id: install_devenv
+        name: Install devenv
+        run: |
+          nix profile install github:cachix/devenv/latest
+
+      - id: devenv_ci
+        name: Devenv CI
+        run: |
+          devenv ci
+
+      - id: devenv_shell
+        name: Devenv Shell
+        run: |
+          devenv shell echo "Development environment OK!"

@@ -18,6 +18,7 @@ inputs.devenv.lib.mkShell {
         nixpkgs-fmt
         statix
         cachix
+        nil
 
         sops
         #sops-init-gpg-key
@@ -171,11 +172,28 @@ inputs.devenv.lib.mkShell {
         };
       };
 
-      devcontainer.enable = true;
+      devcontainer = {
+        enable = true;
+
+        settings = {
+          customizations = {
+            vscode = {
+              extensions = [
+                "pinage404.nix-extension-pack"
+              ];
+            };
+          };
+        };
+      };
 
       devenv = {
         flakesIntegration = true;
         #warnOnNewVersion = true;
+      };
+
+      dotenv = {
+        enable = true;
+        filename = ".env";
       };
 
       difftastic.enable = true;

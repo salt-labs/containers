@@ -49,6 +49,7 @@ in
           # Common
           bash-completion
           bashInteractive
+          bat
           cacert
           coreutils-full
           curlFull
@@ -61,8 +62,10 @@ in
           gnused
           gnutar
           gzip
+          htop
           jq
           less
+          ncurses
           openssh
           procps
           ripgrep
@@ -71,10 +74,11 @@ in
           su
           tree
           unzip
+          vim
           wget
           which
           xz
-          yq
+          yq-go
 
           # VSCode
           findutils
@@ -186,19 +190,34 @@ in
 
       # Setup the .bashrc for the vscode user.
       cat << 'EOF' > "/home/vscode/.bashrc"
+      source <(/bin/starship init bash --print-full-init)
       if [[ "''${VSCODE:-FALSE}" == "TRUE" ]];
       then
-        # sleep infinity
-        read -p "Press ENTER to launch devcontainer shell"
+        while true;
+        do
+          clear
+          read -p "Initialise the Tanzu CLI? y/n: " CHOICE
+          case $CHOICE in
+            [Yy]* )
+              echo "Initialising Tanzu CLI..."
+              tanzu plugin clean || {
+                echo "Failed to clean the Tanzu CLI plugins"
+              }
+              tanzu init || {
+                echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
+              }
+              break
+            ;;
+            [Nn]* )
+              echo "Skipping Tanzu CLI initialisation"
+              break
+            ;;
+            * )
+              echo "Please answer yes or no"
+            ;;
+          esac
+        done
       fi
-      source <(/bin/starship init bash --print-full-init)
-      echo "Initialising Tanzu CLI..."
-      tanzu plugin clean || {
-        echo "Failed to clean the Tanzu CLI plugins"
-      }
-      tanzu init || {
-        echo "Failed to initialise the Tanzu CLI. Please check network connectivbity and try again."
-      }
       figlet "VSCode"
       EOF
 

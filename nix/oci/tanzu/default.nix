@@ -174,6 +174,7 @@ in
       # Setup the .bashrc for the container user.
       cat << EOF > /home/${containerUser}/.bashrc
       source <(/bin/starship init bash --print-full-init)
+      echo "Initialising Tanzu CLI..."
       tanzu plugin clean || {
         echo "Failed to clean the Tanzu CLI plugins"
       }
@@ -191,6 +192,7 @@ in
         read -p "Press ENTER to launch devcontainer shell"
       fi
       source <(/bin/starship init bash --print-full-init)
+      echo "Initialising Tanzu CLI..."
       tanzu plugin clean || {
         echo "Failed to clean the Tanzu CLI plugins"
       }

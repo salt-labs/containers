@@ -153,6 +153,7 @@ in
 
       # Create a container user
       useradd \
+        --uid 1001 \
         --home-dir /home/${containerUser} \
         --shell ${pkgs.bashInteractive}/bin/bash \
         --create-home \
@@ -165,6 +166,7 @@ in
 
       # Create a user for vscode devcontainers
       useradd \
+        --uid 1002 \
         --home-dir /home/vscode \
         --shell ${pkgs.bashInteractive}/bin/bash \
         --create-home \
@@ -227,9 +229,15 @@ in
       figlet "Tanzu CLI"
       EOF
 
-      # Fix home dir permissions
-      chown -R ${containerUser}:${containerUser} /home/${containerUser}
-      chown -R vscode:vscode /home/vscode
+      # Fix home permissions
+      chown -R 1001:1001 /home/${containerUser} || {
+        echo "Failed to chown home for user ${containerUser}"
+        exit 1
+      }
+      chown -R 1002:1002 /home/vscode || {
+        echo "Failed to chown home for user vscode"
+        exit 1
+      }
 
       # Set permissions on required directories
       mkdir --parents --mode 0777 /tmp || exit 1

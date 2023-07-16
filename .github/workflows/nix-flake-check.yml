@@ -12,7 +12,7 @@ on:
     paths:
       - devenv.nix
       - devenv.yaml
-      - .github/workflows/*
+      - .github/workflows/**
       - devshells/**
       - flake.lock
       - flake.nix

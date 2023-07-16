@@ -1,4 +1,3 @@
-
-# Infinite loop of style changes.
+# Avoid infinite loops of style changes.
+.vscode/settings.json
 .devcontainer.json
-

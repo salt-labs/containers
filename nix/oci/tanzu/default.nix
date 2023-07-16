@@ -46,6 +46,10 @@
       (
         writeTextDir "etc/group" ''
           root:x:0:
+          sudo:x:27:${user}
+          shadow:x:42:${user}
+          plugdev:x:46:${user}
+          docker:x:998:${user}
           ${user}:x:${toString gid}:
         ''
       )
@@ -70,14 +74,19 @@ in
       name = "image-root";
 
       pathsToLink = [
+        "/"
         "/bin"
         "/etc"
         "/home"
-        "/root"
-        "/var"
         "/lib"
         "/lib64"
+        "/root"
+        "/run"
+        "/sbin"
         "/usr"
+        "/usr/local"
+        "/var"
+        "/var/run"
       ];
 
       paths = with pkgs;
@@ -99,6 +108,7 @@ in
           gnused
           gnutar
           gzip
+          hey
           htop
           jq
           less
@@ -106,10 +116,10 @@ in
           openssh
           procps
           ripgrep
-          shadow
           shellcheck
           starship
           su
+          sudo
           tree
           unzip
           vim
@@ -166,6 +176,10 @@ in
     fakeRootCommands = ''
       #!${pkgs.runtimeShell}
 
+      # TODO: Make sudo work.
+      chmod +s /sbin/sudo /bin/sudo
+      echo "tanzu ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
       # Create /etc/os-release
       cat << EOF > /etc/os-release
       NAME="SaltOS"
@@ -217,7 +231,7 @@ in
                 echo "Failed to clean the Tanzu CLI plugins"
               }
               tanzu init || {
-                echo "Failed to initialise the Tanzu CLI. Please check network connectivity and try again."
+                echo "Failed to initialise the Tanzu CLI. Please check network connectivity and try running 'tanzu init' again."
               }
               break
             ;;
@@ -226,7 +240,8 @@ in
               break
             ;;
             * )
-              echo "Please answer yes or no"
+              echo "Please answer yes or no."
+              sleep 3
             ;;
           esac
 

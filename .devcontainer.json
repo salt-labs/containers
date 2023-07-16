@@ -2,7 +2,19 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "mkhl.direnv"
+        "exiasr.hadolint",
+        "nhoizey.gremlins",
+        "esbenp.prettier-vscode",
+        "github.copilot",
+        "github.vscode-github-actions",
+        "kamadorueda.alejandra",
+        "ms-azuretools.vscode-docker",
+        "pinage404.nix-extension-pack",
+        "redhat.vscode-yaml",
+        "timonwong.shellcheck",
+        "tuxtina.json2yaml",
+        "vscodevim.vim",
+        "wakatime.vscode-wakatime"
       ]
     }
   },

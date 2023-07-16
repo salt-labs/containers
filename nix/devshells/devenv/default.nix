@@ -18,6 +18,7 @@ inputs.devenv.lib.mkShell {
         nixpkgs-fmt
         statix
         cachix
+        nil
 
         sops
         #sops-init-gpg-key
@@ -29,6 +30,18 @@ inputs.devenv.lib.mkShell {
         bash
         bash-completion
         tree
+
+        ccid
+        hidapi
+        libfido2
+        libu2f-host
+        libusb-compat-0_1
+        libusb1
+        opensc
+        pam_u2f
+        pcsclite
+        pinentry
+        socat
 
         kind
         kubectl
@@ -45,7 +58,7 @@ inputs.devenv.lib.mkShell {
         export PRETTIER_CONFIG=''${PROJECT_DIR}/.linters/config/.prettierrc.yaml
         export YAMLLINT_CONFIG_FILE=''${PROJECT_DIR}/.linters/config/.yamllint.yml
 
-        figlet $PROJECT_SHELL
+        figlet ''${PROJECT_SHELL:-Unknown}
 
         hello \
           --greeting \
@@ -134,6 +147,10 @@ inputs.devenv.lib.mkShell {
         };
 
         settings = {
+          deadnix = {
+            noUnderscore = true;
+          };
+
           markdownlint = {
             config = {
               # No hard tabs allowed.
@@ -171,11 +188,40 @@ inputs.devenv.lib.mkShell {
         };
       };
 
-      devcontainer.enable = true;
+      devcontainer = {
+        enable = true;
+
+        settings = {
+          customizations = {
+            vscode = {
+              extensions = [
+                "exiasr.hadolint"
+                "nhoizey.gremlins"
+                "esbenp.prettier-vscode"
+                "github.copilot"
+                "github.vscode-github-actions"
+                "kamadorueda.alejandra"
+                "ms-azuretools.vscode-docker"
+                "pinage404.nix-extension-pack"
+                "redhat.vscode-yaml"
+                "timonwong.shellcheck"
+                "tuxtina.json2yaml"
+                "vscodevim.vim"
+                "wakatime.vscode-wakatime"
+              ];
+            };
+          };
+        };
+      };
 
       devenv = {
         flakesIntegration = true;
         #warnOnNewVersion = true;
+      };
+
+      dotenv = {
+        enable = true;
+        filename = ".env";
       };
 
       difftastic.enable = true;
@@ -211,7 +257,7 @@ inputs.devenv.lib.mkShell {
 
         rust = {
           enable = false;
-          version = "stable";
+          channel = "stable";
         };
 
         terraform = {

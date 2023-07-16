@@ -10,13 +10,11 @@ on:
     branches:
       - "trunk"
     paths:
-      - devenv.nix
-      - devenv.yaml
       - .github/workflows/**
-      - devshells/**
+      - devenv.nix
       - flake.lock
       - flake.nix
-      - oci/**
+      - nix/**
       - scripts/*
 
 permissions:

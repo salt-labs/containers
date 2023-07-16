@@ -74,16 +74,19 @@ in
       name = "image-root";
 
       pathsToLink = [
+        "/"
         "/bin"
-        "/sbin"
         "/etc"
         "/home"
-        "/root"
-        "/var"
         "/lib"
         "/lib64"
+        "/root"
+        "/run"
+        "/sbin"
         "/usr"
         "/usr/local"
+        "/var"
+        "/var/run"
       ];
 
       paths = with pkgs;

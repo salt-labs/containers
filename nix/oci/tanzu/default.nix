@@ -46,6 +46,10 @@
       (
         writeTextDir "etc/group" ''
           root:x:0:
+          sudo:x:27:${user}
+          shadow:x:42:${user}
+          plugdev:x:46:${user}
+          docker:x:998:${user}
           ${user}:x:${toString gid}:
         ''
       )
@@ -71,6 +75,7 @@ in
 
       pathsToLink = [
         "/bin"
+        "/sbin"
         "/etc"
         "/home"
         "/root"
@@ -78,6 +83,7 @@ in
         "/lib"
         "/lib64"
         "/usr"
+        "/usr/local"
       ];
 
       paths = with pkgs;
@@ -107,10 +113,10 @@ in
           openssh
           procps
           ripgrep
-          shadow
           shellcheck
           starship
           su
+          sudo
           tree
           unzip
           vim
@@ -166,6 +172,10 @@ in
     # Run these commands in fakechroot
     fakeRootCommands = ''
       #!${pkgs.runtimeShell}
+
+      # TODO: Make sudo work.
+      chmod +s /sbin/sudo /bin/sudo
+      echo "tanzu ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
       # Create /etc/os-release
       cat << EOF > /etc/os-release

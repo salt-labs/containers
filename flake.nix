@@ -40,6 +40,7 @@
       repo = "pre-commit-hooks.nix";
       ref = "master";
       flake = true;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     devenv = {
@@ -48,6 +49,16 @@
       repo = "devenv";
       ref = "main";
       flake = true;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nixos-generators = {
+      type = "github";
+      owner = "nix-community";
+      repo = "nixos-generators";
+      ref = "master";
+      flake = true;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     fenix = {
@@ -56,6 +67,7 @@
       repo = "fenix";
       ref = "main";
       flake = true;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     poetry2nix = {
@@ -64,6 +76,7 @@
       repo = "poetry2nix";
       ref = "master";
       flake = true;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     #codestream-cli = {

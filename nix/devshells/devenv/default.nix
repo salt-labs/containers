@@ -27,7 +27,7 @@ inputs.devenv.lib.mkShell {
         ssh-to-pgp
         age
 
-        bash
+        bashInteractive
         bash-completion
         tree
 

@@ -215,43 +215,8 @@ in
       cat << 'EOF' > /home/${containerUser}/.bashrc
       #!/usr/bin/env bash
 
-      # Enable bash-completion
-      if shopt -q progcomp &>/dev/null;
-      then
-        BASH_COMPLETION_ENABLED="TRUE"
-        . "${pkgs.bash-completion}/etc/profile.d/bash_completion.sh"
-      fi
-
-      # shellcheck disable=SC1090
-      source <(/bin/starship init bash --print-full-init)
-
-      # Binaries with bash completions
-      declare -r BINS=(
-        clusterctl
-        helm
-        imgpkg
-        kapp
-        kctrl
-        kubectl
-        kustomize
-        tanzu
-        ytt
-      )
-
-      if [[ "''${BASH_COMPLETION_ENABLED:-FALSE}" == "TRUE" ]];
-      then
-        echo "Loading bash completions into current shell..."
-        for BIN in "''${BINS[@]}";
-        do
-          echo "Loading bash completion for ''${BIN}"
-          source <(''${BIN} completion bash) || {
-            echo "Failed to source bash completion for ''${BIN}, skipping."
-          }
-        done
-      fi
-
       # Initialise the Tanzu CLI
-      if [[ -f "''${HOME}/.config/tanzu/config.yaml" ]];
+      if [[ -d "''${HOME}/.config/tanzu/tkg" ]];
       then
 
         echo "Tanzu CLI is already initialised."
@@ -287,6 +252,41 @@ in
 
         done
 
+      fi
+
+      # Enable bash-completion
+      if shopt -q progcomp &>/dev/null;
+      then
+        BASH_COMPLETION_ENABLED="TRUE"
+        . "${pkgs.bash-completion}/etc/profile.d/bash_completion.sh"
+      fi
+
+      # shellcheck disable=SC1090
+      source <(/bin/starship init bash --print-full-init)
+
+      # Binaries with bash completions
+      declare -r BINS=(
+        clusterctl
+        helm
+        imgpkg
+        kapp
+        kctrl
+        kubectl
+        kustomize
+        tanzu
+        ytt
+      )
+
+      if [[ "''${BASH_COMPLETION_ENABLED:-FALSE}" == "TRUE" ]];
+      then
+        echo "Loading bash completions into current shell..."
+        for BIN in "''${BINS[@]}";
+        do
+          echo "Loading bash completion for ''${BIN}"
+          source <(''${BIN} completion bash) || {
+            echo "Failed to source bash completion for ''${BIN}, skipping."
+          }
+        done
       fi
 
       figlet "Tanzu CLI"

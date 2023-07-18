@@ -204,6 +204,13 @@ in
       # Create the home dir for the container user.
       mkdir --parents /home/${containerUser}
 
+      # Stop clusterctl from checking for updates.
+      mkdir --parents /home/${containerUser}/.cluster-api
+      cat << EOF > /home/${containerUser}/.cluster-api/clusterctl.yaml
+      ---
+      CLUSTERCTL_DISABLE_VERSIONCHECK: "true"
+      EOF
+
       # Setup the .bashrc for the container user.
       cat << 'EOF' > /home/${containerUser}/.bashrc
       #!/usr/bin/env bash

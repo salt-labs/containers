@@ -92,6 +92,7 @@ in
         "/usr"
         "/usr/lib"
         "/usr/local"
+        "/usr/local/bin"
         "/usr/share/"
         "/var"
         "/var/run"
@@ -416,6 +417,65 @@ in
       EOF
       chmod +x /etc/profile.d/tanzu.sh
 
+      # Create a wrapper entrypoint
+      cat << 'EOF' > /usr/local/bin/entrypoint.sh
+      #! /usr/bin/env bash
+      clear
+      set -euo pipefail
+
+      # Launch an interactive shell session.
+      /bin/bash -i || {
+        echo "Failed to start bash"
+        exit 1
+      }
+
+      while true;
+      do
+
+        clear
+
+        # If bash exits, ask if we should restart or break and exit.
+        echo "Your current shell session in this container has endeed."
+        read -r -p "Do you want to start a new session y/n: " CHOICE
+
+        case ''$CHOICE in
+
+          [Yy]* )
+
+            echo "Restarting shell..."
+
+            # Launch an interactive shell session.
+            /bin/bash -i || {
+              echo "Failed to start bash"
+              exit 1
+            }
+
+          ;;
+
+          [Nn]* )
+
+            echo "Exiting..."
+            break
+
+          ;;
+
+          * )
+
+            echo "Please answer yes or no."
+            sleep 3
+
+          ;;
+
+        esac
+
+      done
+      clear
+      figlet "Goodbye!"
+      exit 0
+
+      EOF
+      chmod +x "/usr/local/bin/entrypoint.sh"
+
       # Create the home dir for the container user.
       mkdir --parents /home/${containerUser}
 
@@ -453,7 +513,7 @@ in
         "--"
       ];
       Cmd = [
-        "${pkgs.bashInteractive}/bin/bash"
+        "/usr/local/bin/entrypoint.sh"
       ];
       ExposedPorts = {
       };

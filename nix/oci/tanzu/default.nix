@@ -252,6 +252,10 @@ in
         then
           . "''${HOME}/.profile"
         fi
+
+      # shellcheck disable=SC1090
+      source <(/bin/starship init bash --print-full-init)
+
       fi
       EOF
       chmod +x /etc/skel/.bashrc
@@ -296,13 +300,13 @@ in
         then
           if [[ -f "''${HOME}/.config/tanzu/tkg/config.yaml" ]];
           then
-            TANZU_CLI_INIT="TRUE"
+            TANZU_CLI_INIT_DONE="TRUE"
           fi
         fi
       fi
 
       # Initialise the Tanzu CLI
-      if [[ "''${TANZU_CLI_INIT:-FALSE}" == "TRUE" ]];
+      if [[ "''${TANZU_CLI_INIT_DONE:-FALSE}" == "TRUE" ]];
       then
         echo "Tanzu CLI is already initialised."
       else
@@ -407,9 +411,6 @@ in
       fi
 
       figlet "Tanzu CLI"
-
-      # shellcheck disable=SC1090
-      source <(/bin/starship init bash --print-full-init)
 
       EOF
       chmod +x /etc/profile.d/tanzu.sh

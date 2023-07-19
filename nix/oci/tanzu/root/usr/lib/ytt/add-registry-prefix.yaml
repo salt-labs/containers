@@ -1,0 +1,23 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:assert", "assert")
+#@ load("@ytt:library", "library")
+
+#@overlay/match by=overlay.all
+#@overlay/merge
+---
+#@overlay/match expects=1
+#@overlay/merge
+clientOptions:
+  #@overlay/match expects=1
+  #@overlay/merge
+  cli:
+    #@overlay/match expects=1
+    #@overlay/merge
+    discoverySources:
+      #@overlay/match by=overlay.all, expects="1+"
+      #@overlay/merge
+      - oci:
+          #@overlay/match expects=1
+          #@overlay/replace via=lambda left, right: right+left
+          image: #@ data.values.PULL_THROUGH_CACHE + "/" or assert("Environment variable TANZU_PULL_THROUGH_CACHE is required. NOTE: the variable is case-sensitive.")

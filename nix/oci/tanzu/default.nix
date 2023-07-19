@@ -288,8 +288,21 @@ in
         fi
       fi
 
+      # The rules that define whether the CLI has been "initialized" are:
+      # We need more than one check due to bind mounts.
+      if [[ -f "''${HOME}/.config/tanzu/config.yaml" ]];
+      then
+        if [[ -d "''${HOME}/.config/tanzu/tkg" ]];
+        then
+          if [[ -f "''${HOME}/.config/tanzu/tkg/config.yaml" ]];
+          then
+            TANZU_CLI_INIT="TRUE"
+          fi
+        fi
+      fi
+
       # Initialise the Tanzu CLI
-      if [[ -d "''${HOME}/.config/tanzu/tkg" ]];
+      if [[ "''${TANZU_CLI_INIT:-FALSE}" == "TRUE" ]];
       then
         echo "Tanzu CLI is already initialised."
       else

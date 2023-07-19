@@ -17,6 +17,12 @@
     inherit crossPkgs;
   };
 
+  root_files = builtins.path {
+    name = "root_files";
+    path = ./root/.;
+    recursive = true;
+  };
+
   environmentHelpers = with pkgs.dockerTools; [
     usrBinEnv
     binSh
@@ -84,6 +90,7 @@ in
         "/run"
         "/sbin"
         "/usr"
+        "/usr/lib"
         "/usr/local"
         "/usr/share/"
         "/var"
@@ -162,6 +169,7 @@ in
           carvel
           tanzu
         ]
+        ++ [root_files]
         ++ environmentHelpers
         ++ nonRootShadowSetup {
           user = containerUser;
@@ -179,7 +187,8 @@ in
 
       # TODO: Make sudo work.
       chmod +s /sbin/sudo /bin/sudo
-      echo "tanzu ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+      chown root:root /sbin/sudo /bin/sudo
+      echo "tanzu ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/tanzu
 
       # Create /etc/os-release
       cat << EOF > /etc/os-release
@@ -201,57 +210,155 @@ in
       ln -s ${pkgs.glibc}/lib64 /lib64/glibc
       ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
 
-      # Create the home dir for the container user.
-      mkdir --parents /home/${containerUser}
+      # Create a default global profile.
+      cat << 'EOF' > /etc/profile
+      #!/usr/bin/env bash
 
-      # Stop clusterctl from checking for updates.
-      mkdir --parents /home/${containerUser}/.cluster-api
-      cat << EOF > /home/${containerUser}/.cluster-api/clusterctl.yaml
+      if [[ "$(id -u)" -eq 0 ]];
+      then
+        PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      else
+        PATH="/usr/local/bin:/usr/bin:/bin"
+      fi
+      export PATH
+
+      if [[ -d "/etc/profile.d" ]];
+      then
+        for FILE in /etc/profile.d/*.sh;
+        do
+          if [[ -r "''${FILE}" ]];
+          then
+            . "''${FILE}"
+          fi
+        done
+        unset FILE
+      fi
+      EOF
+      chmod +x /etc/profile
+
+      # Default user .bashrc
+      mkdir --parents /etc/skel
+      cat << 'EOF' > /etc/skel/.bashrc
+      #!/usr/bin/env bash
+
+      if [[ -f "/etc/profile" ]];
+      then
+        . "/etc/profile"
+      fi
+
+      if [[ -n "''${BASH_VERSION}" ]];
+      then
+        if [[ -f "''${HOME}/.profile" ]];
+        then
+          . "''${HOME}/.profile"
+        fi
+      fi
+      EOF
+      chmod +x /etc/skel/.bashrc
+
+      # Create clusterctl config
+      mkdir --parents /etc/skel/.cluster-api
+      cat << EOF > /etc/skel/.cluster-api/clusterctl.yaml
       ---
       CLUSTERCTL_DISABLE_VERSIONCHECK: "true"
       EOF
 
-      # Setup the .bashrc for the container user.
-      cat << 'EOF' > /home/${containerUser}/.bashrc
+      # Setup the Tanzu profile for all users.
+      cat << 'EOF' > /etc/profile.d/tanzu.sh
       #!/usr/bin/env bash
+
+      # Variables
+      export YTT_LIB="/usr/lib/ytt/"
+
+      # HACK: A better method is needed.
+      # Check for a proxy settings script.
+      if [[ "''${ENABLE_PROXY_SCRIPT:-FALSE}" == "TRUE" ]];
+      then
+        if [[ -f "''${WORKDIR}/scripts/proxy.sh" ]];
+        then
+          echo "Loading proxy settings from ''${WORKDIR}/scripts/proxy.sh"
+          source "''${WORKDIR}/scripts/proxy.sh"
+          proxy_on || {
+            echo "Failed to enable proxy settings"
+            exit 1
+          }
+        else
+          echo "Proxy settings are enabled but ''${WORKDIR}/scripts/proxy.sh does not exist."
+          exit 1
+        fi
+      fi
 
       # Initialise the Tanzu CLI
       if [[ -d "''${HOME}/.config/tanzu/tkg" ]];
       then
-
         echo "Tanzu CLI is already initialised."
-
       else
-
         while true;
         do
-
           clear
           read -r -p "Initialise the Tanzu CLI? y/n: " CHOICE
-
           case ''$CHOICE in
+
             [Yy]* )
+
               echo "Initialising Tanzu CLI..."
+
               tanzu plugin clean || {
                 echo "Failed to clean the Tanzu CLI plugins"
               }
+
+              # HACK: A better method is needed, perhaps interactive 'tanzu plugin source'
+              if [[ "''${TANZU_PULL_THROUGH_CACHE:-EMPTY}" == "EMPTY" ]];
+              then
+
+                echo "No pull-through prefix provided, using default."
+
+              else
+
+                echo "Pull-through prefix provided, prefixing ''${TANZU_PULL_THROUGH_CACHE}"
+
+                # Capture existing OCI URL
+                TANZU_CLI_OCI_URL="$(cat ''${HOME}/.config/tanzu/config.yaml | yq '.clientOptions.cli.discoverySources.[0].oci.image')"
+
+                # Add the pull-through cache OCI URL
+                tanzu plugin source add \
+                  --name pull-through-cache \
+                  --type oci \
+                  --uri "''${TANZU_PULL_THROUGH_CACHE}/''${TANZU_CLI_OCI_URL}" || {
+                    echo "Failed to add the pull-through cache Tanzu CLI plugin source"
+                  }
+
+              fi
+
               tanzu init || {
-                echo "Failed to initialise the Tanzu CLI. Please check network connectivity and try running 'tanzu init' again."
+                echo "Failed to initialise the Tanzu CLI using configured sources."
+                echo "Please check network connectivity and try running 'tanzu init' again."
               }
+
+              tanzu plugin sync || {
+                echo "Failed to synchronise Tanzu CLI plugins"
+              }
+
               break
+
             ;;
+
             [Nn]* )
+
               echo "Skipping Tanzu CLI initialisation"
               break
+
             ;;
+
             * )
+
               echo "Please answer yes or no."
               sleep 3
+
             ;;
+
           esac
-
         done
-
       fi
 
       # Enable bash-completion
@@ -260,9 +367,6 @@ in
         BASH_COMPLETION_ENABLED="TRUE"
         . "${pkgs.bash-completion}/etc/profile.d/bash_completion.sh"
       fi
-
-      # shellcheck disable=SC1090
-      source <(/bin/starship init bash --print-full-init)
 
       # Binaries with bash completions
       declare -r BINS=(
@@ -291,9 +395,20 @@ in
 
       figlet "Tanzu CLI"
 
-      EOF
+      # shellcheck disable=SC1090
+      source <(/bin/starship init bash --print-full-init)
 
-      # Fix home permissions
+      EOF
+      chmod +x /etc/profile.d/tanzu.sh
+
+      # Create the home dir for the container user.
+      mkdir --parents /home/${containerUser}
+
+      # Copy dotfiles for user ${containerUser} and root.
+      cp --recursive /etc/skel/. /home/${containerUser}/
+      cp --recursive /etc/skel/. /root/
+
+      # Fix home permissions for user ${containerUser}
       chown -R ${containerUID}:${containerGID} /home/${containerUser} || {
         echo "Failed to chown home for user ${containerUser}"
         exit 1
@@ -331,7 +446,6 @@ in
         "LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib64;/lib64/stdenv;/lib64/glibc"
         "PAGER=less"
         "NIX_PAGER=less"
-        "PATH=/workdir:/usr/bin:/bin:/sbin"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "TERM=xterm"

@@ -46,6 +46,9 @@ inputs.devenv.lib.mkShell {
         kind
         kubectl
         dive
+        ytt
+        kapp
+        vendir
       ];
 
       env = {

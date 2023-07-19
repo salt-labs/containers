@@ -274,6 +274,8 @@ in
       cat << 'EOF' > /etc/profile.d/tanzu.sh
       #!/usr/bin/env bash
 
+      set -m
+
       # Variables
       export YTT_LIB="/usr/lib/ytt/"
 
@@ -284,13 +286,12 @@ in
         if [[ -f "''${WORKDIR}/scripts/proxy.sh" ]];
         then
           echo "Loading proxy settings from ''${WORKDIR}/scripts/proxy.sh"
-          source "''${WORKDIR}/scripts/proxy.sh"
-          proxy_on || {
+          source "''${WORKDIR}/scripts/proxy.sh" && proxy_on || {
             echo "Failed to enable proxy settings"
             exit 1
           }
         else
-          echo "Proxy settings are enabled but ''${WORKDIR}/scripts/proxy.sh does not exist."
+          echo "Proxy settings are enabled but ''${WORKDIR}/scripts/proxy.sh does not exist. Have you mounted the bind volume?"
           exit 1
         fi
       fi
@@ -422,7 +423,6 @@ in
       cat << 'EOF' > /usr/local/bin/entrypoint.sh
       #! /usr/bin/env bash
       clear
-      set -euo pipefail
 
       # Launch an interactive shell session.
       /bin/bash -i || {

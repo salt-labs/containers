@@ -109,6 +109,7 @@ in
           coreutils-full
           curlFull
           diffutils
+          direnv
           figlet
           gawk
           git

@@ -128,6 +128,7 @@ in
           starship
           su
           sudo
+          tini
           tree
           unzip
           vim
@@ -448,6 +449,8 @@ in
         "org.opencontainers.image.description" = "tanzu";
       };
       Entrypoint = [
+        "tini"
+        "--"
       ];
       Cmd = [
         "${pkgs.bashInteractive}/bin/bash"

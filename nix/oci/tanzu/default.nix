@@ -427,7 +427,9 @@ in
     '';
 
     config = {
-      User = containerUser;
+      # Docker socket needs to be mounted for docker-from-docker
+      #User = containerUser;
+      User = "root";
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };
@@ -440,7 +442,6 @@ in
       };
       Env = [
         "CHARSET=UTF-8"
-        "DOCKER_CONFIG=/home/${containerUser}/.docker"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
         "LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib64;/lib64/stdenv;/lib64/glibc"

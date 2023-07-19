@@ -502,9 +502,7 @@ in
     '';
 
     config = {
-      # Docker socket needs to be mounted for docker-from-docker
-      #User = containerUser;
-      User = "root";
+      User = containerUser;
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };

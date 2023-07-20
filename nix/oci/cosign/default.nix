@@ -4,8 +4,8 @@
   self,
   ...
 }: let
-  lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  creationDate = builtins.substring 0 8 lastModifiedDate;
+  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 modifiedDate;
 in
   pkgs.dockerTools.buildImage {
     name = "cosign";

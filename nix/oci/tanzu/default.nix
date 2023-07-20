@@ -4,8 +4,9 @@
   self,
   ...
 }: let
-  lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  creationDate = builtins.substring 0 8 lastModifiedDate;
+
+  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 modifiedDate;
 
   containerUser = "tanzu";
   containerUID = "1000";
@@ -103,6 +104,7 @@ in
         "/usr/share/bash-completion"
         "/var"
         "/var/run"
+        "/var/lib/docker"
       ];
 
       paths = with pkgs;
@@ -139,6 +141,7 @@ in
           starship
           su
           sudo
+          super
           tini
           tree
           unzip
@@ -155,16 +158,21 @@ in
           iproute
 
           # Docker Tools
+          containerd
           dive
           docker
           docker-buildx
           docker-gc
           docker-ls
+          docker-slim
+          docker-proxy
+          runc
 
           # Kubernetes Tools
           clusterctl
           kail
           kapp
+          kind
           kube-bench
           kube-linter
           kubectl
@@ -232,6 +240,8 @@ in
 
     config = {
       User = containerUser;
+      # DinD
+      # User = root;
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };
@@ -243,6 +253,9 @@ in
         "/usr/local/bin/entrypoint.sh"
       ];
       ExposedPorts = {
+        # DinD
+        #"2375/tcp" = {};
+        #"2376/tcp" = {};
       };
       Env = [
         "CHARSET=UTF-8"
@@ -261,6 +274,8 @@ in
       WorkDir = "/workdir";
       Volumes = {
         "/vscode" = {};
+        # DinD
+        #"/var/lib/docker" = {};
       };
     };
   }

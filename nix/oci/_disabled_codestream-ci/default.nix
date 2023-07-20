@@ -3,8 +3,12 @@
   pkgsUnstable,
   crossPkgs,
   pkgCodestreamCLI,
+  self,
   ...
 }: let
+  lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 lastModifiedDate;
+
   containerUser = "codestream-ci";
 
   entrypoint = pkgs.callPackage ./entrypoint {};
@@ -79,7 +83,7 @@ in
   pkgs.dockerTools.buildLayeredImage {
     name = "codestream-ci";
     tag = "latest";
-    #created = "now";
+    created = creationDate;
 
     #fromImage = baseImage;
     maxLayers = 100;

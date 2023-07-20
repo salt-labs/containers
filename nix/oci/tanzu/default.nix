@@ -1,8 +1,12 @@
 {
   pkgs,
   crossPkgs,
+  self,
   ...
 }: let
+  lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 lastModifiedDate;
+
   containerUser = "tanzu";
   containerUID = "1000";
   containerGID = "1000";
@@ -70,7 +74,7 @@ in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu";
     tag = "latest";
-    #created = "now";
+    created = creationDate;
 
     architecture = "amd64";
 

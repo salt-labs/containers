@@ -1,8 +1,12 @@
 {
   pkgs,
   crossPkgs,
+  self,
   ...
 }: let
+  lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 lastModifiedDate;
+
   pivnet = pkgs.callPackage ./pivnet.nix {
     inherit pkgs;
     inherit crossPkgs;
@@ -11,7 +15,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "pivnet";
     tag = "latest";
-    #created = "now";
+    created = creationDate;
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

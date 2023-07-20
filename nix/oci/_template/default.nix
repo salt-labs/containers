@@ -8,8 +8,12 @@
   pkgs,
   system,
   poetry2nix,
+  self,
   ...
 }: let
+  lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 lastModifiedDate;
+
   #app = pkgs.callPackage ./poetry {
   #  inherit pkgs;
   #  inherit system;
@@ -33,7 +37,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "template";
     tag = "latest";
-    #created = "now";
+    created = creationDate;
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

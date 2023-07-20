@@ -1,42 +1,46 @@
 {
   pkgs,
   crossPkgs,
+  self,
   ...
-}:
-pkgs.dockerTools.buildImage {
-  name = "semgrep";
-  tag = "latest";
-  #created = "now";
+}: let
+  lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 lastModifiedDate;
+in
+  pkgs.dockerTools.buildImage {
+    name = "semgrep";
+    tag = "latest";
+    created = creationDate;
 
-  copyToRoot = pkgs.buildEnv {
-    name = "image-root";
-    pathsToLink = ["/bin"];
+    copyToRoot = pkgs.buildEnv {
+      name = "image-root";
+      pathsToLink = ["/bin"];
 
-    paths = with pkgs; [
-      # Common
-      busybox
-      curlFull
-      cacert
+      paths = with pkgs; [
+        # Common
+        busybox
+        curlFull
+        cacert
 
-      # Tools
-      semgrep
-    ];
-  };
-
-  config = {
-    Labels = {
-      "org.opencontainers.image.description" = "semgrep";
+        # Tools
+        semgrep
+      ];
     };
-    Entrypoint = [
-      "${pkgs.semgrep}/bin/semgrep"
-    ];
-    Cmd = [
-    ];
-    ExposedPorts = {
+
+    config = {
+      Labels = {
+        "org.opencontainers.image.description" = "semgrep";
+      };
+      Entrypoint = [
+        "${pkgs.semgrep}/bin/semgrep"
+      ];
+      Cmd = [
+      ];
+      ExposedPorts = {
+      };
+      Env = [
+        "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+      ];
+      WorkingDir = "/workdir";
     };
-    Env = [
-      "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-    ];
-    WorkingDir = "/workdir";
-  };
-}
+  }

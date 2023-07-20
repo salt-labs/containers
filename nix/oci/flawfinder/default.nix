@@ -1,42 +1,46 @@
 {
   pkgs,
   crossPkgs,
+  self,
   ...
-}:
-pkgs.dockerTools.buildImage {
-  name = "flawfinder";
-  tag = "latest";
-  #created = "now";
+}: let
+  lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 lastModifiedDate;
+in
+  pkgs.dockerTools.buildImage {
+    name = "flawfinder";
+    tag = "latest";
+    created = creationDate;
 
-  copyToRoot = pkgs.buildEnv {
-    name = "image-root";
-    pathsToLink = ["/bin"];
+    copyToRoot = pkgs.buildEnv {
+      name = "image-root";
+      pathsToLink = ["/bin"];
 
-    paths = with pkgs; [
-      # Common
-      busybox
-      curlFull
-      cacert
+      paths = with pkgs; [
+        # Common
+        busybox
+        curlFull
+        cacert
 
-      # Tools
-      flawfinder
-    ];
-  };
-
-  config = {
-    Labels = {
-      "org.opencontainers.image.description" = "Flawfinder";
+        # Tools
+        flawfinder
+      ];
     };
-    Entrypoint = [
-      "${pkgs.flawfinder}/bin/flawfinder"
-    ];
-    Cmd = [
-    ];
-    ExposedPorts = {
+
+    config = {
+      Labels = {
+        "org.opencontainers.image.description" = "Flawfinder";
+      };
+      Entrypoint = [
+        "${pkgs.flawfinder}/bin/flawfinder"
+      ];
+      Cmd = [
+      ];
+      ExposedPorts = {
+      };
+      Env = [
+        "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+      ];
+      WorkingDir = "/workdir";
     };
-    Env = [
-      "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-    ];
-    WorkingDir = "/workdir";
-  };
-}
+  }

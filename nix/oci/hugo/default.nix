@@ -16,7 +16,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "hugo";
     tag = "latest";
-    created = creationDate;
+    # created = creationDate;
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

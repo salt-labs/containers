@@ -30,7 +30,7 @@ in
   pkgs.dockerTools.buildLayeredImage {
     name = "kaniko";
     tag = "latest";
-    created = creationDate;
+    # created = creationDate;
 
     #fromImage = baseImage;
     maxLayers = 100;

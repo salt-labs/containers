@@ -10,7 +10,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "packer";
     tag = "latest";
-    created = creationDate;
+    # created = creationDate;
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

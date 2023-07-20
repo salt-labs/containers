@@ -83,7 +83,7 @@ in
   pkgs.dockerTools.buildLayeredImage {
     name = "codestream-ci";
     tag = "latest";
-    created = creationDate;
+    # created = creationDate;
 
     #fromImage = baseImage;
     maxLayers = 100;

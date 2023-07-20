@@ -4,7 +4,6 @@
   self,
   ...
 }: let
-
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   creationDate = builtins.substring 0 8 modifiedDate;
 
@@ -75,7 +74,7 @@ in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu";
     tag = "latest";
-    created = creationDate;
+    # created = creationDate;
 
     architecture = "amd64";
 

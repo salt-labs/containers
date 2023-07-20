@@ -1,0 +1,72 @@
+##################################################
+#
+# Reference: https://github.com/crate-ci/typos/blob/master/docs/reference.md
+#
+# typos --type-list
+# typos --dump-config
+#
+##################################################
+
+[default]
+
+binary = false
+check-filename = true
+check-file = true
+unicode = true
+ignore-hex = true
+identifier-leading-digits = false
+locale = "en_AU"
+
+[default.extend-identifiers]
+
+[default.extend-words]
+
+SOM-ID = "SOM-ID"
+kubeconfig = "kubeconfig"
+
+[files]
+
+extend-exclude = [
+	".typos.toml",
+	"bootstrap/",
+	"bootstrap/**"
+]
+
+ignore-hidden = true
+ignore-files = true
+ignore-dot = true
+ignore-vcs = true
+ignore-global = true
+ignore-parent = true
+
+[type.rust]
+
+extend-glob = []
+
+[type.rust.extend-identifiers]
+
+[type.rust.extend-words]
+
+ser = "ser"
+flate = "flate"
+
+[type.cert]
+
+extend-glob = []
+check-file = false
+
+[type.lock]
+
+extend-glob = []
+check-file = false
+
+[type.gif]
+
+extend-glob = ["*.gif", "*.jpg", "*.png"]
+binary = false
+check-file = false
+unicode = true
+
+[type.gif.extend-identifiers]
+
+[type.gif.extend-words]

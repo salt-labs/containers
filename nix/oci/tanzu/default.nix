@@ -92,7 +92,9 @@ in
         "/usr"
         "/usr/lib"
         "/usr/local"
+        "/usr/local/bin"
         "/usr/share/"
+        "/usr/share/bash-completion"
         "/var"
         "/var/run"
       ];
@@ -108,7 +110,9 @@ in
           coreutils-full
           curlFull
           diffutils
+          direnv
           figlet
+          file
           gawk
           git
           gnupg
@@ -128,6 +132,7 @@ in
           starship
           su
           sudo
+          tini
           tree
           unzip
           vim
@@ -243,6 +248,7 @@ in
 
       if [[ -f "/etc/profile" ]];
       then
+        echo "Loading global shell profile..."
         . "/etc/profile"
       fi
 
@@ -250,8 +256,13 @@ in
       then
         if [[ -f "''${HOME}/.profile" ]];
         then
+          echo "Loading user shell profile..."
           . "''${HOME}/.profile"
         fi
+
+        # shellcheck disable=SC1090
+        source <(/bin/starship init bash --print-full-init)
+
       fi
       EOF
       chmod +x /etc/skel/.bashrc
@@ -267,6 +278,8 @@ in
       cat << 'EOF' > /etc/profile.d/tanzu.sh
       #!/usr/bin/env bash
 
+      set -m
+
       # Variables
       export YTT_LIB="/usr/lib/ytt/"
 
@@ -277,19 +290,33 @@ in
         if [[ -f "''${WORKDIR}/scripts/proxy.sh" ]];
         then
           echo "Loading proxy settings from ''${WORKDIR}/scripts/proxy.sh"
-          source "''${WORKDIR}/scripts/proxy.sh"
-          proxy_on || {
+          source "''${WORKDIR}/scripts/proxy.sh" && proxy_on || {
             echo "Failed to enable proxy settings"
             exit 1
           }
         else
-          echo "Proxy settings are enabled but ''${WORKDIR}/scripts/proxy.sh does not exist."
+          echo "Proxy settings are enabled but ''${WORKDIR}/scripts/proxy.sh does not exist. Have you mounted the bind volume?"
           exit 1
+        fi
+      else
+        echo "The Proxy script is not enabled, assuming direct internet access."
+      fi
+
+      # We need more than one check due to bind mounts.
+      # The rules that define whether the CLI has been "initialized" are:
+      if [[ -f "''${HOME}/.config/tanzu/config.yaml" ]];
+      then
+        if [[ -d "''${HOME}/.config/tanzu/tkg" ]];
+        then
+          if [[ -f "''${HOME}/.config/tanzu/tkg/config.yaml" ]];
+          then
+            TANZU_CLI_INIT_DONE="TRUE"
+          fi
         fi
       fi
 
       # Initialise the Tanzu CLI
-      if [[ -d "''${HOME}/.config/tanzu/tkg" ]];
+      if [[ "''${TANZU_CLI_INIT_DONE:-FALSE}" == "TRUE" ]];
       then
         echo "Tanzu CLI is already initialised."
       else
@@ -361,14 +388,7 @@ in
         done
       fi
 
-      # Enable bash-completion
-      if shopt -q progcomp &>/dev/null;
-      then
-        BASH_COMPLETION_ENABLED="TRUE"
-        . "${pkgs.bash-completion}/etc/profile.d/bash_completion.sh"
-      fi
-
-      # Binaries with bash completions
+      # Binaries we need to source manual bash completions from.
       declare -r BINS=(
         clusterctl
         helm
@@ -380,13 +400,15 @@ in
         tanzu
         ytt
       )
+      # TODO: vendir
+      # vendir issue: https://github.com/carvel-dev/vendir/issues/275
+      # The workaround is fragile.
 
-      if [[ "''${BASH_COMPLETION_ENABLED:-FALSE}" == "TRUE" ]];
+      if shopt -q progcomp;
       then
         echo "Loading bash completions into current shell..."
         for BIN in "''${BINS[@]}";
         do
-          echo "Loading bash completion for ''${BIN}"
           source <(''${BIN} completion bash) || {
             echo "Failed to source bash completion for ''${BIN}, skipping."
           }
@@ -395,11 +417,62 @@ in
 
       figlet "Tanzu CLI"
 
-      # shellcheck disable=SC1090
-      source <(/bin/starship init bash --print-full-init)
-
       EOF
       chmod +x /etc/profile.d/tanzu.sh
+
+      # Create a wrapper entrypoint
+      cat << 'EOF' > /usr/local/bin/entrypoint.sh
+      #! /usr/bin/env bash
+
+      clear
+
+      # Launch an interactive shell session.
+      /bin/bash -i
+
+      while true;
+      do
+
+        clear
+
+        # If bash exits, ask if we should restart or break and exit.
+        echo -e "\n"
+        echo "Your current shell session in this container has terminated."
+        read -r -p "Start a new shell session? y/n: " CHOICE
+
+        case ''$CHOICE in
+
+          [Yy]* )
+
+            echo "Restarting shell..."
+
+            # Launch an interactive shell session.
+            /bin/bash -i
+
+          ;;
+
+          [Nn]* )
+
+            echo "Exiting..."
+            break
+
+          ;;
+
+          * )
+
+            echo "Please answer yes or no."
+            sleep 3
+
+          ;;
+
+        esac
+
+      done
+
+      clear
+      figlet "Goodbye!"
+      exit 0
+      EOF
+      chmod +x "/usr/local/bin/entrypoint.sh"
 
       # Create the home dir for the container user.
       mkdir --parents /home/${containerUser}
@@ -427,16 +500,16 @@ in
     '';
 
     config = {
-      # Docker socket needs to be mounted for docker-from-docker
-      #User = containerUser;
-      User = "root";
+      User = containerUser;
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };
       Entrypoint = [
+        "tini"
+        "--"
       ];
       Cmd = [
-        "${pkgs.bashInteractive}/bin/bash"
+        "/usr/local/bin/entrypoint.sh"
       ];
       ExposedPorts = {
       };

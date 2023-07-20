@@ -23,14 +23,11 @@ locale = "en_AU"
 
 SOM-ID = "SOM-ID"
 kubeconfig = "kubeconfig"
+doas = "doas"
 
 [files]
 
-extend-exclude = [
-	".typos.toml",
-	"bootstrap/",
-	"bootstrap/**"
-]
+extend-exclude = [".typos.toml", "bootstrap/", "bootstrap/**"]
 
 ignore-hidden = true
 ignore-files = true

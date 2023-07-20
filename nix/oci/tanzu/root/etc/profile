@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+if [[ "$(id -u)" -eq 0 ]]; then
+	PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+else
+	PATH="/usr/local/bin:/usr/bin:/bin"
+fi
+export PATH
+
+if [[ -d "/etc/profile.d" ]]; then
+
+	for FILE in /etc/profile.d/*.sh; do
+
+		if [[ -r "${FILE}" ]]; then
+			. "${FILE}"
+		fi
+
+	done
+	unset FILE
+
+fi

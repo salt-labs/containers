@@ -112,6 +112,7 @@ in
           diffutils
           direnv
           figlet
+          file
           gawk
           git
           gnupg
@@ -240,36 +241,6 @@ in
       EOF
       chmod +x /etc/profile
 
-      # Bash completion
-      cat << 'EOF' > /etc/profile.d/bash_completion.sh
-      #! /usr/bin/env bash
-
-      # Check for interactive bash and that we haven't already been sourced.
-      if [ "x''${BASH_VERSION-}" != x -a "x''${PS1-}" != x -a "x''${BASH_COMPLETION_VERSINFO-}" = x ];
-      then
-        # Check for recent enough version of bash.
-        if [ "''${BASH_VERSINFO[0]}" -gt 4 ] ||
-          [ "''${BASH_VERSINFO[0]}" -eq 4 -a "''${BASH_VERSINFO[1]}" -ge 2 ];
-        then
-          [ -r "''${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion" ] &&
-            . "''${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion"
-          if shopt -q progcomp && [ -r /usr/share/bash-completion/bash_completion ];
-          then
-            # Source completion code.
-            . /usr/share/bash-completion/bash_completion
-          fi
-        fi
-      fi
-
-      # Enable bash-completion the Nix way.
-      if shopt -q progcomp &>/dev/null;
-      then
-        export BASH_COMPLETION_ENABLED="TRUE"
-        . "${pkgs.bash-completion}/etc/profile.d/bash_completion.sh"
-      fi
-      EOF
-      chmod +x /etc/profile.d/bash_completion.sh
-
       # Default user .bashrc
       mkdir --parents /etc/skel
       cat << 'EOF' > /etc/skel/.bashrc
@@ -277,6 +248,7 @@ in
 
       if [[ -f "/etc/profile" ]];
       then
+        echo "Loading global shell profile..."
         . "/etc/profile"
       fi
 
@@ -284,6 +256,7 @@ in
       then
         if [[ -f "''${HOME}/.profile" ]];
         then
+          echo "Loading user shell profile..."
           . "''${HOME}/.profile"
         fi
 
@@ -325,6 +298,8 @@ in
           echo "Proxy settings are enabled but ''${WORKDIR}/scripts/proxy.sh does not exist. Have you mounted the bind volume?"
           exit 1
         fi
+      else
+        echo "The Proxy script is not enabled, assuming direct internet access."
       fi
 
       # We need more than one check due to bind mounts.
@@ -425,8 +400,11 @@ in
         tanzu
         ytt
       )
+      # TODO: vendir
+      # vendir issue: https://github.com/carvel-dev/vendir/issues/275
+      # The workaround is fragile.
 
-      if [[ "''${BASH_COMPLETION_ENABLED:-FALSE}" == "TRUE" ]];
+      if shopt -q progcomp;
       then
         echo "Loading bash completions into current shell..."
         for BIN in "''${BINS[@]}";
@@ -449,10 +427,7 @@ in
       clear
 
       # Launch an interactive shell session.
-      /bin/bash -i || {
-        echo "Failed to start bash"
-        exit 1
-      }
+      /bin/bash -i
 
       while true;
       do
@@ -460,8 +435,9 @@ in
         clear
 
         # If bash exits, ask if we should restart or break and exit.
-        echo "Your current shell session in this container has endeed."
-        read -r -p "Do you want to start a new session y/n: " CHOICE
+        echo -e "\n"
+        echo "Your current shell session in this container has terminated."
+        read -r -p "Start a new shell session? y/n: " CHOICE
 
         case ''$CHOICE in
 
@@ -470,10 +446,7 @@ in
             echo "Restarting shell..."
 
             # Launch an interactive shell session.
-            /bin/bash -i || {
-              echo "Failed to start bash"
-              exit 1
-            }
+            /bin/bash -i
 
           ;;
 

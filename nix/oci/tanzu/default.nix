@@ -94,6 +94,7 @@ in
         "/usr/local"
         "/usr/local/bin"
         "/usr/share/"
+        "/usr/share/bash-completion"
         "/var"
         "/var/run"
       ];
@@ -239,6 +240,36 @@ in
       EOF
       chmod +x /etc/profile
 
+      # Bash completion
+      cat << 'EOF' > /etc/profile.d/bash_completion.sh
+      #! /usr/bin/env bash
+
+      # Check for interactive bash and that we haven't already been sourced.
+      if [ "x''${BASH_VERSION-}" != x -a "x''${PS1-}" != x -a "x''${BASH_COMPLETION_VERSINFO-}" = x ];
+      then
+        # Check for recent enough version of bash.
+        if [ "''${BASH_VERSINFO[0]}" -gt 4 ] ||
+          [ "''${BASH_VERSINFO[0]}" -eq 4 -a "''${BASH_VERSINFO[1]}" -ge 2 ];
+        then
+          [ -r "''${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion" ] &&
+            . "''${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion"
+          if shopt -q progcomp && [ -r /usr/share/bash-completion/bash_completion ];
+          then
+            # Source completion code.
+            . /usr/share/bash-completion/bash_completion
+          fi
+        fi
+      fi
+
+      # Enable bash-completion the Nix way.
+      if shopt -q progcomp &>/dev/null;
+      then
+        export BASH_COMPLETION_ENABLED="TRUE"
+        . "${pkgs.bash-completion}/etc/profile.d/bash_completion.sh"
+      fi
+      EOF
+      chmod +x /etc/profile.d/bash_completion.sh
+
       # Default user .bashrc
       mkdir --parents /etc/skel
       cat << 'EOF' > /etc/skel/.bashrc
@@ -256,8 +287,8 @@ in
           . "''${HOME}/.profile"
         fi
 
-      # shellcheck disable=SC1090
-      source <(/bin/starship init bash --print-full-init)
+        # shellcheck disable=SC1090
+        source <(/bin/starship init bash --print-full-init)
 
       fi
       EOF
@@ -296,8 +327,8 @@ in
         fi
       fi
 
-      # The rules that define whether the CLI has been "initialized" are:
       # We need more than one check due to bind mounts.
+      # The rules that define whether the CLI has been "initialized" are:
       if [[ -f "''${HOME}/.config/tanzu/config.yaml" ]];
       then
         if [[ -d "''${HOME}/.config/tanzu/tkg" ]];
@@ -382,14 +413,7 @@ in
         done
       fi
 
-      # Enable bash-completion
-      if shopt -q progcomp &>/dev/null;
-      then
-        BASH_COMPLETION_ENABLED="TRUE"
-        . "${pkgs.bash-completion}/etc/profile.d/bash_completion.sh"
-      fi
-
-      # Binaries with bash completions
+      # Binaries we need to source manual bash completions from.
       declare -r BINS=(
         clusterctl
         helm
@@ -407,7 +431,6 @@ in
         echo "Loading bash completions into current shell..."
         for BIN in "''${BINS[@]}";
         do
-          echo "Loading bash completion for ''${BIN}"
           source <(''${BIN} completion bash) || {
             echo "Failed to source bash completion for ''${BIN}, skipping."
           }
@@ -422,6 +445,7 @@ in
       # Create a wrapper entrypoint
       cat << 'EOF' > /usr/local/bin/entrypoint.sh
       #! /usr/bin/env bash
+
       clear
 
       # Launch an interactive shell session.
@@ -470,10 +494,10 @@ in
         esac
 
       done
+
       clear
       figlet "Goodbye!"
       exit 0
-
       EOF
       chmod +x "/usr/local/bin/entrypoint.sh"
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ "${ENABLE_DEBUG:-FALSE}" == "TRUE" ]]; then
+if [[ ${ENABLE_DEBUG:-FALSE} == "TRUE" ]]; then
 	set -x
 fi
 
@@ -18,26 +18,26 @@ while true; do
 
 	case $CHOICE in
 
-		[Yy]*)
+	[Yy]*)
 
-			echo "Restarting shell..."
-			/usr/bin/env bash --login || true
+		echo "Restarting shell..."
+		/usr/bin/env bash --login || true
 
-			;;
+		;;
 
-		[Nn]*)
+	[Nn]*)
 
-			echo "Exiting..."
-			break
+		echo "Exiting..."
+		break
 
-			;;
+		;;
 
-		*)
+	*)
 
-			echo "Please answer yes or no."
-			sleep 1
+		echo "Please answer yes or no."
+		sleep 1
 
-			;;
+		;;
 
 	esac
 

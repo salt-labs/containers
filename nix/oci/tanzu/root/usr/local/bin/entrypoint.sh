@@ -5,7 +5,7 @@ if [[ ${ENABLE_DEBUG:-FALSE} == "TRUE" ]]; then
 fi
 
 # Start a fresh shell session.
-/usr/bin/env bash -i --login || true
+/usr/bin/env bash --login -i || true
 
 while true; do
 
@@ -21,7 +21,7 @@ while true; do
 	[Yy]*)
 
 		echo "Restarting shell..."
-		/usr/bin/env bash -i --login || true
+		/usr/bin/env bash --login -i || true
 
 		;;
 

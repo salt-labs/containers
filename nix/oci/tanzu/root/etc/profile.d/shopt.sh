@@ -1,5 +1,3 @@
-#! /usr/bin/env bash
-
 ##################################################
 # Name: shopt
 # Description: Contains the bash shell options configurations
@@ -8,10 +6,8 @@
 
 function shell_options() {
 
-	echo "Setting the Shell Options for Bash using shopt"
-
 	# Confirm bash is actually running
-	if ! type shopt >/dev/null 2>&1; then
+	if ! type shopt > /dev/null 2>&1; then
 		echo "ERROR: This function: ${FUNCNAME[0]} needs to be called from within Bash"
 		return 1
 	fi
@@ -53,15 +49,15 @@ function shell_options() {
 	shopt -q -s cmdhist
 
 	# compat31
-	# If set, Bash changes its behavior to that of version 3.1 with respect to quoted arguments to the conditional command’s ‘=~’ operator and with respect to locale-specific string comparison when using the [[ conditional command’s ‘<’ and ‘>’ operators. Bash versions prior to bash-4.1 use ASCII collation and strcmp(3); bash-4.1 and later use the current locales collation sequence and strcoll(3).
+	# If set, Bash changes its behavior to that of version 3.1 with respect to quoted arguments to the conditional command's '=~' operator and with respect to locale-specific string comparison when using the [[ conditional command's '<' and '>' operators. Bash versions prior to bash-4.1 use ASCII collation and strcmp(3); bash-4.1 and later use the current locales collation sequence and strcoll(3).
 	shopt -q -u compat31
 
 	# compat32
-	# If set, Bash changes its behavior to that of version 3.2 with respect to locale-specific string comparison when using the [[ conditional command’s ‘<’ and ‘>’ operators (see previous item) and the effect of interrupting a command list. Bash versions 3.2 and earlier continue with the next command in the list after one terminates due to an interrupt.
+	# If set, Bash changes its behavior to that of version 3.2 with respect to locale-specific string comparison when using the [[ conditional command's '<' and '>' operators (see previous item) and the effect of interrupting a command list. Bash versions 3.2 and earlier continue with the next command in the list after one terminates due to an interrupt.
 	shopt -q -u compat32
 
 	# compat40
-	# If set, Bash changes its behavior to that of version 4.0 with respect to locale-specific string comparison when using the [[ conditional command’s ‘<’ and ‘>’ operators (see description of compat31) and the effect of interrupting a command list. Bash versions 4.0 and later interrupt the list as if the shell received the interrupt; previous versions continue with the next command in the list.
+	# If set, Bash changes its behavior to that of version 4.0 with respect to locale-specific string comparison when using the [[ conditional command's '<' and '>' operators (see description of compat31) and the effect of interrupting a command list. Bash versions 4.0 and later interrupt the list as if the shell received the interrupt; previous versions continue with the next command in the list.
 	shopt -q -u compat40
 
 	# compat41
@@ -73,7 +69,7 @@ function shell_options() {
 	shopt -q -u compat42
 
 	# compat43
-	# If set, Bash does not print a warning message if an attempt is made to use a quoted compound array assignment as an argument to declare, makes word expansion errors non-fatal errors that cause the current command to fail (the default behavior is to make them fatal errors that cause the shell to exit), and does not reset the loop state when a shell function is executed (this allows break or continue in a shell function to affect loops in the caller’s context).
+	# If set, Bash does not print a warning message if an attempt is made to use a quoted compound array assignment as an argument to declare, makes word expansion errors non-fatal errors that cause the current command to fail (the default behavior is to make them fatal errors that cause the shell to exit), and does not reset the loop state when a shell function is executed (this allows break or continue in a shell function to affect loops in the caller's context).
 	shopt -q -u compat43
 
 	if [ "${BASH_VERSINFO:-0}" -ge 5 ]; then
@@ -97,7 +93,7 @@ function shell_options() {
 	shopt -q -s direxpand
 
 	# dotglob
-	# If set, Bash includes filenames beginning with a ‘.’ in the results of filename expansion. The filenames ‘.’ and ‘..’ must always be matched explicitly, even if dotglob is set.
+	# If set, Bash includes filenames beginning with a '.' in the results of filename expansion. The filenames '.' and '..' must always be matched explicitly, even if dotglob is set.
 	shopt -q -s dotglob
 
 	# execfail
@@ -129,11 +125,11 @@ function shell_options() {
 	shopt -q -s force_fignore
 
 	# globasciiranges
-	# If set, range expressions used in pattern matching bracket expressions (see Pattern Matching) behave as if in the traditional C locale when performing comparisons. That is, the current locale’s collating sequence is not taken into account, so ‘b’ will not collate between ‘A’ and ‘B’, and upper-case and lower-case ASCII characters will collate together.
+	# If set, range expressions used in pattern matching bracket expressions (see Pattern Matching) behave as if in the traditional C locale when performing comparisons. That is, the current locale's collating sequence is not taken into account, so 'b' will not collate between 'A' and 'B', and upper-case and lower-case ASCII characters will collate together.
 	shopt -q -s globasciiranges
 
 	# globstar
-	# If set, the pattern ‘**’ used in a filename expansion context will match all files and zero or more directories and subdirectories. If the pattern is followed by a ‘/’, only directories and subdirectories match.
+	# If set, the pattern '**' used in a filename expansion context will match all files and zero or more directories and subdirectories. If the pattern is followed by a '/', only directories and subdirectories match.
 	shopt -q -s globstar
 
 	# gnu_errfmt
@@ -153,7 +149,7 @@ function shell_options() {
 	shopt -q -u histverify
 
 	# hostcomplete
-	# If set, and Readline is being used, Bash will attempt to perform hostname completion when a word containing a ‘@’ is being completed (see Commands For Completion). This option is enabled by default.
+	# If set, and Readline is being used, Bash will attempt to perform hostname completion when a word containing a '@' is being completed (see Commands For Completion). This option is enabled by default.
 	shopt -q -s hostcomplete
 
 	# huponexit
@@ -165,7 +161,7 @@ function shell_options() {
 	shopt -q -u inherit_errexit
 
 	# interactive_comments
-	# Allow a word beginning with ‘#’ to cause that word and all remaining characters on that line to be ignored in an interactive shell. This option is enabled by default.
+	# Allow a word beginning with '#' to cause that word and all remaining characters on that line to be ignored in an interactive shell. This option is enabled by default.
 	shopt -q -s interactive_comments
 
 	# lastpipe
@@ -220,7 +216,7 @@ function shell_options() {
 	if [ "${BASH_VERSINFO:-0}" -ge 5 ]; then
 
 		#progcomp_alias
-		#If set, and programmable completion is enabled, Bash treats a command name that doesn’t have any completions as a possible alias and attempts alias expansion. If it has an alias, Bash attempts programmable completion using the command word resulting from the expanded alias.
+		#If set, and programmable completion is enabled, Bash treats a command name that doesn't have any completions as a possible alias and attempts alias expansion. If it has an alias, Bash attempts programmable completion using the command word resulting from the expanded alias.
 		shopt -q -u progcomp_alias
 
 	fi
@@ -254,6 +250,5 @@ function shell_options() {
 }
 
 shell_options || {
-	echo "ERROR: Failed to set the Shell Options for Bash using shopt!"
-	exit 1
+	echo "ERROR: Failed to set one or more Shell Options for Bash using shopt!"
 }

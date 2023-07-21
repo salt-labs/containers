@@ -1,49 +1,47 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
 
-clear
+if [[ "${ENABLE_DEBUG:-FALSE}" == "TRUE" ]]; then
+	set -x
+fi
 
-# Launch an interactive shell session.
-/bin/bash -i
+# Start a fresh shell session.
+/usr/bin/env bash --login || true
 
 while true; do
 
 	clear
 
 	# If bash exits, ask if we should restart or break and exit.
-	echo -e "\n"
+	printf "\n"
 	echo "Your current shell session in this container has terminated."
 	read -r -p "Start a new shell session? y/n: " CHOICE
 
 	case $CHOICE in
 
-	[Yy]*)
+		[Yy]*)
 
-		echo "Restarting shell..."
+			echo "Restarting shell..."
+			/usr/bin/env bash --login || true
 
-		# Launch an interactive shell session.
-		/bin/bash -i
+			;;
 
-		;;
+		[Nn]*)
 
-	[Nn]*)
+			echo "Exiting..."
+			break
 
-		echo "Exiting..."
-		break
+			;;
 
-		;;
+		*)
 
-	*)
+			echo "Please answer yes or no."
+			sleep 1
 
-		echo "Please answer yes or no."
-		sleep 3
-
-		;;
+			;;
 
 	esac
 
 done
 
-clear
-figlet "Goodbye!"
-
+figlet -f slant "Goodbye!"
 exit 0

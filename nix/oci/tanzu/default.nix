@@ -7,6 +7,7 @@
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   creationDate = builtins.substring 0 8 modifiedDate;
 
+  # A non-root user to add to the container image.
   containerUser = "tanzu";
   containerUID = "1000";
   containerGID = "1000";
@@ -197,10 +198,10 @@ in
         };
     };
 
-    # Enable fakeRootCommands in fakechroot
+    # Enable fakeRootCommands in a fake chroot environment.
     enableFakechroot = true;
 
-    # Run these commands in fakechroot
+    # Run these commands in the fake chroot environment.
     fakeRootCommands = ''
       #!${pkgs.runtimeShell}
 
@@ -212,14 +213,14 @@ in
       ln -s ${pkgs.glibc}/lib64 /lib64/glibc
       ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
 
-      # Create the home dir for the container user.
+      # Create the home dir for the non-root container user.
       mkdir --parents /home/${containerUser}
 
-      # Copy dotfiles for user ${containerUser} and root.
+      # Copy dotfiles for the user ${containerUser} and root.
       cp --recursive /etc/skel/. /home/${containerUser}/
       cp --recursive /etc/skel/. /root/
 
-      # Fix home permissions for user ${containerUser}
+      # Fix the home permissions for user ${containerUser}
       chown -R ${containerUID}:${containerGID} /home/${containerUser} || {
         echo "Failed to chown home for user ${containerUser}"
         exit 1
@@ -246,6 +247,7 @@ in
       };
       Entrypoint = [
         "tini"
+        "-g"
         "--"
       ];
       Cmd = [
@@ -257,6 +259,10 @@ in
         #"2376/tcp" = {};
       };
       Env = [
+        "ENABLE_DEBUG=FALSE"
+        "ENABLE_STARSHIP=FALSE"
+        "ENABLE_PROXY_SCRIPT=FALSE"
+        "TANZU_CLI_PLUGIN_GROUP_TKG_VERSION=v2.2.0"
         "CHARSET=UTF-8"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
@@ -273,6 +279,8 @@ in
       WorkDir = "/workdir";
       Volumes = {
         "/vscode" = {};
+        "/tmp" = {};
+        "/home/${containerUser}" = {};
         # DinD
         #"/var/lib/docker" = {};
       };

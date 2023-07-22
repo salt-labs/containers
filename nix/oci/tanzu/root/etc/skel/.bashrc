@@ -114,10 +114,21 @@ if ! shopt -oq posix; then
 	fi
 fi
 
-# Starship
-if [[ ${ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
-	echo "INFO: Launching Starship prompt..."
-	source <(/bin/starship init bash)
+# Make sure that the interactive parts are not run in a a VSCode remote env.
+if [[ ${VSCODE_REMOTE_ENV:-FALSE} == "TRUE" ]]; then
+
+	echo "INFO: VSCode remote environment detected, skipping interactive parts."
+
 else
-	echo "INFO: Starship prompt is disabled."
+
+	# Starship
+	if [[ ${ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
+		echo "INFO: Launching Starship prompt..."
+		source <(/bin/starship init bash)
+	else
+		echo "INFO: Starship prompt is disabled."
+	fi
+
 fi
+
+echo "INFO: Finished loading .bashrc"

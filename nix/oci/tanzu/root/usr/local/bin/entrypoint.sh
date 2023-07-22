@@ -7,41 +7,50 @@ fi
 # Start a fresh shell session.
 /usr/bin/env bash --login -i || true
 
-while true; do
+# Make sure that the interactive parts are not run in a a VSCode remote env.
+if [[ ${VSCODE_REMOTE_ENV:-FALSE} == "TRUE" ]]; then
 
-	clear
+	echo "INFO: VSCode remote environment detected, skipping interactive parts."
 
-	# If bash exits, ask if we should restart or break and exit.
-	printf "\n"
-	echo "Your current shell session in this container has terminated."
-	read -r -p "Start a new shell session? y/n: " CHOICE
+else
 
-	case $CHOICE in
+	while true; do
 
-	[Yy]*)
+		clear
 
-		echo "Restarting shell..."
-		/usr/bin/env bash --login -i || true
+		# If bash exits, ask if we should restart or break and exit.
+		printf "\n"
+		echo "Your current shell session in this container has terminated."
+		read -r -p "Start a new shell session? y/n: " CHOICE
 
-		;;
+		case $CHOICE in
 
-	[Nn]*)
+		[Yy]*)
 
-		echo "Exiting..."
-		break
+			echo "Restarting shell..."
+			/usr/bin/env bash --login -i || true
 
-		;;
+			;;
 
-	*)
+		[Nn]*)
 
-		echo "Please answer yes or no."
-		sleep 1
+			echo "Exiting..."
+			break
 
-		;;
+			;;
 
-	esac
+		*)
 
-done
+			echo "Please answer yes or no."
+			sleep 1
+
+			;;
+
+		esac
+
+	done
+
+fi
 
 figlet -f slant "Goodbye!"
 exit 0

@@ -274,6 +274,8 @@ in
         "TERM=xterm"
         "TZ=UTC"
         "WORKDIR=/workdir"
+        "VSCODE_CONTAINER_ENV=FALSE"
+        "VSCODE_REMOTE_ENV=FALSE"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";

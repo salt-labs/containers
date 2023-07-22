@@ -133,6 +133,7 @@ in
           jq
           less
           ncurses
+          nil
           openssh
           procps
           ripgrep

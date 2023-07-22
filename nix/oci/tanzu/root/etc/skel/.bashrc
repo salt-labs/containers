@@ -115,9 +115,9 @@ if ! shopt -oq posix; then
 fi
 
 # Make sure that the interactive parts are not run in a a VSCode remote env.
-if [[ "${ENVIRONMENT_VSCODE^^}" == "REMOTE" ]]; then
+if [[ "${ENVIRONMENT_VSCODE^^}" == "CONTAINER" ]]; then
 
-	echo "$(date '+%Y/%m/%d %T'): INFO: VSCode remote environment detected, skipping interactive parts." | tee -a "/tmp/vscode-remote-env.log"
+	echo "$(date '+%Y/%m/%d %T'): INFO: VSCode container environment detected, skipping interactive parts." | tee -a "/tmp/environment.log"
 
 else
 
@@ -132,3 +132,6 @@ else
 fi
 
 echo "INFO: Finished loading .bashrc"
+
+# When running in a VSCode environment, drop a log file for tracking
+echo "$(date '+%Y/%m/%d %T'): INFO: VSCode Environment: ${ENVIRONMENT_VSCODE}" >> "/tmp/environment.log"

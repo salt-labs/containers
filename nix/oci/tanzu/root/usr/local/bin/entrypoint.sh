@@ -8,9 +8,9 @@ fi
 /usr/bin/env bash --login -i || true
 
 # Make sure that the interactive parts are not run in a a VSCode remote env.
-if [[ "${ENVIRONMENT_VSCODE^^}" == "REMOTE" ]]; then
+if [[ "${ENVIRONMENT_VSCODE^^}" == "CONTAINER" ]]; then
 
-	echo "$(date '+%Y/%m/%d %T'): INFO: VSCode remote environment detected, skipping interactive parts." | tee -a "/tmp/vscode-remote-env.log"
+	echo "$(date '+%Y/%m/%d %T'): INFO: VSCode container environment detected, skipping interactive parts." | tee -a "/tmp/environment.log"
 
 else
 

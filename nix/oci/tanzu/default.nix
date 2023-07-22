@@ -226,6 +226,10 @@ in
         echo "Failed to chown home for user ${containerUser}"
         exit 1
       }
+      chmod -R +rw /home/${containerUser} || {
+        echo "Failed to add rw permissions to /home/${containerUser}"
+        exit 1
+      }
 
       # Set permissions on required directories
       mkdir --parents --mode 0777 /tmp || exit 1
@@ -263,7 +267,8 @@ in
         "ENABLE_DEBUG=FALSE"
         "ENABLE_STARSHIP=FALSE"
         "ENABLE_PROXY_SCRIPT=FALSE"
-        "TANZU_CLI_PLUGIN_GROUP_TKG_VERSION=v2.2.0"
+        "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
+        "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
         "CHARSET=UTF-8"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"

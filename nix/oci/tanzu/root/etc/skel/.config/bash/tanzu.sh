@@ -6,7 +6,8 @@ fi
 
 # Variables
 export YTT_LIB="/usr/lib/ytt/"
-export TANZU_CLI_PLUGIN_GROUP_TKG_VERSION="${TANZU_CLI_PLUGIN_GROUP_TKG_VERSION:-latest}"
+export TANZU_CLI_PLUGIN_SOURCE_TAG="${TANZU_PLUGIN_SOURCE_TAG:-latest}"
+export TANZU_CLI_PLUGIN_GROUP_TKG_TAG="${TANZU_CLI_PLUGIN_GROUP_TKG_TAG:-latest}"
 
 # HACK: A better method is needed.
 # Check for a proxy settings script.
@@ -16,6 +17,7 @@ if [[ ${ENABLE_PROXY_SCRIPT:-FALSE} == "TRUE" ]]; then
 
 		echo "INFO: Loading proxy settings from ${WORKDIR}/scripts/proxy.sh"
 
+		# shellcheck disable=SC1091
 		source "${WORKDIR}/scripts/proxy.sh" || {
 			echo "ERROR: Failed to load proxy settings!"
 		}
@@ -69,92 +71,94 @@ else
 
 			case "$CHOICE" in
 
-			[Yy]*)
+				[Yy]*)
 
-				echo "INFO: Initialising Tanzu CLI..."
+					echo "INFO: Initialising Tanzu CLI..."
 
-				tanzu plugin clean || {
-					echo "ERROR: Failed to clean the Tanzu CLI plugins"
-				}
-
-				tanzu init || {
-					echo "ERROR: Failed to initialise the Tanzu CLI configuration"
-				}
-
-				# There are 3 options for the Tanzu CLI OCI registry in preference order:
-				# 	1. A custom registry is provided, use it.
-				# 	2. A pull-through cache is provided, use it.
-				# 	3. No pull-through or custom registry is provided, pull direct from internet.
-
-				# If there is a custom registry, use it as priority.
-				if [[ ${TANZU_CUSTOM_REGISTRY:-EMPTY} != "EMPTY" ]]; then
-
-					echo "INFO: Custom registry provided, using ${TANZU_CUSTOM_REGISTRY}"
-
-					# Capture existing OCI URL
-					TANZU_CLI_OCI_URL="$(tanzu plugin source list --output yaml | yq .[].image)"
-
-					# Strip the VMware registry prefix.
-					TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL#*projects.registry.vmware.com}"
-
-					# Add the custom registry OCI URL and update the plugin cache.
-					TANZU_CLI_OCI_URL="${TANZU_CUSTOM_REGISTRY}${TANZU_CLI_OCI_URL}"
-
-					# Update the plugin source and test pulling the image.
-					tanzu plugin source update \
-						default \
-						--uri "${TANZU_CLI_OCI_URL}" || {
-						echo "ERROR: Failed to update plugin configuration to use the provided custom registry."
+					tanzu plugin clean || {
+						echo "ERROR: Failed to clean the Tanzu CLI plugins"
 					}
 
-				elif [[ ${TANZU_PULL_THROUGH_CACHE:-EMPTY} != "EMPTY" ]]; then
+					tanzu init || {
+						echo "ERROR: Failed to initialise the Tanzu CLI configuration"
+					}
 
-					echo "INFO: Pull-through prefix provided, prefixing ${TANZU_PULL_THROUGH_CACHE}"
+					# There are 3 options for the Tanzu CLI OCI registry in preference order:
+					# 	1. A custom registry is provided, use it.
+					# 	2. A pull-through cache is provided, use it.
+					# 	3. No pull-through or custom registry is provided, pull direct from internet.
 
 					# Capture existing OCI URL
 					TANZU_CLI_OCI_URL="$(tanzu plugin source list --output yaml | yq .[].image)"
 
-					# Add the pull-through prefix
-					TANZU_CLI_OCI_URL="${TANZU_PULL_THROUGH_CACHE}/${TANZU_CLI_OCI_URL}"
+					# Strip the image tag.
+					TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL%:*}"
+
+					# Add the user provided image tag.
+					TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_CLI_PLUGIN_SOURCE_TAG}"
+
+					echo "INFO: Tanzu CLI OCI URL set to ${TANZU_CLI_OCI_URL}"
+
+					# If there is a custom registry, use it as priority.
+					if [[ ${TANZU_CUSTOM_REGISTRY:-EMPTY} != "EMPTY" ]]; then
+
+						echo "INFO: Custom registry provided, using ${TANZU_CUSTOM_REGISTRY}"
+
+						# Strip the VMware registry prefix.
+						TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL#*projects.registry.vmware.com}"
+
+						# Add the custom registry OCI URL.
+						TANZU_CLI_OCI_URL="${TANZU_CUSTOM_REGISTRY}${TANZU_CLI_OCI_URL}"
+
+						echo "INFO: Custom registry OCI URL set to ${TANZU_CLI_OCI_URL}"
+
+					elif [[ ${TANZU_PULL_THROUGH_CACHE:-EMPTY} != "EMPTY" ]]; then
+
+						# Add the pull-through prefix
+						TANZU_CLI_OCI_URL="${TANZU_PULL_THROUGH_CACHE}/${TANZU_CLI_OCI_URL}"
+
+						echo "INFO: Pull-through cache OCI URL set to ${TANZU_CLI_OCI_URL}"
+
+					else
+
+						echo "INFO: No custom registry or pull-through cache provided, pulling direct from internet."
+
+					fi
+
+					echo "INFO: Updating Tanzu CLI plugin source..."
 
 					# Add the pull-through cache OCI URL and update the plugin cache.
 					tanzu plugin source update \
 						default \
 						--uri "${TANZU_CLI_OCI_URL}" || {
-						echo "ERROR: Failed to update plugin configuration to use the provided pull-through cache."
+						echo "ERROR: Failed to update plugin source to ${TANZU_CLI_OCI_URL}"
 					}
 
-				else
+					# Add the VMWare TKG group of plugins at the configured version to match the CLI.
+					tanzu plugin install \
+						--group "vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}" || {
+						echo "ERROR: Failed to install the Tanzu plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
+					}
 
-					echo "INFO: No custom registry or pull-through cache provided, pulling direct from internet."
+					tanzu plugin sync || {
+						echo "ERROR: Failed to synchronise Tanzu CLI plugins"
+					}
 
-				fi
+					break
 
-				# Add the VMWare TKG group of plugins at the configured version to match the CLI.
-				tanzu plugin install \
-					--group "vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_VERSION}" || {
-					echo "ERROR: Failed to install the Tanzu plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_VERSION}"
-				}
+					;;
 
-				tanzu plugin sync || {
-					echo "ERROR: Failed to synchronise Tanzu CLI plugins"
-				}
+				[Nn]*)
 
-				break
+					break
 
-				;;
+					;;
 
-			[Nn]*)
+				*)
 
-				break
+					echo "Please answer yes or no."
 
-				;;
-
-			*)
-
-				echo "Please answer yes or no."
-
-				;;
+					;;
 
 			esac
 
@@ -182,6 +186,7 @@ else
 
 		for BIN in "${BINS[@]}"; do
 
+			# shellcheck disable=SC1090
 			source <(${BIN} completion bash) || {
 				echo "ERROR: Failed to source bash completion for ${BIN}, skipping..."
 			}

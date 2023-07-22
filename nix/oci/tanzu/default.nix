@@ -149,7 +149,6 @@ in
           yq-go
 
           # Nix
-          devenv
           direnv
           nil
 

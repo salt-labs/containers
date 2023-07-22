@@ -119,7 +119,6 @@ in
           curlFull
           diffutils
           direnv
-          doas
           figlet
           file
           gawk
@@ -140,7 +139,6 @@ in
           shellcheck
           starship
           su
-          sudo
           super
           tini
           tree

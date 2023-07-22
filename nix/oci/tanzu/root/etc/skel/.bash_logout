@@ -5,3 +5,5 @@
 if [ "$SHLVL" = 1 ]; then
 	[ -x /usr/bin/clear_console ] && /usr/bin/clear_console -q
 fi
+
+echo "$(date '+%Y/%m/%d %T'): INFO: Logout of Devcontainer Environment: ${ENVIRONMENT_VSCODE}" >> "/tmp/environment.log"

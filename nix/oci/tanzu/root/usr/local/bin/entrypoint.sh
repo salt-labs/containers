@@ -4,15 +4,18 @@ if [[ ${ENABLE_DEBUG:-FALSE} == "TRUE" ]]; then
 	set -x
 fi
 
-# Start a fresh shell session.
-/usr/bin/env bash --login -i || true
-
 # Make sure that the interactive parts are not run in a a VSCode remote env.
-if [[ "${ENVIRONMENT_VSCODE^^}" == "CONTAINER" ]]; then
+if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 
-	echo "$(date '+%Y/%m/%d %T'): INFO: VSCode container environment detected, skipping interactive parts." | tee -a "/tmp/environment.log"
+	while true; do
+		echo "$(date '+%Y/%m/%d %T'): INFO: Devcontainer environment is running..." | tee -a "/tmp/environment.log"
+		sleep 300
+	done
 
 else
+
+	# Start a fresh shell session.
+	/usr/bin/env bash --login -i || true
 
 	while true; do
 
@@ -25,26 +28,26 @@ else
 
 		case $CHOICE in
 
-			[Yy]*)
+		[Yy]*)
 
-				echo "Restarting shell..."
-				/usr/bin/env bash --login -i || true
+			echo "Restarting shell..."
+			/usr/bin/env bash --login -i || true
 
-				;;
+			;;
 
-			[Nn]*)
+		[Nn]*)
 
-				echo "Exiting..."
-				break
+			echo "Exiting..."
+			break
 
-				;;
+			;;
 
-			*)
+		*)
 
-				echo "Please answer yes or no."
-				sleep 1
+			echo "Please answer yes or no."
+			sleep 1
 
-				;;
+			;;
 
 		esac
 

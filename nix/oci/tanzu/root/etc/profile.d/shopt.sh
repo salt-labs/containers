@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 ##################################################
 # Name: shopt
 # Description: Contains the bash shell options configurations

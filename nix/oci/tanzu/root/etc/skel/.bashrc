@@ -1,11 +1,16 @@
+#!/usr/bin/env bash
+
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
 # If not running interactively, don't do anything
 case $- in
-	*i*) ;;
-	*) return ;;
+
+*i*) ;;
+
+*) return ;;
+
 esac
 
 # don't put duplicate lines or lines starting with space in the history.
@@ -40,7 +45,7 @@ fi
 
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
-	xterm-color | *-256color) color_prompt=yes ;;
+xterm-color | *-256color) color_prompt=yes ;;
 esac
 
 # uncomment for a colored prompt, if the terminal has the capability; turned
@@ -68,31 +73,35 @@ unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
-	xterm* | rxvt*)
-		PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-		;;
-	*) ;;
+xterm* | rxvt*)
+	PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+	;;
+*) ;;
 esac
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
-	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-	alias ls='ls --color=auto'
-	#alias dir='dir --color=auto'
-	#alias vdir='vdir --color=auto'
 
-	#alias grep='grep --color=auto'
-	#alias fgrep='fgrep --color=auto'
-	#alias egrep='egrep --color=auto'
+	if [[ -r ~/.dircolors ]]; then
+		eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+	fi
+
+	alias ls='ls --color=auto'
+	alias dir='dir --color=auto'
+	alias vdir='vdir --color=auto'
+	alias grep='grep --color=auto'
+	alias fgrep='fgrep --color=auto'
+	alias egrep='egrep --color=auto'
+
+	#colored GCC warnings and errors
+	export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
 fi
 
-# colored GCC warnings and errors
-#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
 # some more ls aliases
-#alias ll='ls -l'
-#alias la='ls -A'
-#alias l='ls -CF'
+alias ll='ls -l'
+alias la='ls -A'
+alias l='ls -CF'
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -100,6 +109,7 @@ fi
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
 if [ -f ~/.bash_aliases ]; then
+	# shellcheck disable=SC1090
 	. ~/.bash_aliases
 fi
 
@@ -108,14 +118,16 @@ fi
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
 	if [ -f /usr/share/bash-completion/bash_completion ]; then
+		# shellcheck disable=SC1091
 		. /usr/share/bash-completion/bash_completion
 	elif [ -f /etc/bash_completion ]; then
+		# shellcheck disable=SC1091
 		. /etc/bash_completion
 	fi
 fi
 
 # Make sure that the interactive parts are not run in a a VSCode remote env.
-if [[ "${ENVIRONMENT_VSCODE^^}" == "CONTAINER" ]]; then
+if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 
 	echo "$(date '+%Y/%m/%d %T'): INFO: VSCode container environment detected, skipping interactive parts." | tee -a "/tmp/environment.log"
 
@@ -124,6 +136,7 @@ else
 	# Starship
 	if [[ ${ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
 		echo "INFO: Launching Starship prompt..."
+		# shellcheck disable=SC1090
 		source <(/bin/starship init bash)
 	else
 		echo "INFO: Starship prompt is disabled."
@@ -134,4 +147,4 @@ fi
 echo "INFO: Finished loading .bashrc"
 
 # When running in a VSCode environment, drop a log file for tracking
-echo "$(date '+%Y/%m/%d %T'): INFO: VSCode Environment: ${ENVIRONMENT_VSCODE}" >> "/tmp/environment.log"
+echo "$(date '+%Y/%m/%d %T'): INFO: Login to Devcontainer Environment: ${ENVIRONMENT_VSCODE}" >>"/tmp/environment.log"

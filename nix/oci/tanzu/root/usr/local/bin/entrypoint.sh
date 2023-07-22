@@ -8,9 +8,9 @@ fi
 /usr/bin/env bash --login -i || true
 
 # Make sure that the interactive parts are not run in a a VSCode remote env.
-if [[ ${VSCODE_REMOTE_ENV:-FALSE} == "TRUE" ]]; then
+if [[ "${VSCODE_REMOTE_ENV:-FALSE}" == "TRUE" ]]; then
 
-	echo "INFO: VSCode remote environment detected, skipping interactive parts."
+	echo "$(date '+%Y/%m/%d %T'): INFO: VSCode remote environment detected, skipping interactive parts." | tee -a "/tmp/vscode-remote-env.log"
 
 else
 
@@ -25,26 +25,26 @@ else
 
 		case $CHOICE in
 
-		[Yy]*)
+			[Yy]*)
 
-			echo "Restarting shell..."
-			/usr/bin/env bash --login -i || true
+				echo "Restarting shell..."
+				/usr/bin/env bash --login -i || true
 
-			;;
+				;;
 
-		[Nn]*)
+			[Nn]*)
 
-			echo "Exiting..."
-			break
+				echo "Exiting..."
+				break
 
-			;;
+				;;
 
-		*)
+			*)
 
-			echo "Please answer yes or no."
-			sleep 1
+				echo "Please answer yes or no."
+				sleep 1
 
-			;;
+				;;
 
 		esac
 

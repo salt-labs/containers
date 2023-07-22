@@ -118,13 +118,12 @@ in
           coreutils-full
           curlFull
           diffutils
-          direnv
           figlet
           file
           gawk
           git
-          gnupg
           gnugrep
+          gnupg
           gnused
           gnutar
           gzip
@@ -133,7 +132,6 @@ in
           jq
           less
           ncurses
-          nil
           openssh
           procps
           ripgrep
@@ -149,6 +147,11 @@ in
           which
           xz
           yq-go
+
+          # Nix
+          devenv
+          direnv
+          nil
 
           # VSCode
           findutils

@@ -215,8 +215,8 @@ in
       mkdir --parents /home/${containerUser}
 
       # Copy dotfiles for the user ${containerUser} and root.
-      cp --recursive /etc/skel/. /home/${containerUser}/
-      cp --recursive /etc/skel/. /root/
+      cp --recursive --dereference /etc/skel/. /home/${containerUser}/
+      cp --recursive --dereference /etc/skel/. /root/
 
       # Fix the home permissions for user ${containerUser}
       chown -R ${containerUID}:${containerGID} /home/${containerUser} || {

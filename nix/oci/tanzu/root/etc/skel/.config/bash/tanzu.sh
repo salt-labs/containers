@@ -134,6 +134,8 @@ else
 						echo "ERROR: Failed to update plugin source to ${TANZU_CLI_OCI_URL}"
 					}
 
+					echo "INFO: Installing Tanzu CLI plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
+
 					# Add the VMWare TKG group of plugins at the configured version to match the CLI.
 					tanzu plugin install \
 						--group "vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}" || {

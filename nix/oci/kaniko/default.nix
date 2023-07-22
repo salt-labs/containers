@@ -2,8 +2,12 @@
   pkgs,
   pkgsUnstable,
   crossPkgs,
+  self,
   ...
 }: let
+  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 modifiedDate;
+
   unstablePkgs = with pkgsUnstable; [
     kaniko
   ];
@@ -26,7 +30,7 @@ in
   pkgs.dockerTools.buildLayeredImage {
     name = "kaniko";
     tag = "latest";
-    #created = "now";
+    # created = creationDate;
 
     #fromImage = baseImage;
     maxLayers = 100;

@@ -1,42 +1,46 @@
 {
   pkgs,
   crossPkgs,
+  self,
   ...
-}:
-pkgs.dockerTools.buildImage {
-  name = "salt";
-  tag = "latest";
-  #created = "now";
+}: let
+  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 modifiedDate;
+in
+  pkgs.dockerTools.buildImage {
+    name = "salt";
+    tag = "latest";
+    # created = creationDate;
 
-  copyToRoot = pkgs.buildEnv {
-    name = "image-root";
-    pathsToLink = ["/bin"];
+    copyToRoot = pkgs.buildEnv {
+      name = "image-root";
+      pathsToLink = ["/bin"];
 
-    paths = with pkgs; [
-      # Common
-      busybox
-      curlFull
-      cacert
+      paths = with pkgs; [
+        # Common
+        busybox
+        curlFull
+        cacert
 
-      # Tools
-      salt
-    ];
-  };
-
-  config = {
-    Labels = {
-      "org.opencontainers.image.description" = "salt";
+        # Tools
+        salt
+      ];
     };
-    Entrypoint = [
-      "${pkgs.salt}/bin/salt"
-    ];
-    Cmd = [
-    ];
-    ExposedPorts = {
+
+    config = {
+      Labels = {
+        "org.opencontainers.image.description" = "salt";
+      };
+      Entrypoint = [
+        "${pkgs.salt}/bin/salt"
+      ];
+      Cmd = [
+      ];
+      ExposedPorts = {
+      };
+      Env = [
+        "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+      ];
+      WorkingDir = "/workdir";
     };
-    Env = [
-      "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-    ];
-    WorkingDir = "/workdir";
-  };
-}
+  }

@@ -3,8 +3,12 @@
   pkgs,
   system,
   poetry2nix,
+  self,
   ...
 }: let
+  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+  creationDate = builtins.substring 0 8 modifiedDate;
+
   overlay = self: super: {
     app = self.poetry2nix.mkPoetryApplication {
       projectDir = ./poetry;
@@ -21,7 +25,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "idem";
     tag = "latest";
-    #created = "now";
+    # created = creationDate;
 
     copyToRoot = pkgs.buildEnv {
       name = "image-root";

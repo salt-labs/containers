@@ -117,6 +117,7 @@ in
           bashInteractive
           bat
           bottom
+          bind
           bindfs
           cacert
           coreutils-full
@@ -134,10 +135,12 @@ in
           gzip
           hey
           htop
+          iputils
           jq
           kmod
           less
           ncurses
+          nettools
           openssh
           procps
           ripgrep

@@ -114,12 +114,15 @@ in
           bashInteractive
           bat
           bottom
+          bindfs
           cacert
           coreutils-full
           curlFull
           diffutils
+          doas
           figlet
           file
+          fuse
           gawk
           git
           gnugrep
@@ -130,6 +133,7 @@ in
           hey
           htop
           jq
+          kmod
           less
           ncurses
           openssh
@@ -138,6 +142,7 @@ in
           shellcheck
           starship
           su
+          sudo
           super
           tini
           tree

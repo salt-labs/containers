@@ -122,7 +122,7 @@ in
           doas
           figlet
           file
-          fuse
+          fuse3
           gawk
           git
           gnugrep

@@ -77,6 +77,19 @@ if [[ "${UID}" -eq 0  ]]; then
 		OPTION_1_STATUS="FAILED"
 	}
 
+	# If the docker socket was mounted, make sure the user can access it.
+	DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3)
+	if [[ -S /var/run/docker.sock ]]; then
+		DOCKER_SOCKET_ID=$(stat -c '%g' /var/run/docker.sock)
+		# If the docker socket group id does not match the docker group id, change the group id.
+		if [[ "${DOCKER_GROUP_ID}" -ne "${DOCKER_SOCKET_ID}" ]]; then
+			groupmod --gid "${DOCKER_SOCKET_ID}" docker || {
+				echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'docker' group GID to '${DOCKER_SOCKET_ID}'"
+				OPTION_1_STATUS="FAILED"
+			}
+		fi
+	fi
+
 	# Option 2.
 
 	# If Option 1 fails, attempt Option 2.

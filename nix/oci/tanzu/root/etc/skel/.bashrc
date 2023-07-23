@@ -7,9 +7,9 @@
 # If not running interactively, don't do anything
 case $- in
 
-	*i*) ;;
+*i*) ;;
 
-	*) return ;;
+*) return ;;
 
 esac
 
@@ -45,7 +45,7 @@ fi
 
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
-	xterm-color | *-256color) color_prompt=yes ;;
+xterm-color | *-256color) color_prompt=yes ;;
 esac
 
 # uncomment for a colored prompt, if the terminal has the capability; turned
@@ -73,10 +73,10 @@ unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
-	xterm* | rxvt*)
-		PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-		;;
-	*) ;;
+xterm* | rxvt*)
+	PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+	;;
+*) ;;
 esac
 
 # enable color support of ls and also add handy aliases
@@ -123,13 +123,16 @@ if ! shopt -oq posix; then
 	elif [ -f /etc/bash_completion ]; then
 		# shellcheck disable=SC1091
 		. /etc/bash_completion
+	elif [ -f /etc/profile.d/bash_completion.sh ]; then
+		# shellcheck disable=SC1091
+		. /etc/profile.d/bash_completion.sh
 	fi
 fi
 
 # Load all the custom scripts.
 if [[ -d "${HOME}/.config/bash" ]]; then
 	for FILE in "${HOME}/.config/bash/"*.sh; do
-		if [[ -r "${FILE}" ]]; then
+		if [[ -r ${FILE} ]]; then
 			# shellcheck disable=SC1090
 			source "${FILE}" || {
 				echo "ERROR: Failed to load ${FILE}"
@@ -158,4 +161,4 @@ else
 fi
 
 # When running in a VSCode environment, drop a log file for tracking
-echo "$(date '+%Y/%m/%d %T'): INFO: Login to Devcontainer Environment: ${ENVIRONMENT_VSCODE}" >> "/tmp/environment.log"
+echo "$(date '+%Y/%m/%d %T'): INFO: Login to Devcontainer Environment: ${ENVIRONMENT_VSCODE}" >>"/tmp/environment.log"

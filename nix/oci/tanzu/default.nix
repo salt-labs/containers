@@ -242,11 +242,13 @@ in
         echo "Failed to add group tanzu"
         exit 1
       }
-      groupadd docker || {
+      groupadd docker \
+        --gid 998 || {
         echo "Failed to add group docker"
         exit 1
       }
-      groupadd sudo || {
+      groupadd sudo \
+        --gid 27 || {
         echo "Failed to add group sudo"
         exit 1
       }

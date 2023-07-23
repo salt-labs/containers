@@ -123,16 +123,19 @@ if ! shopt -oq posix; then
 	elif [ -f /etc/bash_completion ]; then
 		# shellcheck disable=SC1091
 		. /etc/bash_completion
+	elif [ -f /etc/profile.d/bash_completion.sh ]; then
+		# shellcheck disable=SC1091
+		. /etc/profile.d/bash_completion.sh
 	fi
 fi
 
 # Load all the custom scripts.
 if [[ -d "${HOME}/.config/bash" ]]; then
 	for FILE in "${HOME}/.config/bash/"*.sh; do
-		if [[ -r "${FILE}" ]]; then
+		if [[ -r ${FILE} ]]; then
 			# shellcheck disable=SC1090
 			source "${FILE}" || {
-				echo "ERROR: Failed to load ${FILE}"
+				echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to load ${FILE}"
 			}
 		fi
 	done
@@ -148,11 +151,11 @@ else
 
 	# Starship
 	if [[ ${ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
-		echo "INFO: Launching Starship prompt..."
+		echo "$(date '+%Y/%m/%d %T'): INFO: Launching Starship prompt..."
 		# shellcheck disable=SC1090
 		source <(/bin/starship init bash)
 	else
-		echo "INFO: Starship prompt is disabled."
+		echo "$(date '+%Y/%m/%d %T'): INFO: Starship prompt is disabled."
 	fi
 
 fi

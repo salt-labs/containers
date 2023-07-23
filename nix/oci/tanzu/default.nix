@@ -9,8 +9,8 @@
 
   # A non-root user to add to the container image.
   containerUser = "tanzu";
-  containerUID = "1000";
-  containerGID = "1000";
+  containerUID = "5000";
+  containerGID = "5000";
 
   tanzu = pkgs.callPackage ./tanzu.nix {
     inherit pkgs;
@@ -90,14 +90,17 @@ in
         "/etc"
         "/etc/skel"
         "/etc/sudoers.d"
+        "/etc/pam.d"
         "/home"
         "/lib"
         "/lib64"
-        "/root"
         "/run"
+        "/share"
         "/sbin"
         "/usr"
         "/usr/lib"
+        "/usr/lib64"
+        "/usr/lib/security"
         "/usr/local"
         "/usr/local/bin"
         "/usr/share/"
@@ -119,7 +122,6 @@ in
           coreutils-full
           curlFull
           diffutils
-          doas
           figlet
           file
           fuse3
@@ -141,9 +143,6 @@ in
           ripgrep
           shellcheck
           starship
-          su
-          sudo
-          super
           tini
           tree
           unzip
@@ -153,14 +152,22 @@ in
           xz
           yq-go
 
+          # User tools
+          #doas
+          #shadow # breaks pam/sudo
+          #super
+          getent
+          su
+          sudo
+
           # Nix
           direnv
           nil
 
           # VSCode
           findutils
-          gcc-unwrapped
-          glibc
+          #gcc-unwrapped
+          #glibc
           iproute
 
           # Docker Tools
@@ -196,12 +203,13 @@ in
           tanzu
         ]
         ++ [root_files]
-        ++ environmentHelpers
-        ++ nonRootShadowSetup {
-          user = containerUser;
-          uid = containerUID;
-          gid = containerGID;
-        };
+        ++ environmentHelpers;
+        # HACK: Needed mutable users/groups for entrypoint permission workaround.
+        #++ nonRootShadowSetup {
+        #  user = containerUser;
+        #  uid = containerUID;
+        #  gid = containerGID;
+        #};
     };
 
     # Enable fakeRootCommands in a fake chroot environment.
@@ -211,37 +219,141 @@ in
     fakeRootCommands = ''
       #!${pkgs.runtimeShell}
 
+      # Setup shadow and pam for root
+      ${pkgs.dockerTools.shadowSetup}
+
+      # HACK: Roll your own shadow so it's not broken by installing pkgs.shadow
+      # https://github.com/NixOS/nixpkgs/blob/a5931fa6e38da31f119cf08127c1aa8f178a22af/pkgs/build-support/docker/default.nix#L153-L175
+      declare BINS=(
+        usermod
+        groupmod
+      )
+      for BIN in "''${BINS[@]}";
+      do
+        cp --dereference ${pkgs.shadow}/bin/''${BIN} /sbin/''${BIN} || {
+          echo "Failed to copy ''${BIN} to /sbin"
+          exit 1
+        }
+      done
+
+      # Add required groups
+      groupadd tanzu \
+        --gid ${containerGID} || {
+        echo "Failed to add group tanzu"
+        exit 1
+      }
+      groupadd docker || {
+        echo "Failed to add group docker"
+        exit 1
+      }
+      groupadd sudo || {
+        echo "Failed to add group sudo"
+        exit 1
+      }
+
+      # Add the container user
+      # -M = --no-create-home
+      useradd \
+        --uid ${containerUID} \
+        --comment "Tanzu CLI" \
+        --home /home/${containerUser} \
+        --shell ${pkgs.bashInteractive}/bin/bash \
+        --groups tanzu,docker,sudo \
+        --no-user-group \
+        -M \
+        ${containerUser} || {
+          echo "Failed to add user ${containerUser}"
+          exit 1
+        }
+
+      # Update user primary group (manual)
+      sed \
+        --in-place \
+        --regexp-extended \
+        --expression "s/^${containerUser}:x:${containerUID}:1000:/${containerUser}:x:${containerUID}:${containerGID}:/" \
+        /etc/passwd || {
+          echo "Failed to update user ${containerUser} primary group"
+          exit 1
+        }
+
       # VSCode includes a bundled nodejs binary which is
       # dynamically linked and hardcoded to look in /lib
-      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib/stdenv
-      ln -s ${pkgs.glibc}/lib /lib/glibc
-      ln -s ${pkgs.stdenv.cc.cc.lib}/lib64 /lib64/stdenv
-      ln -s ${pkgs.glibc}/lib64 /lib64/glibc
-      ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
+      mkdir --parents /lib || {
+        echo "Failed to create /lib"
+        exit 1
+      }
+      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib/stdenv || {
+        echo "Failed to create /lib/stdenv symlink"
+        exit 1
+      }
+      ln -s ${pkgs.glibc}/lib /lib/glibc || {
+        echo "Failed to create /lib/glibc symlink"
+        exit 1
+      }
+      mkdir --parents /lib64 || {
+        echo "Failed to create /lib64"
+        exit 1
+      }
+      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib64/stdenv || {
+        echo "Failed to create /lib/stdenv symlink"
+        exit 1
+      }
+      ln -s ${pkgs.glibc}/lib /lib64/glibc || {
+        echo "Failed to create /lib64/glibc symlink"
+        exit 1
+      }
+      ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2 || {
+        echo "Failed to create /lib64/ld-linux-x86-64.so.2 symlink"
+        exit 1
+      }
 
-      # Create the home dir for the non-root container user.
-      mkdir --parents /home/${containerUser}
+      # Setup root user profile
+      cp --recursive --dereference /etc/skel /root
+      chown -R root:root /root || {
+        echo "Failed to chown /root"
+        exit 1
+      }
+      chmod 0751 /root || {
+        echo "Failed to chmod /root"
+        exit 1
+      }
 
-      # Copy dotfiles for the user ${containerUser} and root.
-      cp --recursive --dereference /etc/skel/. /home/${containerUser}/
-      cp --recursive --dereference /etc/skel/. /root/
-
+      # Setup the container user profile
+      cp --recursive --dereference /etc/skel /home/${containerUser}
       # Fix the home permissions for user ${containerUser}
       chown -R ${containerUID}:${containerGID} /home/${containerUser} || {
         echo "Failed to chown home for user ${containerUser}"
         exit 1
       }
-      chmod -R +rw /home/${containerUser} || {
-        echo "Failed to add rw permissions to /home/${containerUser}"
+      chmod 0751 /home/${containerUser} || {
+        echo "Failed to chmod home for user ${containerUser}"
         exit 1
       }
 
       # Set permissions on required directories
-      mkdir --parents --mode 0777 /tmp || exit 1
-      mkdir --parents --mode 0777 /workdir || exit 1
-      mkdir --parents --mode 0777 /workspaces || exit 1
-      mkdir --parents --mode 0777 /vscode || exit 1
-      mkdir --parents --mode 0777 /var/devcontainer || exit 1
+      mkdir --parents --mode 1777 /tmp || exit 1
+      mkdir --parents --mode 1777 /workdir || exit 1
+      mkdir --parents --mode 1777 /workspaces || exit 1
+      mkdir --parents --mode 1777 /vscode || exit 1
+      mkdir --parents --mode 1777 /var/devcontainer || exit 1
+
+      # Make sudo great again...
+      chmod +s /sbin/sudo || {
+        echo "Failed to add setuid bit to sudo"
+        exit 1
+      }
+      # If /etc/sudoers is a symlink, remove it
+      if [ -L /etc/sudoers ]; then
+        rm /etc/sudoers || {
+          echo "Failed to remove /etc/sudoers symlink"
+          exit 1
+        }
+        # Copy /etc/sudoers from the sudo pkgs
+        cp ${pkgs.sudo}/etc/sudoers /etc/sudoers || {
+          echo "Failed to copy /etc/sudoers"
+          exit 1
+        }
+      fi
     '';
 
     # Runs in the final layer, on top of other layers.

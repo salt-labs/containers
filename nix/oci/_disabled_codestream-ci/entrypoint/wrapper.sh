@@ -73,7 +73,7 @@ if [[ $# -eq 0 ]]; then
 
 else
 
-	BIN="${1:-}"
+	BIN="${1-}"
 	shift
 	BIN_ARGS=("${@}")
 

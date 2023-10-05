@@ -7,7 +7,7 @@ set -euo pipefail
 #########################
 
 export LOGLEVEL="${LOGLEVEL:=INFO}"
-export GIT_REPO="${GIT_REPO:-}"
+export GIT_REPO="${GIT_REPO-}"
 export CADDY_CONFIG="${CADDY_CONFIG:-/etc/caddy/Caddyfile}"
 export CADDY_RELOAD="FALSE"
 

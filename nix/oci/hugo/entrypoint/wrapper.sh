@@ -7,8 +7,8 @@ set -euo pipefail
 #########################
 
 export LOGLEVEL="${LOGLEVEL:=INFO}"
-export GIT_REPO="${GIT_REPO:-}"
-export GIT_BRANCH="${GIT_BRANCH:-}"
+export GIT_REPO="${GIT_REPO-}"
+export GIT_BRANCH="${GIT_BRANCH-}"
 
 #########################
 # Constants

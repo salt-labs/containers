@@ -1,6 +1,8 @@
 {
   pkgs,
+  pkgsUnstable,
   crossPkgs,
+  crossPkgsUnstable,
   self,
   ...
 }: let
@@ -71,6 +73,107 @@
         ''
       )
     ];
+
+  stablePkgs = with pkgs; [
+    # Common
+    bash-completion
+    bashInteractive
+    bat
+    bottom
+    bind
+    bindfs
+    cacert
+    coreutils-full
+    curlFull
+    diffutils
+    figlet
+    file
+    fuse3
+    gawk
+    git
+    gnugrep
+    gnupg
+    gnused
+    gnutar
+    gzip
+    hey
+    htop
+    iputils
+    jq
+    kmod
+    less
+    ncurses
+    nettools
+    openssh
+    procps
+    ripgrep
+    shellcheck
+    starship
+    tini
+    tree
+    unzip
+    vim
+    wget
+    which
+    xz
+    yq-go
+
+    # User tools
+    #doas
+    #shadow # breaks pam/sudo
+    #super
+    getent
+    su
+    sudo
+
+    # Nix
+    direnv
+    nil
+
+    # VSCode
+    findutils
+    #gcc-unwrapped
+    #glibc
+    iproute
+
+    # Docker Tools
+    containerd
+    dive
+    #docker
+    #docker-client
+    docker-buildx
+    docker-gc
+    docker-ls
+    docker-slim
+    docker-proxy
+    runc
+
+    # Kubernetes Tools
+    clusterctl
+    kail
+    kapp
+    kind
+    kube-bench
+    kube-linter
+    kubectl
+    kubernetes-helm
+    kustomize
+    kustomize-sops
+    sonobuoy
+    sops
+    velero
+    vendir
+    ytt
+
+    # Custom derivations
+    carvel
+    tanzu
+  ];
+
+  unstablePkgs = with pkgsUnstable; [
+    # TODO: Check when docker-client is up to v24+
+    docker_24
+  ];
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu";
@@ -110,109 +213,17 @@ in
         "/var/lib/docker"
       ];
 
-      paths = with pkgs;
-        [
-          # Common
-          bash-completion
-          bashInteractive
-          bat
-          bottom
-          bind
-          bindfs
-          cacert
-          coreutils-full
-          curlFull
-          diffutils
-          figlet
-          file
-          fuse3
-          gawk
-          git
-          gnugrep
-          gnupg
-          gnused
-          gnutar
-          gzip
-          hey
-          htop
-          iputils
-          jq
-          kmod
-          less
-          ncurses
-          nettools
-          openssh
-          procps
-          ripgrep
-          shellcheck
-          starship
-          tini
-          tree
-          unzip
-          vim
-          wget
-          which
-          xz
-          yq-go
-
-          # User tools
-          #doas
-          #shadow # breaks pam/sudo
-          #super
-          getent
-          su
-          sudo
-
-          # Nix
-          direnv
-          nil
-
-          # VSCode
-          findutils
-          #gcc-unwrapped
-          #glibc
-          iproute
-
-          # Docker Tools
-          containerd
-          dive
-          docker
-          docker-buildx
-          docker-gc
-          docker-ls
-          docker-slim
-          docker-proxy
-          runc
-
-          # Kubernetes Tools
-          clusterctl
-          kail
-          kapp
-          kind
-          kube-bench
-          kube-linter
-          kubectl
-          kubernetes-helm
-          kustomize
-          kustomize-sops
-          sonobuoy
-          sops
-          velero
-          vendir
-          ytt
-
-          # Custom derivations
-          carvel
-          tanzu
-        ]
+      paths =
+        stablePkgs
+        ++ unstablePkgs
         ++ [root_files]
         ++ environmentHelpers;
-        # HACK: Needed mutable users/groups for entrypoint permission workaround.
-        #++ nonRootShadowSetup {
-        #  user = containerUser;
-        #  uid = containerUID;
-        #  gid = containerGID;
-        #};
+      # HACK: Needed mutable users/groups for entrypoint permission workaround.
+      #++ nonRootShadowSetup {
+      #  user = containerUser;
+      #  uid = containerUID;
+      #  gid = containerGID;
+      #};
     };
 
     # Enable fakeRootCommands in a fake chroot environment.

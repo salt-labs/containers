@@ -427,7 +427,9 @@
       tanzu = import ./nix/oci/tanzu {
         inherit self;
         inherit pkgs;
+        inherit pkgsUnstable;
         inherit crossPkgs;
+        inherit crossPkgsUnstable;
       };
 
       terraform = import ./nix/oci/terraform {

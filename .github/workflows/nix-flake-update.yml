@@ -22,11 +22,11 @@ jobs:
     steps:
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - id: install_nix
         name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v23
 
       - id: cachix
         name: "Enable Cachix ❄️"
@@ -37,7 +37,7 @@ jobs:
 
       - id: update_nix_flake
         name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@v19
+        uses: DeterminateSystems/update-flake-lock@v20
         with:
           sign-commits: false
           gpg-fingerprint: ${{ secrets.GPG_FINGERPRINT }}

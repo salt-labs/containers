@@ -117,6 +117,7 @@ in
           bashInteractive
           bat
           bottom
+          bind
           bindfs
           cacert
           coreutils-full
@@ -134,10 +135,12 @@ in
           gzip
           hey
           htop
+          iputils
           jq
           kmod
           less
           ncurses
+          nettools
           openssh
           procps
           ripgrep
@@ -311,11 +314,11 @@ in
 
       # Setup root user profile
       cp --recursive --dereference /etc/skel /root
-      chown -R root:root /root || {
+      chown --recursive root:root /root || {
         echo "Failed to chown /root"
         exit 1
       }
-      chmod 0751 /root || {
+      chmod --recursive 0751 /root || {
         echo "Failed to chmod /root"
         exit 1
       }
@@ -323,11 +326,11 @@ in
       # Setup the container user profile
       cp --recursive --dereference /etc/skel /home/${containerUser}
       # Fix the home permissions for user ${containerUser}
-      chown -R ${containerUID}:${containerGID} /home/${containerUser} || {
+      chown --recursive ${containerUID}:${containerGID} /home/${containerUser} || {
         echo "Failed to chown home for user ${containerUser}"
         exit 1
       }
-      chmod 0751 /home/${containerUser} || {
+      chmod --recursive 0751 /home/${containerUser} || {
         echo "Failed to chmod home for user ${containerUser}"
         exit 1
       }

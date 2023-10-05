@@ -84,7 +84,7 @@ function run_git_clone() {
 			return 1
 		}
 
-	elif [[ -n ${CI_GIT_SSH_KEY:-} ]]; then
+	elif [[ -n ${CI_GIT_SSH_KEY-} ]]; then
 		# If CI_GIT_SSH_KEY is set, use it to authenticate
 
 		writeLog "DEBUG" "Using CI_GIT_SSH_KEY to authenticate"
@@ -200,7 +200,7 @@ function run_brakeman() {
 	writeLog "INFO" "Running brakeman..."
 
 	brakeman \
-		"${BIN_ARGS[@]:-}" \
+		"${BIN_ARGS[@]-}" \
 		--color \
 		--run-all-checks \
 		--output "${CI_BIN_HOME}/brakeman.json" \
@@ -341,7 +341,7 @@ function run_clair() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -436,7 +436,7 @@ function run_cosign() {
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
 	"${BIN_NAME}" \
-		"${BIN_ARGS[@]:-}" \
+		"${BIN_ARGS[@]-}" \
 		sign -key "${CI_BIN_HOME}/cosign.key" \
 		"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" ||
 		{
@@ -445,7 +445,7 @@ function run_cosign() {
 		}
 
 	"${BIN_NAME}" \
-		"${BIN_ARGS[@]:-}" \
+		"${BIN_ARGS[@]-}" \
 		sign -key cosign.key ||
 		{
 			writeLog "ERROR" "Failed to verify signature with ${BIN_NAME}."
@@ -525,7 +525,7 @@ function run_flawfinder() {
 
 	fi
 
-	flawfinder "${CI_GIT_SRC}" "${BIN_ARGS[@]:-}"
+	flawfinder "${CI_GIT_SRC}" "${BIN_ARGS[@]-}"
 
 	flawfinder --sarif "${CI_GIT_SRC}" >"${CI_BIN_HOME}/${CI_SAST_SARIF_FILE:=flawfinder.sarif}" || {
 		writeLog "ERROR" "Failed to geherate sarif report for flawfinder."
@@ -591,7 +591,7 @@ function run_gitleaks() {
 
 	gitleaks \
 		detect \
-		"${BIN_ARGS[@]:-}" \
+		"${BIN_ARGS[@]-}" \
 		--redact \
 		--source "${CI_GIT_SRC}" \
 		--exit-code "1" \
@@ -677,7 +677,7 @@ function run_gosec() {
 	_pushd "${CI_GIT_SRC}" || return 1
 
 	"${BIN_NAME}" \
-		"${BIN_ARGS[@]:-}" \
+		"${BIN_ARGS[@]-}" \
 		"${GI_GOSEC_PATH}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
@@ -742,7 +742,7 @@ function run_govc() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -846,7 +846,7 @@ function run_grype() {
 		writeLog "INFO" "Found SBOM from syft, scanning using that..."
 
 		"${BIN_NAME}" \
-			"${BIN_ARGS[@]:-}" \
+			"${BIN_ARGS[@]-}" \
 			--config "${CI_BIN_HOME}/config.yaml" \
 			--platform "${CI_IMAGE_PLATFORM:-linux}" \
 			--format sarif \
@@ -858,7 +858,7 @@ function run_grype() {
 		writeLog "INFO" "No SBOM found, scanning image directly..."
 
 		"${BIN_NAME}" \
-			"${BIN_ARGS[@]:-}" \
+			"${BIN_ARGS[@]-}" \
 			--config "${CI_BIN_HOME}/config.yaml" \
 			--platform "${CI_IMAGE_PLATFORM:-linux}" \
 			--format sarif \
@@ -924,7 +924,7 @@ function run_hadolint() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -982,7 +982,7 @@ function run_helm() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1147,7 +1147,7 @@ function run_kics() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1209,7 +1209,7 @@ function run_kube-linter() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1271,7 +1271,7 @@ function run_kubectl() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1333,7 +1333,7 @@ function run_kubesec() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1395,7 +1395,7 @@ function run_license_finder() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1457,7 +1457,7 @@ function run_packer() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1519,7 +1519,7 @@ function run_secretscanner() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1581,7 +1581,7 @@ function run_shellcheck() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1643,7 +1643,7 @@ function run_skopeo() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1731,7 +1731,7 @@ function run_syft() {
 	EOF
 
 	"${BIN_NAME}" \
-		"${BIN_ARGS[@]:-}" \
+		"${BIN_ARGS[@]-}" \
 		-o json="${CI_BIN_HOME}/sbom.json" \
 		"${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" ||
 		{
@@ -1794,7 +1794,7 @@ function run_snyk() {
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1856,7 +1856,7 @@ function run_tflint() {
 
 	writeLog "INFO" "Running ${BIN_NAME}..."
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -1916,7 +1916,7 @@ function run_tfsec() {
 
 	checkVarEmpty "CI_GIT_SRC" "Source code directory" && return 1
 
-	"${BIN_NAME}" "${BIN_ARGS[@]:-}" || {
+	"${BIN_NAME}" "${BIN_ARGS[@]-}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1
 	}
@@ -2017,7 +2017,7 @@ function run_trivy() {
 	EOF
 
 	"${BIN_NAME}" \
-		"${BIN_ARGS[@]:-}" \
+		"${BIN_ARGS[@]-}" \
 		image "${CI_REGISTRY}/${CI_IMAGE_NAME}:${CI_IMAGE_TAG:-latest}" || {
 		writeLog "ERROR" "Failed to run ${BIN_NAME}."
 		return 1

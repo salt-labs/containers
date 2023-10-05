@@ -28,7 +28,7 @@ function _popd() {
 
 function usage() {
 
-	local MESSAGE="${1:-}"
+	local MESSAGE="${1-}"
 
 	cat <<-EOF
 

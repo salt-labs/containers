@@ -37,7 +37,7 @@ export REQ_BINS
 #########################
 
 # Import the required functions
-# shellcheck source=functions.sh
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/functions.sh" || {
 	echo "Failed to source dependant functions!"
 	exit 1

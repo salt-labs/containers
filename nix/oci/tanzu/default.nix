@@ -159,6 +159,7 @@
     kubernetes-helm
     kustomize
     kustomize-sops
+    pinniped
     sonobuoy
     sops
     velero

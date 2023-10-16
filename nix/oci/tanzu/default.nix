@@ -153,6 +153,7 @@
     kail
     kapp
     kind
+    krew
     kube-bench
     kube-linter
     kubectl

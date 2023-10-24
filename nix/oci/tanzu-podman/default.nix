@@ -103,7 +103,6 @@
 
     # Container Tools
     dive
-    runc
     crun
     podman
     podman-tui
@@ -209,8 +208,6 @@ in
         --shell ${pkgs.bashInteractive}/bin/bash \
         --groups tanzu \
         --no-user-group \
-        --system \
-        --add-subids-for-system \
         -M \
         ${containerUser} || {
           echo "Failed to add user ${containerUser}"
@@ -328,7 +325,7 @@ in
           echo "Failed to copy ''${BIN} to /sbin"
           exit 1
         }
-        chmod u+s /bin/''${BIN} || {
+        chmod 4755 /bin/''${BIN} || {
           echo "Failed to allow ''${BIN} to run as non-root"
           exit 1
         }

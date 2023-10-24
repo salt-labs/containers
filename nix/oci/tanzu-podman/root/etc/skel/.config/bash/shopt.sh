@@ -9,7 +9,7 @@
 function shell_options() {
 
 	# Confirm bash is actually running
-	if ! type shopt > /dev/null 2>&1; then
+	if ! type shopt >/dev/null 2>&1; then
 		echo "$(date '+%Y/%m/%d %T'): ERROR: This function: ${FUNCNAME[0]} needs to be called from within Bash"
 		return 1
 	fi

@@ -18,7 +18,7 @@ if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 fi
 
 # If the container is run as root, then we need to setup the user.
-if [[ "${UID}" -eq 0  ]]; then
+if [[ ${UID} -eq 0 ]]; then
 
 	echo "$(date '+%Y/%m/%d %T'): INFO: Running as root user, performing user setup steps..." | tee -a "/tmp/environment.log"
 
@@ -35,13 +35,13 @@ if [[ "${UID}" -eq 0  ]]; then
 	}
 
 	# --env HOST_UID=$(id -u)
-	if [[ "${HOST_UID:-EMPTY}" == "EMPTY" ]]; then
+	if [[ ${HOST_UID:-EMPTY} == "EMPTY" ]]; then
 		echo "$(date '+%Y/%m/%d %T'): ERROR: When running as 'root' please set the 'HOST_UID' env" >&2
 		exit 1
 	fi
 
 	# --env HOST_GID=$(id -g)
-	if [[ "${HOST_GID:-EMPTY}" == "EMPTY" ]]; then
+	if [[ ${HOST_GID:-EMPTY} == "EMPTY" ]]; then
 		echo "$(date '+%Y/%m/%d %T'): ERROR: When running as 'root' please set the 'HOST_GID' env" >&2
 		exit 1
 	fi
@@ -55,7 +55,7 @@ if [[ "${UID}" -eq 0  ]]; then
 	# If the group named 'tanzu' does not have the same id, change it.
 	OPTION_1_STATUS="SUCCESS"
 	TANZU_GROUP_ID=$(getent group tanzu | cut -d: -f3)
-	if [[ "${TANZU_GROUP_ID}" -ne "${HOST_GID}" ]]; then
+	if [[ ${TANZU_GROUP_ID} -ne ${HOST_GID} ]]; then
 		echo "$(date '+%Y/%m/%d %T'): INFO: Updating the container user 'tanzu' GID to '${HOST_GID}'" | tee -a "/tmp/environment.log"
 		groupmod --gid "$HOST_GID" tanzu || {
 			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'tanzu' group GID to '${HOST_GID}'"
@@ -65,7 +65,7 @@ if [[ "${UID}" -eq 0  ]]; then
 
 	# If the user named 'tanzu' does not have the same id, change it.
 	TANZU_USER_ID=$(id -u tanzu)
-	if [[ "${TANZU_USER_ID}" -ne "${HOST_UID}" ]]; then
+	if [[ ${TANZU_USER_ID} -ne ${HOST_UID} ]]; then
 		echo "$(date '+%Y/%m/%d %T'): INFO: Updating the container user tanzu' UID to '${HOST_UID}'" | tee -a "/tmp/environment.log"
 		usermod --uid "$HOST_UID" tanzu || {
 			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'tanzu' user UID to '${HOST_UID}'"
@@ -82,7 +82,7 @@ if [[ "${UID}" -eq 0  ]]; then
 	if [[ -S /var/run/docker.sock ]]; then
 		DOCKER_SOCKET_ID=$(stat -c '%g' /var/run/docker.sock)
 		# If the docker socket group id does not match the docker group id, change the group id.
-		if [[ "${DOCKER_GROUP_ID}" -ne "${DOCKER_SOCKET_ID}" ]]; then
+		if [[ ${DOCKER_GROUP_ID} -ne ${DOCKER_SOCKET_ID} ]]; then
 			groupmod --gid "${DOCKER_SOCKET_ID}" docker || {
 				echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'docker' group GID to '${DOCKER_SOCKET_ID}'"
 				OPTION_1_STATUS="FAILED"
@@ -93,7 +93,7 @@ if [[ "${UID}" -eq 0  ]]; then
 	# Option 2.
 
 	# If Option 1 fails, attempt Option 2.
-	if [[ ! "${OPTION_1_STATUS:-FAILED}" == "SUCCESS" ]]; then
+	if [[ ${OPTION_1_STATUS:-FAILED} != "SUCCESS" ]]; then
 
 		echo "$(date '+%Y/%m/%d %T'): WARN: Using bindFS fallback method for user permissions" | tee -a "/tmp/environment.log"
 
@@ -165,26 +165,26 @@ else
 
 		case $CHOICE in
 
-			[Yy]*)
+		[Yy]*)
 
-				echo "Restarting shell..."
-				"${CMD_PREFIX[@]}" "${COMMAND[@]}" || true
+			echo "Restarting shell..."
+			"${CMD_PREFIX[@]}" "${COMMAND[@]}" || true
 
-				;;
+			;;
 
-			[Nn]*)
+		[Nn]*)
 
-				echo "Exiting..."
-				break
+			echo "Exiting..."
+			break
 
-				;;
+			;;
 
-			*)
+		*)
 
-				echo "Please answer yes or no."
-				sleep 1
+			echo "Please answer yes or no."
+			sleep 1
 
-				;;
+			;;
 
 		esac
 

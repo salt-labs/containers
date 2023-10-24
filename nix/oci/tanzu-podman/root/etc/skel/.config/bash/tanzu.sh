@@ -71,96 +71,96 @@ else
 
 			case "$CHOICE" in
 
-				[Yy]*)
+			[Yy]*)
 
-					echo "$(date '+%Y/%m/%d %T'): INFO: Initialising Tanzu CLI..."
+				echo "$(date '+%Y/%m/%d %T'): INFO: Initialising Tanzu CLI..."
 
-					tanzu plugin clean || {
-						echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to clean the Tanzu CLI plugins"
-					}
+				tanzu plugin clean || {
+					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to clean the Tanzu CLI plugins"
+				}
 
-					tanzu init || {
-						echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to initialise the Tanzu CLI configuration"
-					}
+				tanzu init || {
+					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to initialise the Tanzu CLI configuration"
+				}
 
-					# There are 3 options for the Tanzu CLI OCI registry in preference order:
-					# 	1. A custom registry is provided, use it.
-					# 	2. A pull-through cache is provided, use it.
-					# 	3. No pull-through or custom registry is provided, pull direct from internet.
+				# There are 3 options for the Tanzu CLI OCI registry in preference order:
+				# 	1. A custom registry is provided, use it.
+				# 	2. A pull-through cache is provided, use it.
+				# 	3. No pull-through or custom registry is provided, pull direct from internet.
 
-					# Capture existing OCI URL
-					TANZU_CLI_OCI_URL="$(tanzu plugin source list --output yaml | yq .[].image)"
+				# Capture existing OCI URL
+				TANZU_CLI_OCI_URL="$(tanzu plugin source list --output yaml | yq .[].image)"
 
-					# Strip the image tag.
-					TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL%:*}"
+				# Strip the image tag.
+				TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL%:*}"
 
-					# Add the user provided image tag.
-					TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_CLI_PLUGIN_SOURCE_TAG}"
+				# Add the user provided image tag.
+				TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_CLI_PLUGIN_SOURCE_TAG}"
 
-					echo "$(date '+%Y/%m/%d %T'): INFO: Tanzu CLI OCI URL set to ${TANZU_CLI_OCI_URL}"
+				echo "$(date '+%Y/%m/%d %T'): INFO: Tanzu CLI OCI URL set to ${TANZU_CLI_OCI_URL}"
 
-					# If there is a custom registry, use it as priority.
-					if [[ ${TANZU_CUSTOM_REGISTRY:-EMPTY} != "EMPTY" ]]; then
+				# If there is a custom registry, use it as priority.
+				if [[ ${TANZU_CUSTOM_REGISTRY:-EMPTY} != "EMPTY" ]]; then
 
-						echo "$(date '+%Y/%m/%d %T'): INFO: Custom registry provided, using ${TANZU_CUSTOM_REGISTRY}"
+					echo "$(date '+%Y/%m/%d %T'): INFO: Custom registry provided, using ${TANZU_CUSTOM_REGISTRY}"
 
-						# Strip the VMware registry prefix.
-						TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL#*projects.registry.vmware.com}"
+					# Strip the VMware registry prefix.
+					TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL#*projects.registry.vmware.com}"
 
-						# Add the custom registry OCI URL.
-						TANZU_CLI_OCI_URL="${TANZU_CUSTOM_REGISTRY}${TANZU_CLI_OCI_URL}"
+					# Add the custom registry OCI URL.
+					TANZU_CLI_OCI_URL="${TANZU_CUSTOM_REGISTRY}${TANZU_CLI_OCI_URL}"
 
-						echo "$(date '+%Y/%m/%d %T'): INFO: Custom registry OCI URL set to ${TANZU_CLI_OCI_URL}"
+					echo "$(date '+%Y/%m/%d %T'): INFO: Custom registry OCI URL set to ${TANZU_CLI_OCI_URL}"
 
-					elif [[ ${TANZU_PULL_THROUGH_CACHE:-EMPTY} != "EMPTY" ]]; then
+				elif [[ ${TANZU_PULL_THROUGH_CACHE:-EMPTY} != "EMPTY" ]]; then
 
-						# Add the pull-through prefix
-						TANZU_CLI_OCI_URL="${TANZU_PULL_THROUGH_CACHE}/${TANZU_CLI_OCI_URL}"
+					# Add the pull-through prefix
+					TANZU_CLI_OCI_URL="${TANZU_PULL_THROUGH_CACHE}/${TANZU_CLI_OCI_URL}"
 
-						echo "$(date '+%Y/%m/%d %T'): INFO: Pull-through cache OCI URL set to ${TANZU_CLI_OCI_URL}"
+					echo "$(date '+%Y/%m/%d %T'): INFO: Pull-through cache OCI URL set to ${TANZU_CLI_OCI_URL}"
 
-					else
+				else
 
-						echo "$(date '+%Y/%m/%d %T'): INFO: No custom registry or pull-through cache provided, pulling direct from internet."
+					echo "$(date '+%Y/%m/%d %T'): INFO: No custom registry or pull-through cache provided, pulling direct from internet."
 
-					fi
+				fi
 
-					echo "$(date '+%Y/%m/%d %T'): INFO: Updating Tanzu CLI plugin source..."
+				echo "$(date '+%Y/%m/%d %T'): INFO: Updating Tanzu CLI plugin source..."
 
-					# Add the pull-through cache OCI URL and update the plugin cache.
-					tanzu plugin source update \
-						default \
-						--uri "${TANZU_CLI_OCI_URL}" || {
-						echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to update plugin source to ${TANZU_CLI_OCI_URL}"
-					}
+				# Add the pull-through cache OCI URL and update the plugin cache.
+				tanzu plugin source update \
+					default \
+					--uri "${TANZU_CLI_OCI_URL}" || {
+					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to update plugin source to ${TANZU_CLI_OCI_URL}"
+				}
 
-					echo "$(date '+%Y/%m/%d %T'): INFO: Installing Tanzu CLI plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
+				echo "$(date '+%Y/%m/%d %T'): INFO: Installing Tanzu CLI plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
 
-					# Add the VMWare TKG group of plugins at the configured version to match the CLI.
-					tanzu plugin install \
-						--group "vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}" || {
-						echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to install the Tanzu plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
-					}
+				# Add the VMWare TKG group of plugins at the configured version to match the CLI.
+				tanzu plugin install \
+					--group "vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}" || {
+					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to install the Tanzu plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
+				}
 
-					tanzu plugin sync || {
-						echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to synchronise Tanzu CLI plugins"
-					}
+				tanzu plugin sync || {
+					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to synchronise Tanzu CLI plugins"
+				}
 
-					break
+				break
 
-					;;
+				;;
 
-				[Nn]*)
+			[Nn]*)
 
-					break
+				break
 
-					;;
+				;;
 
-				*)
+			*)
 
-					echo "Please answer yes or no."
+				echo "Please answer yes or no."
 
-					;;
+				;;
 
 			esac
 

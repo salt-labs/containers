@@ -1,3 +1,8 @@
+##################################################
+#
+# Reference: https://www.redhat.com/sysadmin/podman-inside-container
+#
+##################################################
 {
   pkgs,
   pkgsUnstable,
@@ -34,45 +39,9 @@
     usrBinEnv
     binSh
     caCertificates
-    #fakeNss
-    #shadowSetup
   ];
 
-  nonRootShadowSetup = {
-    user,
-    uid,
-    gid ? uid,
-  }:
-    with pkgs; [
-      (
-        writeTextDir "etc/shadow" ''
-          root:!x:::::::
-          ${user}:!:::::::
-        ''
-      )
-      (
-        writeTextDir "etc/passwd" ''
-          root:x:0:0::/root:${runtimeShell}
-          ${user}:x:${toString uid}:${toString gid}::/home/${user}:${runtimeShell}
-        ''
-      )
-      (
-        writeTextDir "etc/group" ''
-          root:x:0:
-          sudo:x:27:${user}
-          shadow:x:42:${user}
-          plugdev:x:46:${user}
-          docker:x:998:${user}
-          ${user}:x:${toString gid}:
-        ''
-      )
-      (
-        writeTextDir "etc/gshadow" ''
-          root:x::
-          ${user}:x::
-        ''
-      )
-    ];
+  unstablePkgs = with pkgsUnstable; [];
 
   stablePkgs = with pkgs; [
     # Common
@@ -112,6 +81,7 @@
     tini
     tree
     unzip
+    util-linux
     vim
     wget
     which
@@ -119,12 +89,9 @@
     yq-go
 
     # User tools
-    doas
-    #shadow # breaks sudo
-    super
+    shadow
     getent
     su
-    sudo
 
     # Nix
     direnv
@@ -132,24 +99,16 @@
 
     # VSCode
     findutils
-    #gcc-unwrapped
-    #glibc
     iproute
 
-    # Docker Tools
-    containerd
+    # Container Tools
     dive
-    #docker
-    #docker-client
-    docker-buildx
-    docker-gc
-    docker-ls
-    docker-slim
-    docker-proxy
     runc
     crun
     podman
     podman-tui
+    fuse-overlayfs
+    slirp4netns
 
     # Kubernetes Tools
     clusterctl
@@ -174,16 +133,11 @@
     carvel
     tanzu
   ];
-
-  unstablePkgs = with pkgsUnstable; [
-    # TODO: Check when docker-client is up to v24+
-    docker_24
-  ];
 in
   pkgs.dockerTools.buildLayeredImage {
-    name = "tanzu";
+    name = "tanzu-podman";
     tag = "latest";
-    # created = creationDate;
+    created = creationDate;
 
     architecture = "amd64";
 
@@ -197,7 +151,6 @@ in
         "/bin"
         "/etc"
         "/etc/containers"
-        "/etc/docker"
         "/etc/pam.d"
         "/etc/skel"
         "/etc/sudoers.d"
@@ -217,7 +170,6 @@ in
         "/usr/share/bash-completion"
         "/var"
         "/var/lib/containers"
-        "/var/lib/docker"
         "/var/run"
       ];
 
@@ -226,12 +178,6 @@ in
         ++ unstablePkgs
         ++ [root_files]
         ++ environmentHelpers;
-      # HACK: Needed mutable users/groups for entrypoint permission workaround.
-      #++ nonRootShadowSetup {
-      #  user = containerUser;
-      #  uid = containerUID;
-      #  gid = containerGID;
-      #};
     };
 
     # Enable fakeRootCommands in a fake chroot environment.
@@ -242,36 +188,15 @@ in
       #!${pkgs.runtimeShell}
 
       # Setup shadow and pam for root
-      ${pkgs.dockerTools.shadowSetup}
+      #${pkgs.dockerTools.shadowSetup}
 
-      # HACK: Roll your own shadow so it's not broken by installing pkgs.shadow
-      # https://github.com/NixOS/nixpkgs/blob/a5931fa6e38da31f119cf08127c1aa8f178a22af/pkgs/build-support/docker/default.nix#L153-L175
-      declare BINS=(
-        usermod
-        groupmod
-      )
-      for BIN in "''${BINS[@]}";
-      do
-        cp --dereference ${pkgs.shadow}/bin/''${BIN} /sbin/''${BIN} || {
-          echo "Failed to copy ''${BIN} to /sbin"
-          exit 1
-        }
-      done
+      # Make sure shadow bins are in the PATH
+      export PATH=${pkgs.shadow}/bin/:''${PATH}
 
       # Add required groups
       groupadd tanzu \
         --gid ${containerGID} || {
         echo "Failed to add group tanzu"
-        exit 1
-      }
-      groupadd docker \
-        --gid 998 || {
-        echo "Failed to add group docker"
-        exit 1
-      }
-      groupadd sudo \
-        --gid 27 || {
-        echo "Failed to add group sudo"
         exit 1
       }
 
@@ -282,8 +207,10 @@ in
         --comment "Tanzu CLI" \
         --home /home/${containerUser} \
         --shell ${pkgs.bashInteractive}/bin/bash \
-        --groups tanzu,docker,sudo \
+        --groups tanzu \
         --no-user-group \
+        --system \
+        --add-subids-for-system \
         -M \
         ${containerUser} || {
           echo "Failed to add user ${containerUser}"
@@ -343,7 +270,10 @@ in
       }
 
       # Setup the container user profile
-      cp --recursive --dereference /etc/skel /home/${containerUser}
+      cp --recursive --dereference /etc/skel /home/${containerUser} || {
+        echo "Failed to copy profile for ${containerUser}"
+        exit 1
+      }
       # Fix the home permissions for user ${containerUser}
       chown --recursive ${containerUID}:${containerGID} /home/${containerUser} || {
         echo "Failed to chown home for user ${containerUser}"
@@ -361,47 +291,48 @@ in
       mkdir --parents --mode 1777 /vscode || exit 1
       mkdir --parents --mode 1777 /var/devcontainer || exit 1
 
-      # Make sudo great again...
-      chmod +s /sbin/sudo || {
-        echo "Failed to add setuid bit to sudo"
-        exit 1
-      }
-      # If /etc/sudoers is a symlink, remove it
-      if [ -L /etc/sudoers ]; then
-        rm /etc/sudoers || {
-          echo "Failed to remove /etc/sudoers symlink"
-          exit 1
-        }
-        # Copy /etc/sudoers from the sudo pkgs
-        cp ${pkgs.sudo}/etc/sudoers /etc/sudoers || {
-          echo "Failed to copy /etc/sudoers"
-          exit 1
-        }
-      fi
+      # Setup sub IDs and GIDs for rootless Podman
+      #echo "Setting up Sub IDs and GIDs"
+      #echo ${containerUser}:10000:65535 > /etc/subuid || exit 1
+      #echo ${containerUser}:10000:65535 > /etc/subgid || exit 1
+      #chmod 0644 /etc/subuid /etc/subgid || exit 1
 
-      # Setup sub IDs and GIDs for rootless podman
-      usermod \
-        --add-subuids 100000-165535 \
-        --add-subgids 100000-165535 \
-        root
+      # Setup directories for rootless Podman
+      mkdir -p /run/containers/storage || exit 1
+      mkdir -p /run/user/${containerUID} || exit 1
+      chmod 0777 /run/user/${containerUID} || exit 1
 
-      usermod \
-        --add-subuids 165536-231071 \
-        --add-subgiods 165536-231071 \
-        ${containerUser}
-
-      # Podman allow Fuse overlay for storage
-      chmod 644 /etc/containers/containers.conf
-      sed -i \
-        -e 's|^#mount_program|mount_program|g' \
-        -e '/additionalimage.*/a "/var/lib/shared",' \
-        -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
-        /etc/containers/storage.conf
       mkdir -p /var/lib/shared/{overlay-images,overlay-layers,vfs-images,vfs-layers}
-      touch /var/lib/shared/overlay-images/images.lock
-      touch /var/lib/shared/overlay-layers/layers.lock
-      touch /var/lib/shared/vfs-images/images.lock
-      touch /var/lib/shared/vfs-layers/layers.lock
+      touch /var/lib/shared/overlay-images/images.lock || exit 1
+      touch /var/lib/shared/overlay-layers/layers.lock || exit 1
+      touch /var/lib/shared/vfs-images/images.lock || exit 1
+      touch /var/lib/shared/vfs-layers/layers.lock || exit 1
+      chmod -R 0777 /var/lib/shared || exit 1
+
+      # Podman needs this working directory.
+      mkdir -p /var/tmp
+      chmod -R 0777 /var/tmp
+
+      # HACK: We need to run these as non-root users.
+      declare BINS=(
+        newgidmap
+        newuidmap
+      )
+      for BIN in "''${BINS[@]}";
+      do
+        rm -f /bin/''${BIN} || {
+          echo "Failed to remove symlink to ''${BIN}"
+          exit 1
+        }
+        cp --dereference ${pkgs.shadow}/bin/''${BIN} /bin/''${BIN} || {
+          echo "Failed to copy ''${BIN} to /sbin"
+          exit 1
+        }
+        chmod u+s /bin/''${BIN} || {
+          echo "Failed to allow ''${BIN} to run as non-root"
+          exit 1
+        }
+      done
     '';
 
     # Runs in the final layer, on top of other layers.
@@ -424,9 +355,6 @@ in
         "/usr/local/bin/entrypoint.sh"
       ];
       ExposedPorts = {
-        # DinD
-        #"2375/tcp" = {};
-        #"2376/tcp" = {};
       };
       Env = [
         "ENABLE_DEBUG=FALSE"
@@ -446,6 +374,7 @@ in
         "TZ=UTC"
         "WORKDIR=/workdir"
         "ENVIRONMENT_VSCODE=none"
+        "_CONTAINERS_USERNS_CONFIGURED="
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";
@@ -453,9 +382,6 @@ in
         "/vscode" = {};
         "/tmp" = {};
         "/home/${containerUser}" = {};
-        # DinD
-        #"/var/lib/docker" = {};
-        # Podman
         "/var/lib/containers" = {};
       };
     };

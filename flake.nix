@@ -432,6 +432,14 @@
         inherit crossPkgsUnstable;
       };
 
+      tanzu-podman = import ./nix/oci/tanzu-podman {
+        inherit self;
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+        inherit crossPkgsUnstable;
+      };
+
       terraform = import ./nix/oci/terraform {
         inherit self;
         inherit pkgs;

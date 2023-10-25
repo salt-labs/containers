@@ -8,7 +8,7 @@ export ENTRYPOINT_EXECUTED="TRUE"
 
 # Make sure that the interactive parts are not run in a a VSCode container env.
 # VSCode handles it's own userID mapping and mounts.
-if [[ "${ENVIRONMENT_VSCODE^^}" == "CONTAINER" ]]; then
+if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 
 	while true; do
 		echo "$(date '+%Y/%m/%d %T'): INFO: Devcontainer environment is running..." | tee -a "/tmp/environment.log"

@@ -260,6 +260,7 @@ in
         "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
         "TERM=xterm"
         "TZ=UTC"
+        "USER=${containerUser}"
         "WORKDIR=/workdir"
         "_CONTAINERS_USERNS_CONFIGURED="
       ];

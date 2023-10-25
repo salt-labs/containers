@@ -307,11 +307,11 @@ in
       mkdir --parents --mode 1777 /workdir || exit 1
       mkdir --parents --mode 1777 /workspaces || exit 1
 
-      # TEST
-      chmod +x /usr/local/bin/entrypoint.sh || {
-        echo nope
-        exit 1
-      }
+      # Setup sub IDs and GIDs for rootless
+      echo "Setting up Sub IDs and GIDs for ${containerUser}"
+      echo ${containerUser}:100000:65535 >> /etc/subuid || exit 1
+      echo ${containerUser}:100000:65535 >> /etc/subgid || exit 1
+      chmod 0644 /etc/subuid /etc/subgid || exit 1
     '';
 
     # Runs in the final layer, on top of other layers.
@@ -353,6 +353,7 @@ in
         "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
         "TERM=xterm"
         "TZ=UTC"
+        "USER=${containerUser}"
         "WORKDIR=/workdir"
       ];
       WorkingDir = "/workdir";

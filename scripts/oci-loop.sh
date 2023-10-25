@@ -9,7 +9,7 @@ set -euo pipefail
 
 if [[ ${1:-EMPTY} == "EMPTY" ]]; then
 	echo "Defaulting to docker"
-    OCI_TOOL="docker"
+	OCI_TOOL="docker"
 else
 	OCI_TOOL=$1
 fi
@@ -21,10 +21,9 @@ else
 	OCI_NAME=$2
 fi
 
-if ! type "${OCI_TOOL}" > /dev/null 2>&1;
-then
-    echo "Unable to find container tool ${OCI_TOOL}"
-    exit 1
+if ! type "${OCI_TOOL}" >/dev/null 2>&1; then
+	echo "Unable to find container tool ${OCI_TOOL}"
+	exit 1
 fi
 
 git add --all || {
@@ -48,47 +47,47 @@ nix build \
 
 case "${OCI_TOOL}" in
 
-    "docker" )
+"docker")
 
-        "${OCI_TOOL}" \
-            --log-level=info \
-            run \
-            -it \
-            --rm \
-            --name "test-${OCI_NAME}" \
-            --privileged \
-            --security-opt label=disable \
-            --security-opt apparmor=unconfined \
-            --security-opt seccomp=unconfined \
-            --device /dev/fuse \
-            --mount type=bind,source="${XDG_RUNTIME_DIR}/docker.sock",target="/var/run/docker.sock" \
-            "${OCI_NAME}:latest"
-            #--user root \
-            #"${OCI_NAME}:latest" \
-            #/bin/bash
+	"${OCI_TOOL}" \
+		--log-level=info \
+		run \
+		-it \
+		--rm \
+		--name "test-${OCI_NAME}" \
+		--privileged \
+		--security-opt label=disable \
+		--security-opt apparmor=unconfined \
+		--security-opt seccomp=unconfined \
+		--device /dev/fuse \
+		--mount "type=bind,source=${XDG_RUNTIME_DIR}/docker.sock,target=/var/run/docker.sock" \
+		"${OCI_NAME}:latest"
+	#--user root \
+	#"${OCI_NAME}:latest" \
+	#/bin/bash
 
-    ;;
+	;;
 
-    "podman" )
+"podman")
 
-        "${OCI_TOOL}" \
-        --log-level=info \
-        run \
-        -it \
-        --rm \
-        --name "test-${OCI_NAME}" \
-        --privileged \
-        --security-opt label=disable \
-        --security-opt apparmor=unconfined \
-        --security-opt seccomp=unconfined \
-        --device /dev/fuse \
-        --mount type=bind,source="${XDG_RUNTIME_DIR}/podman/podman.sock",target="/var/run/docker.sock,relabel=shared,U=true" \
-        localhost/"${OCI_NAME}:latest"
+	"${OCI_TOOL}" \
+		--log-level=info \
+		run \
+		-it \
+		--rm \
+		--name "test-${OCI_NAME}" \
+		--privileged \
+		--security-opt label=disable \
+		--security-opt apparmor=unconfined \
+		--security-opt seccomp=unconfined \
+		--device /dev/fuse \
+		--mount "type=bind,source=${XDG_RUNTIME_DIR}/podman/podman.sock,target=/var/run/docker.sock,relabel=shared,U=true" \
+		localhost/"${OCI_NAME}:latest"
 
-    ;;
+	;;
 
 esac
- 
+
 # Scratch
 #    --mount type=bind,source="${XDG_RUNTIME_DIR}/podman/podman.sock",target="/run/podman/podman.sock" \
 #

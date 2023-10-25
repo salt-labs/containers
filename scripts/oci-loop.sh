@@ -8,7 +8,7 @@ clear
 set -euo pipefail
 
 if [[ ${1:-EMPTY} == "EMPTY" ]]; then
-	echo 'Provide the OCI image name as $1'
+	echo 'Provide the OCI image name as parameter #1'
 	exit 1
 else
 	OCI_NAME=$1
@@ -49,10 +49,11 @@ nix build \
 	-it \
 	--rm \
 	--name temp \
-    --privileged \
-    --security-opt label=disable \
-    --security-opt apparmor=unconfined \
-    --security-opt seccomp=unconfined \
+	--privileged \
+	--security-opt label=disable \
+	--security-opt apparmor=unconfined \
+	--security-opt seccomp=unconfined \
+	--user podman \
 	localhost/"${OCI_NAME}:latest"
 
 # Troubleshooting

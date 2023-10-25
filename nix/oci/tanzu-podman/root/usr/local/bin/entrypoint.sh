@@ -8,7 +8,7 @@ export ENTRYPOINT_EXECUTED="TRUE"
 
 # Make sure that the interactive parts are not run in a a VSCode container env.
 # VSCode handles it's own userID mapping and mounts.
-if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
+if [[ "${ENVIRONMENT_VSCODE^^}" == "CONTAINER" ]]; then
 
 	while true; do
 		echo "$(date '+%Y/%m/%d %T'): INFO: Devcontainer environment is running..." | tee -a "/tmp/environment.log"
@@ -136,6 +136,9 @@ if [[ ${UID} -eq 0 ]]; then
 	)
 
 fi
+
+# Unfortunately, kind has a hard dependency on systemd...
+#alias kind='systemd-run --user --scope --property=Delegate=yes kind'
 
 # If a custom CMD was provided, run that and not the interactive loop.
 if [[ $# -gt 0 ]]; then

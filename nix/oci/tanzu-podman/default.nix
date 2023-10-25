@@ -15,16 +15,24 @@
   creationDate = builtins.substring 0 8 modifiedDate;
 
   # A non-root user to add to the container image.
-  containerUser = "tanzu";
-  containerUID = "1001";
-  containerGID = "1001";
+  containerUser = "podman";
+  containerUID = "1000";
+  containerGID = "1000";
 
-  tanzu = pkgs.callPackage ./tanzu.nix {
+  baseImage = pkgs.dockerTools.pullImage {
+    imageName = "quay.io/podman/stable";
+    imageDigest = "sha256:8265953034d4d1b1d559aa02bf46289046d3a2cd2b808ed2a1e1073d78a25ae1";
+    sha256 = "sha256-qI0sEyUosXGOS7td4jeLswCG6+7gQrzlFyGAKI4FG+k=";
+    finalImageTag = "v4.7.0";
+    finalImageName = "podman";
+  };
+
+  tanzu = pkgs.callPackage ../tanzu/tanzu.nix {
     inherit pkgs;
     inherit crossPkgs;
   };
 
-  carvel = pkgs.callPackage ./carvel.nix {
+  carvel = pkgs.callPackage ../carvel/carvel.nix {
     inherit pkgs;
     inherit crossPkgs;
   };
@@ -36,43 +44,22 @@
   };
 
   environmentHelpers = with pkgs.dockerTools; [
-    usrBinEnv
-    binSh
-    caCertificates
   ];
 
   stablePkgs = with pkgs; [
     # Common
-    bash-completion
-    bashInteractive
     bat
     bottom
-    bind
-    bindfs
-    cacert
-    coreutils-full
-    curlFull
-    diffutils
     figlet
     file
-    fuse3
-    gawk
     git
-    gnugrep
-    gnupg
-    gnused
-    gnutar
-    gzip
     hey
     htop
     iputils
     jq
-    kmod
     less
     lurk
-    ncurses
     nettools
-    openssh
     procps
     ripgrep
     shellcheck
@@ -87,11 +74,6 @@
     xz
     yq-go
 
-    # User tools
-    shadow
-    getent
-    su
-
     # Nix
     direnv
     nil
@@ -102,20 +84,11 @@
 
     # Container Tools
     dive
-    #buildah
-    #crun
-    #conmon
-    #podman # bug in Podman v4.5.0 fixed in v4.6.0+
-    podman-tui
-    fuse-overlayfs
-    #skopeo
-    slirp4netns
 
     # Kubernetes Tools
     clusterctl
     kail
-    kapp
-    kind
+    #kind
     krew
     kube-bench
     kube-linter
@@ -123,12 +96,12 @@
     kubernetes-helm
     kustomize
     kustomize-sops
+    sops
+
+    # TKG Tools
     pinniped
     sonobuoy
-    sops
     velero
-    vendir
-    ytt
 
     # Custom derivations
     carvel
@@ -136,12 +109,7 @@
   ];
 
   unstablePkgs = with pkgsUnstable; [
-    # Bug in Podman v4.5.0 fixed in v4.6.0+
-    buildah
-    crun
-    conmon
-    podman
-    skopeo
+    kind
   ];
 in
   pkgs.dockerTools.buildLayeredImage {
@@ -151,43 +119,23 @@ in
 
     architecture = "amd64";
 
+    fromImage = baseImage;
     maxLayers = 100;
 
     contents = pkgs.buildEnv {
       name = "image-root";
 
-      pathsToLink = [
-        "/"
-        "/bin"
-        "/etc"
-        "/etc/containers"
-        "/etc/pam.d"
-        "/etc/skel"
-        "/etc/sudoers.d"
-        "/home"
-        "/lib"
-        "/lib64"
-        "/run"
-        "/sbin"
-        "/share"
-        "/usr"
-        "/usr/lib"
-        "/usr/lib/security"
-        "/usr/lib64"
-        "/usr/local"
-        "/usr/local/bin"
-        "/usr/share/"
-        "/usr/share/bash-completion"
-        "/var"
-        "/var/lib/containers"
-        "/var/run"
-      ];
-
       paths =
         stablePkgs
         ++ unstablePkgs
-        ++ [root_files]
-        ++ environmentHelpers;
+        ++ environmentHelpers
+        ++ [root_files];
+
+      pathsToLink = [
+        "/bin"
+        "/usr/local/bin"
+        "/usr/local/share/applications/tanzu-cli"
+      ];
     };
 
     # Enable fakeRootCommands in a fake chroot environment.
@@ -197,166 +145,78 @@ in
     fakeRootCommands = ''
       #!${pkgs.runtimeShell}
 
-      # Setup shadow and pam for root
-      #${pkgs.dockerTools.shadowSetup}
+      mkdir --parents --mode 0755 /home/${containerUser}/.cluster-api
+      cat << EOF > /home/${containerUser}/.cluster-api/clusterctl.yaml
+      ---
+      CLUSTERCTL_DISABLE_VERSIONCHECK: "true"
+      EOF
 
-      # Make sure shadow bins are in the PATH
-      export PATH=${pkgs.shadow}/bin/:''${PATH}
+      # Reset user home permissions
+      chown -R ${containerUID}:${containerUID} /home/${containerUser}
 
-      # Add required groups
-      groupadd tanzu \
-        --gid ${containerGID} || {
-        echo "Failed to add group tanzu"
-        exit 1
-      }
+      mkdir --parents --mode 0755 /etc/systemd/system/user@.service.d
+      cat << EOF > /etc/systemd/system/user@.service.d/delegate.conf
+      [Service]
+      Delegate=yes
+      EOF
 
-      # Add the container user
-      # -M = --no-create-home
-      useradd \
-        --uid ${containerUID} \
-        --comment "Tanzu CLI" \
-        --home /home/${containerUser} \
-        --shell ${pkgs.bashInteractive}/bin/bash \
-        --groups tanzu \
-        --no-user-group \
-        -M \
-        ${containerUser} || {
-          echo "Failed to add user ${containerUser}"
-          exit 1
-        }
+      mkdir --parents --mode 0755 /etc/modules-load.d/
+      cat << EOF > /etc/modules-load.d/iptables.conf
+      ip6_tables
+      ip6table_nat
+      ip_tables
+      iptable_nat
+      EOF
 
-      # Update user primary group (manual)
-      sed \
-        --in-place \
-        --regexp-extended \
-        --expression "s/^${containerUser}:x:${containerUID}:1000:/${containerUser}:x:${containerUID}:${containerGID}:/" \
-        /etc/passwd || {
-          echo "Failed to update user ${containerUser} primary group"
-          exit 1
-        }
+      # Systemd shennanigans
 
-      # VSCode includes a bundled nodejs binary which is
-      # dynamically linked and hardcoded to look in /lib
-      mkdir --parents /lib || {
-        echo "Failed to create /lib"
-        exit 1
-      }
-      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib/stdenv || {
-        echo "Failed to create /lib/stdenv symlink"
-        exit 1
-      }
-      ln -s ${pkgs.glibc}/lib /lib/glibc || {
-        echo "Failed to create /lib/glibc symlink"
-        exit 1
-      }
-      mkdir --parents /lib64 || {
-        echo "Failed to create /lib64"
-        exit 1
-      }
-      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib64/stdenv || {
-        echo "Failed to create /lib/stdenv symlink"
-        exit 1
-      }
-      ln -s ${pkgs.glibc}/lib /lib64/glibc || {
-        echo "Failed to create /lib64/glibc symlink"
-        exit 1
-      }
-      ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2 || {
-        echo "Failed to create /lib64/ld-linux-x86-64.so.2 symlink"
-        exit 1
-      }
+      rm -f \
+        /lib/systemd/system/multi-user.target.wants/* \
+        /etc/systemd/system/*.wants/* \
+        /lib/systemd/system/local-fs.target.wants/* \
+        /lib/systemd/system/sockets.target.wants/*udev* \
+        /lib/systemd/system/sockets.target.wants/*initctl* \
+        /lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup* \
+        /lib/systemd/system/systemd-update-utmp*
 
-      # Setup root user profile
-      cp --recursive --dereference /etc/skel /root
-      chown --recursive root:root /root || {
-        echo "Failed to chown /root"
-        exit 1
-      }
-      chmod --recursive 0751 /root || {
-        echo "Failed to chmod /root"
-        exit 1
-      }
+      cat << EOF > /etc/systemd/system/systemd-in-container.target
+      [Unit]
+      Description=Target for running systemd inside a container
+      Requires=systemd-in-container.service systemd-logind.service systemd-user-sessions.service
+      EOF
 
-      # Setup the container user profile
-      cp --recursive --dereference /etc/skel /home/${containerUser} || {
-        echo "Failed to copy profile for ${containerUser}"
-        exit 1
-      }
-      # Fix the home permissions for user ${containerUser}
-      chown --recursive ${containerUID}:${containerGID} /home/${containerUser} || {
-        echo "Failed to chown home for user ${containerUser}"
-        exit 1
-      }
-      chmod --recursive 0751 /home/${containerUser} || {
-        echo "Failed to chmod home for user ${containerUser}"
-        exit 1
-      }
+      env > /etc/systemd/system/systemd-in-container.env
 
-      # Set permissions on required directories
+      cat << EOF > /etc/systemd/system/systemd-in-container.service
+      [Unit]
+      Description=Service for running systemd inside a container
+
+      [Service]
+      ExecStart=/bin/bash -exc "source /etc/docker-entrypoint-cmd"
+      # EXIT_STATUS is either an exit code integer or a signal name string, see systemd.exec(5)
+      ExecStopPost=/bin/bash -ec "if echo \''${EXIT_STATUS} | grep [A-Z] > /dev/null; then echo >&2 \"got signal \''${EXIT_STATUS}\"; systemctl exit \$(( 128 + \$( kill -l \''${EXIT_STATUS} ) )); else systemctl exit \''${EXIT_STATUS}; fi"
+      StandardInput=tty-force
+      StandardOutput=inherit
+      StandardError=inherit
+      WorkingDirectory=$(pwd)
+      EnvironmentFile=/etc/systemd/system/systemd-in-container.env
+
+      [Install]
+      WantedBy=multi-user.target
+      EOF
+
+      systemctl mask systemd-firstboot.service systemd-udevd.service systemd-modules-load.service
+      systemctl unmask systemd-logind
+      systemctl enable systemd-in-container.service
+
+      # Set permissions on volume directories.
+      mkdir --parents --mode 1777 /run || exit 1
       mkdir --parents --mode 1777 /tmp || exit 1
+      mkdir --parents --mode 1777 /usr/lib/ytt || exit 1
+      mkdir --parents --mode 1777 /var/devcontainer || exit 1
+      mkdir --parents --mode 1777 /vscode || exit 1
       mkdir --parents --mode 1777 /workdir || exit 1
       mkdir --parents --mode 1777 /workspaces || exit 1
-      mkdir --parents --mode 1777 /vscode || exit 1
-      mkdir --parents --mode 1777 /var/devcontainer || exit 1
-
-      # Setup sub IDs and GIDs for rootless Podman
-      echo "Setting up Sub IDs and GIDs"
-      echo ${containerUser}:100000:65535 >> /etc/subuid || exit 1
-      echo ${containerUser}:100000:65535 >> /etc/subgid || exit 1
-      chmod 0666 /etc/subuid /etc/subgid || exit 1
-
-      # Setup directories for rootless Podman
-      mkdir -p /run/containers/storage || exit 1
-      mkdir -p /run/user/${containerUID} || exit 1
-      chown -R ${containerUID}:${containerUID} /run/user/${containerUID} || exit 1
-
-      mkdir -p /var/lib/shared/{overlay-images,overlay-layers,vfs-images,vfs-layers}
-      touch /var/lib/shared/overlay-images/images.lock || exit 1
-      touch /var/lib/shared/overlay-layers/layers.lock || exit 1
-      touch /var/lib/shared/vfs-images/images.lock || exit 1
-      touch /var/lib/shared/vfs-layers/layers.lock || exit 1
-      chmod -R 0777 /var/lib/shared || exit 1
-
-      # Podman needs this working directory.
-      mkdir -p /var/tmp
-      chmod -R 0777 /var/tmp
-
-      # Cleanup
-      echo "Running Cleanup operations"
-      rm -f /dev/shm/libpod* || exit 1
-
-      # HACK: We need to run these as non-root users.
-      declare BINS=(
-        newgidmap
-        newuidmap
-      )
-      for BIN in "''${BINS[@]}";
-      do
-        rm -f /bin/''${BIN} /sbin/''${BIN} || {
-          echo "Failed to remove bin symlink to ''${BIN}"
-          exit 1
-        }
-        rm -f /sbin/''${BIN} || {
-          echo "Failed to remove sbin symlink to ''${BIN}"
-          exit 1
-        }
-        cp --dereference ${pkgs.shadow}/bin/''${BIN} /bin/''${BIN} || {
-          echo "Failed to copy ''${BIN} to /bin"
-          exit 1
-        }
-        cp --dereference ${pkgs.shadow}/bin/''${BIN} /sbin/''${BIN} || {
-          echo "Failed to copy ''${BIN} to /sbin"
-          exit 1
-        }
-        chmod 4755 /bin/''${BIN} || {
-          echo "Failed to allow bin ''${BIN} to run as non-root"
-          exit 1
-        }
-        chmod 4755 /sbin/''${BIN} || {
-          echo "Failed to allow sbin ''${BIN} to run as non-root"
-          exit 1
-        }
-      done
     '';
 
     # Runs in the final layer, on top of other layers.
@@ -365,48 +225,52 @@ in
 
     config = {
       User = containerUser;
-      # DinD
-      # User = root;
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };
       Entrypoint = [
         "tini"
         "-g"
+        "-w"
         "--"
       ];
+      #Entrypoint = [
+      #  "/sbin/init"
+      #  "--show-status=false"
+      #  #"--unit=systemd-in-container.target"
+      #];
       Cmd = [
         "/usr/local/bin/entrypoint.sh"
       ];
       ExposedPorts = {
       };
       Env = [
-        "ENABLE_DEBUG=FALSE"
-        "ENABLE_STARSHIP=FALSE"
-        "ENABLE_PROXY_SCRIPT=FALSE"
-        "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
-        "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
         "CHARSET=UTF-8"
+        "ENABLE_DEBUG=FALSE"
+        "ENABLE_PROXY_SCRIPT=FALSE"
+        "ENABLE_STARSHIP=FALSE"
+        "ENVIRONMENT_VSCODE=none"
+        "KIND_EXPERIMENTAL_PROVIDER=podman"
+        "KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER=fuse-overlayfs"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        "LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib64;/lib64/stdenv;/lib64/glibc"
-        "PAGER=less"
         "NIX_PAGER=less"
-        "SHELL=${pkgs.bashInteractive}/bin/bash"
-        "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+        "PAGER=less"
+        "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
+        "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
         "TERM=xterm"
         "TZ=UTC"
         "WORKDIR=/workdir"
-        "ENVIRONMENT_VSCODE=none"
         "_CONTAINERS_USERNS_CONFIGURED="
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";
       Volumes = {
-        "/vscode" = {};
-        "/tmp" = {};
         "/home/${containerUser}" = {};
+        "/tmp" = {};
+        "/usr/lib/ytt" = {};
         "/var/lib/containers" = {};
+        "/vscode" = {};
       };
     };
   }

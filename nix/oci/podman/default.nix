@@ -27,12 +27,6 @@
     finalImageName = "podman";
   };
 
-  root_files = builtins.path {
-    name = "root_files";
-    path = ./root/.;
-    recursive = true;
-  };
-
   environmentHelpers = with pkgs.dockerTools; [
     usrBinEnv
     binSh

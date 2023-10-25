@@ -8,22 +8,23 @@ clear
 set -euo pipefail
 
 if [[ ${1:-EMPTY} == "EMPTY" ]]; then
-	echo 'Provide the OCI image name as parameter #1'
-	exit 1
+	echo "Defaulting to docker"
+    OCI_TOOL="docker"
 else
-	OCI_NAME=$1
+	OCI_TOOL=$1
 fi
 
-if type podman >/dev/null 2>&1; then
-	TOOL=podman
-elif
-	type docker 2? >/dev/null &
-	1
-then
-	TOOL=docker
-else
-	echo "No supported container tool found!"
+if [[ ${2:-EMPTY} == "EMPTY" ]]; then
+	echo 'Provide the OCI image name as parameter #2'
 	exit 1
+else
+	OCI_NAME=$2
+fi
+
+if ! type "${OCI_TOOL}" > /dev/null 2>&1;
+then
+    echo "Unable to find container tool ${OCI_TOOL}"
+    exit 1
 fi
 
 git add --all || {
@@ -40,21 +41,72 @@ nix build \
 	exit 1
 }
 
-"${TOOL}" load <result || {
+"${OCI_TOOL}" load <result || {
 	echo "Failed to load OCI image"
 	exit 1
 }
 
-"${TOOL}" run \
-	-it \
-	--rm \
-	--name temp \
-	--privileged \
-	--security-opt label=disable \
-	--security-opt apparmor=unconfined \
-	--security-opt seccomp=unconfined \
-	--user podman \
-	localhost/"${OCI_NAME}:latest"
+case "${OCI_TOOL}" in
+
+    "docker" )
+
+        "${OCI_TOOL}" \
+            --log-level=info \
+            run \
+            -it \
+            --rm \
+            --name "test-${OCI_NAME}" \
+            --privileged \
+            --security-opt label=disable \
+            --security-opt apparmor=unconfined \
+            --security-opt seccomp=unconfined \
+            --device /dev/fuse \
+            --mount type=bind,source="${XDG_RUNTIME_DIR}/docker.sock",target="/var/run/docker.sock" \
+            "${OCI_NAME}:latest"
+            #--user root \
+            #"${OCI_NAME}:latest" \
+            #/bin/bash
+
+    ;;
+
+    "podman" )
+
+        "${OCI_TOOL}" \
+        --log-level=info \
+        run \
+        -it \
+        --rm \
+        --name "test-${OCI_NAME}" \
+        --privileged \
+        --security-opt label=disable \
+        --security-opt apparmor=unconfined \
+        --security-opt seccomp=unconfined \
+        --device /dev/fuse \
+        --mount type=bind,source="${XDG_RUNTIME_DIR}/podman/podman.sock",target="/var/run/docker.sock,relabel=shared,U=true" \
+        localhost/"${OCI_NAME}:latest"
+
+    ;;
+
+esac
+ 
+# Scratch
+#    --mount type=bind,source="${XDG_RUNTIME_DIR}/podman/podman.sock",target="/run/podman/podman.sock" \
+#
+#   --tmpfs /tmp \
+#   --tmpfs /run \
+#    -v "/run/user/$(id -u)":/run \
+#    -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+#	localhost/"${OCI_NAME}:latest"
+# podman --remote run busybox echo hi
+#
+# podman run \
+#   --security-opt label=disable \
+#   --rm \
+#   -ti \
+#   -v $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:z \
+#   docker.io/library/docker run -ti --rm hello-world
+#
+#
 
 # Troubleshooting
 

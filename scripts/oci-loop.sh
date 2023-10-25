@@ -49,7 +49,41 @@ nix build \
 	-it \
 	--rm \
 	--name temp \
-	--cap-add=sys_admin,sys_ptrace,mknod \
-	--security-opt label=disable \
-	--device /dev/fuse \
+    --privileged \
+    --security-opt label=disable \
+    --security-opt apparmor=unconfined \
+    --security-opt seccomp=unconfined \
 	localhost/"${OCI_NAME}:latest"
+
+# Troubleshooting
+
+# Test with SELinux disabled
+# --security-opt label=disable
+
+# Test with AppArmor disabled
+# --security-opt apparmor=unconfined
+
+# Test with unrestricted syscalls
+# --security-opt seccomp=unconfined
+
+# Test with unmasked filesystems
+# --security-opt unmask=all
+
+# Test with network namespace isolation disabled
+# --net=host
+
+# Test with PID and IPC namespace isolation disabled
+# --pid=host --ipc=host
+
+# Test with passing in required devices
+# --device /dev/fuse
+
+# Test with just certain capabilities
+# SYSADMIN, SYS_PTRACE, MKNOD, NET_BIND_SERVICE, NET_BROADCAST, NET_ADMIN, NET_RAW, CAP_IPC_LOCK
+# --cap-add=sys_admin,sys_ptrace,mknod
+
+# Test with full privs
+# --privileged
+
+# And finally, try with root
+# sudo podman ...

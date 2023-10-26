@@ -35,15 +35,15 @@ in
     '';
 
     installPhase = ''
-      mkdir --parents $out/bin
-      mkdir --parents $out/plugins
+      mkdir --parents $out/usr/local/bin
+      mkdir --parents $out/usr/local/share/applications/tanzu-cli/plugins
 
       CORE=unpack/*/tanzu-cli-linux_amd64
       PLUGINS=unpack/admin-plugins-*
 
-      install --mode=0755 --verbose $CORE $out/bin/tanzu
+      install --mode=0755 --verbose $CORE $out/usr/local/bin/tanzu
 
-      cp -r $PLUGINS $out/plugins
+      cp -r $PLUGINS $out/usr/local/share/applications/tanzu-cli/plugins
     '';
 
     meta = {

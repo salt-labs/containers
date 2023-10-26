@@ -11,15 +11,15 @@
 
   # A non-root user to add to the container image.
   containerUser = "tanzu";
-  containerUID = "5000";
-  containerGID = "5000";
+  containerUID = "1001";
+  containerGID = "1001";
 
   tanzu = pkgs.callPackage ./tanzu.nix {
     inherit pkgs;
     inherit crossPkgs;
   };
 
-  carvel = pkgs.callPackage ./carvel.nix {
+  carvel = pkgs.callPackage ../carvel/carvel.nix {
     inherit pkgs;
     inherit crossPkgs;
   };
@@ -37,42 +37,6 @@
     #fakeNss
     #shadowSetup
   ];
-
-  nonRootShadowSetup = {
-    user,
-    uid,
-    gid ? uid,
-  }:
-    with pkgs; [
-      (
-        writeTextDir "etc/shadow" ''
-          root:!x:::::::
-          ${user}:!:::::::
-        ''
-      )
-      (
-        writeTextDir "etc/passwd" ''
-          root:x:0:0::/root:${runtimeShell}
-          ${user}:x:${toString uid}:${toString gid}::/home/${user}:${runtimeShell}
-        ''
-      )
-      (
-        writeTextDir "etc/group" ''
-          root:x:0:
-          sudo:x:27:${user}
-          shadow:x:42:${user}
-          plugdev:x:46:${user}
-          docker:x:998:${user}
-          ${user}:x:${toString gid}:
-        ''
-      )
-      (
-        writeTextDir "etc/gshadow" ''
-          root:x::
-          ${user}:x::
-        ''
-      )
-    ];
 
   stablePkgs = with pkgs; [
     # Common
@@ -119,12 +83,8 @@
     yq-go
 
     # User tools
-    #doas
-    #shadow # breaks pam/sudo
-    #super
+    shadow
     getent
-    su
-    sudo
 
     # Nix
     direnv
@@ -132,12 +92,10 @@
 
     # VSCode
     findutils
-    #gcc-unwrapped
-    #glibc
     iproute
 
     # Docker Tools
-    containerd
+    #containerd
     dive
     #docker
     #docker-client
@@ -152,7 +110,7 @@
     clusterctl
     kail
     kapp
-    kind
+    #kind
     krew
     kube-bench
     kube-linter
@@ -160,12 +118,16 @@
     kubernetes-helm
     kustomize
     kustomize-sops
+    sops
+
+    # TKG Tools
     pinniped
     sonobuoy
-    sops
     velero
-    vendir
-    ytt
+
+    # Custom derivations
+    carvel
+    tanzu
 
     # Custom derivations
     carvel
@@ -175,12 +137,13 @@
   unstablePkgs = with pkgsUnstable; [
     # TODO: Check when docker-client is up to v24+
     docker_24
+    kind
   ];
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu";
     tag = "latest";
-    # created = creationDate;
+    created = creationDate;
 
     architecture = "amd64";
 
@@ -190,6 +153,12 @@ in
       name = "image-root";
 
       pathsToLink = [
+        #"/bin"
+        #"/etc/docker"
+        #"/etc/skel"
+        #"/usr/local/bin"
+        #"/usr/local/share/applications/tanzu-cli"
+        #
         "/"
         "/bin"
         "/etc"
@@ -218,14 +187,8 @@ in
       paths =
         stablePkgs
         ++ unstablePkgs
-        ++ [root_files]
-        ++ environmentHelpers;
-      # HACK: Needed mutable users/groups for entrypoint permission workaround.
-      #++ nonRootShadowSetup {
-      #  user = containerUser;
-      #  uid = containerUID;
-      #  gid = containerGID;
-      #};
+        ++ environmentHelpers
+        ++ [root_files];
     };
 
     # Enable fakeRootCommands in a fake chroot environment.
@@ -238,19 +201,8 @@ in
       # Setup shadow and pam for root
       ${pkgs.dockerTools.shadowSetup}
 
-      # HACK: Roll your own shadow so it's not broken by installing pkgs.shadow
-      # https://github.com/NixOS/nixpkgs/blob/a5931fa6e38da31f119cf08127c1aa8f178a22af/pkgs/build-support/docker/default.nix#L153-L175
-      declare BINS=(
-        usermod
-        groupmod
-      )
-      for BIN in "''${BINS[@]}";
-      do
-        cp --dereference ${pkgs.shadow}/bin/''${BIN} /sbin/''${BIN} || {
-          echo "Failed to copy ''${BIN} to /sbin"
-          exit 1
-        }
-      done
+      # Make sure shadow bins are in the PATH
+      PATH=${pkgs.shadow}/bin/:$PATH
 
       # Add required groups
       groupadd tanzu \
@@ -263,11 +215,6 @@ in
         echo "Failed to add group docker"
         exit 1
       }
-      groupadd sudo \
-        --gid 27 || {
-        echo "Failed to add group sudo"
-        exit 1
-      }
 
       # Add the container user
       # -M = --no-create-home
@@ -276,7 +223,7 @@ in
         --comment "Tanzu CLI" \
         --home /home/${containerUser} \
         --shell ${pkgs.bashInteractive}/bin/bash \
-        --groups tanzu,docker,sudo \
+        --groups tanzu,docker \
         --no-user-group \
         -M \
         ${containerUser} || {
@@ -337,7 +284,10 @@ in
       }
 
       # Setup the container user profile
-      cp --recursive --dereference /etc/skel /home/${containerUser}
+      cp --recursive --dereference /etc/skel /home/${containerUser} || {
+        echo "Failed to copy home template for user ${containerUser}"
+        exit 1
+      }
       # Fix the home permissions for user ${containerUser}
       chown --recursive ${containerUID}:${containerGID} /home/${containerUser} || {
         echo "Failed to chown home for user ${containerUser}"
@@ -349,29 +299,19 @@ in
       }
 
       # Set permissions on required directories
+      mkdir --parents --mode 1777 /run || exit 1
       mkdir --parents --mode 1777 /tmp || exit 1
+      mkdir --parents --mode 1777 /usr/lib/ytt || exit 1
+      mkdir --parents --mode 1777 /var/devcontainer || exit 1
+      mkdir --parents --mode 1777 /vscode || exit 1
       mkdir --parents --mode 1777 /workdir || exit 1
       mkdir --parents --mode 1777 /workspaces || exit 1
-      mkdir --parents --mode 1777 /vscode || exit 1
-      mkdir --parents --mode 1777 /var/devcontainer || exit 1
 
-      # Make sudo great again...
-      chmod +s /sbin/sudo || {
-        echo "Failed to add setuid bit to sudo"
-        exit 1
-      }
-      # If /etc/sudoers is a symlink, remove it
-      if [ -L /etc/sudoers ]; then
-        rm /etc/sudoers || {
-          echo "Failed to remove /etc/sudoers symlink"
-          exit 1
-        }
-        # Copy /etc/sudoers from the sudo pkgs
-        cp ${pkgs.sudo}/etc/sudoers /etc/sudoers || {
-          echo "Failed to copy /etc/sudoers"
-          exit 1
-        }
-      fi
+      # Setup sub IDs and GIDs for rootless
+      echo "Setting up Sub IDs and GIDs for ${containerUser}"
+      echo ${containerUser}:100000:65535 >> /etc/subuid || exit 1
+      echo ${containerUser}:100000:65535 >> /etc/subgid || exit 1
+      chmod 0644 /etc/subuid /etc/subgid || exit 1
     '';
 
     # Runs in the final layer, on top of other layers.
@@ -380,8 +320,6 @@ in
 
     config = {
       User = containerUser;
-      # DinD
-      # User = root;
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };
@@ -399,32 +337,33 @@ in
         #"2376/tcp" = {};
       };
       Env = [
-        "ENABLE_DEBUG=FALSE"
-        "ENABLE_STARSHIP=FALSE"
-        "ENABLE_PROXY_SCRIPT=FALSE"
-        "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
-        "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
         "CHARSET=UTF-8"
+        "ENABLE_DEBUG=FALSE"
+        "ENABLE_PROXY_SCRIPT=FALSE"
+        "ENABLE_STARSHIP=FALSE"
+        "ENVIRONMENT_VSCODE=none"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
         "LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib64;/lib64/stdenv;/lib64/glibc"
-        "PAGER=less"
         "NIX_PAGER=less"
+        "PAGER=less"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+        "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
+        "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
         "TERM=xterm"
         "TZ=UTC"
+        "USER=${containerUser}"
         "WORKDIR=/workdir"
-        "ENVIRONMENT_VSCODE=none"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";
       Volumes = {
-        "/vscode" = {};
-        "/tmp" = {};
         "/home/${containerUser}" = {};
-        # DinD
-        #"/var/lib/docker" = {};
+        "/tmp" = {};
+        "/usr/lib/ytt" = {};
+        "/var/lib/docker" = {};
+        "/vscode" = {};
       };
     };
   }

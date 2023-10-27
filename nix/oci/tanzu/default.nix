@@ -9,7 +9,7 @@
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   creationDate = builtins.substring 0 8 modifiedDate;
 
-  # A non-root user to add to the container image.
+  # A non-root user that will be used inside the image.
   containerUser = "tanzu";
   containerUID = "1001";
   containerGID = "1001";
@@ -35,7 +35,7 @@
     binSh
     caCertificates
     #fakeNss
-    #shadowSetup
+    shadowSetup
   ];
 
   stablePkgs = with pkgs; [
@@ -71,6 +71,7 @@
     openssh
     procps
     ripgrep
+    rsync
     shellcheck
     starship
     tini
@@ -85,6 +86,10 @@
     # User tools
     shadow
     getent
+    su
+    super
+    sudo
+    libcap
 
     # Nix
     direnv
@@ -147,21 +152,16 @@ in
 
     architecture = "amd64";
 
-    maxLayers = 100;
+    maxLayers = 125;
 
     contents = pkgs.buildEnv {
       name = "image-root";
 
       pathsToLink = [
-        #"/bin"
-        #"/etc/docker"
-        #"/etc/skel"
-        #"/usr/local/bin"
-        #"/usr/local/share/applications/tanzu-cli"
-        #
         "/"
         "/bin"
         "/etc"
+        "/etc/default"
         "/etc/skel"
         "/etc/sudoers.d"
         "/etc/pam.d"
@@ -205,41 +205,80 @@ in
       PATH=${pkgs.shadow}/bin/:$PATH
 
       # Add required groups
-      groupadd tanzu \
-        --gid ${containerGID} || {
-        echo "Failed to add group tanzu"
-        exit 1
-      }
       groupadd docker \
         --gid 998 || {
         echo "Failed to add group docker"
         exit 1
       }
 
-      # Add the container user
-      # -M = --no-create-home
-      useradd \
-        --uid ${containerUID} \
-        --comment "Tanzu CLI" \
-        --home /home/${containerUser} \
-        --shell ${pkgs.bashInteractive}/bin/bash \
-        --groups tanzu,docker \
-        --no-user-group \
-        -M \
-        ${containerUser} || {
-          echo "Failed to add user ${containerUser}"
-          exit 1
+      # Create a wrappers dir for SUID binaries
+      mkdir --parents --mode 0755 /run/wrappers/bin || {
+        echo "Failed to create wrappers directory"
+        exit 1
+      }
+      declare -A BINS_SUID
+      BINS_SUID[sudo]=""
+      BINS_SUID[ping]="cap_net_raw+ep"
+      #BINS_SUID[setuid]=""
+      #BINS_SUID[su]=""
+
+      for BIN in "''${!BINS_SUID[@]}" ;
+      do
+
+        BIN_NAME="''${BIN}"
+        BIN_CAPS="''${BINS_SUID[''$BIN]}"
+
+        echo "Creating wrapper for ''${BIN}"
+
+        cp --dereference /bin/''${BIN} /run/wrappers/bin/''${BIN} || {
+          echo "Failed to copy ''${BIN} to /run/wrappers/bin/"
+          exit -1
         }
 
-      # Update user primary group (manual)
-      sed \
-        --in-place \
-        --regexp-extended \
-        --expression "s/^${containerUser}:x:${containerUID}:1000:/${containerUser}:x:${containerUID}:${containerGID}:/" \
-        /etc/passwd || {
-          echo "Failed to update user ${containerUser} primary group"
-          exit 1
+        chmod 0000 /run/wrappers/bin/''${BIN} || {
+          echo "Failed to reset permissions on ''${BIN}"
+          exit -1
         }
+
+        chown root:root /run/wrappers/bin/''${BIN} || {
+          echo "Failed to reset owner and group on ''${BIN}"
+           exit -1
+        }
+
+        chmod "u+rx,g+rx,o+rx" /run/wrappers/bin/''${BIN_NAME} || {
+          echo "Failed to set permissions on ''${BIN_NAME}"
+          exit -1
+        }
+
+        chmod "+s" /run/wrappers/bin/''${BIN_NAME} || {
+          echo "Failed to set SUID on ''${BIN_NAME}"
+          exit -1
+        }
+
+        if [[ ! "''${BIN_CAPS:-EMPTY}" == "EMPTY" ]];
+        then
+          ${pkgs.libcap.out}/bin/setcap "cap_setpcap,''${BIN_CAPS}" /run/wrappers/bin/''${BIN} || {
+            echo "Failed to add capabilities ''${BIN_CAPS} to ''${BIN_NAME}"
+            echo "cap_setpcap''${BIN_CAPS:+,$BIN_CAPS} /run/wrappers/bin/''${BIN}"
+            exit -1
+          }
+        else
+          echo "No additioanl capabilities being added for ''${BIN}"
+        fi
+
+        echo "Finished creating wrapper for ''${BIN}"
+
+      done
+
+      # Setup sudo
+      mkdir --parents --mode 0755 /etc/sudoers.d || {
+        echo "Failed to create sudoers.d directory"
+        exit 1
+      }
+      echo "${containerUser}    ALL=(ALL)    NOPASSWD:    ALL" >> "/etc/sudoers.d/${containerUser}" || {
+        echo "Failed to write to sudoers file"
+        exit 1
+      }
 
       # VSCode includes a bundled nodejs binary which is
       # dynamically linked and hardcoded to look in /lib
@@ -283,22 +322,7 @@ in
         exit 1
       }
 
-      # Setup the container user profile
-      cp --recursive --dereference /etc/skel /home/${containerUser} || {
-        echo "Failed to copy home template for user ${containerUser}"
-        exit 1
-      }
-      # Fix the home permissions for user ${containerUser}
-      chown --recursive ${containerUID}:${containerGID} /home/${containerUser} || {
-        echo "Failed to chown home for user ${containerUser}"
-        exit 1
-      }
-      chmod --recursive 0751 /home/${containerUser} || {
-        echo "Failed to chmod home for user ${containerUser}"
-        exit 1
-      }
-
-      # Set permissions on required directories
+      echo "Setting permissions permissions on required directories"
       mkdir --parents --mode 1777 /run || exit 1
       mkdir --parents --mode 1777 /tmp || exit 1
       mkdir --parents --mode 1777 /usr/lib/ytt || exit 1
@@ -307,10 +331,43 @@ in
       mkdir --parents --mode 1777 /workdir || exit 1
       mkdir --parents --mode 1777 /workspaces || exit 1
 
-      # Setup sub IDs and GIDs for rootless
+      # Update login defaults.
+      sed \
+        --in-place \
+        --regexp-extended \
+        --expression "s/^UID_MAX.*$/UID_MAX                 1000000000/" \
+        /etc/login.defs || {
+          echo "Failed to update UID_MAX"
+          exit 1
+        }
+      sed \
+        --in-place \
+        --regexp-extended \
+        --expression "s/^SUB_UID_MIN.*$/SUB_UID_MIN             1000000000/" \
+        /etc/login.defs || {
+          echo "Failed to update SUB_UID_MIN"
+          exit 1
+        }
+      sed \
+        --in-place \
+        --regexp-extended \
+        --expression "s/^SUB_UID_MAX.*$/SUB_UID_MAX             2000000000/" \
+        /etc/login.defs || {
+          echo "Failed to update SUB_UID_MAX"
+          exit 1
+        }
+
+      # Update user add defaults
+      cat << EOF > /etc/default/useradd
+      SHELL=/bin/bash
+      HOME=/home
+      SKEL=/etc/skel
+      CREATE_MAIL_SPOOL=no
+      EOF
+
       echo "Setting up Sub IDs and GIDs for ${containerUser}"
-      echo ${containerUser}:100000:65535 >> /etc/subuid || exit 1
-      echo ${containerUser}:100000:65535 >> /etc/subgid || exit 1
+      echo ${containerUser}:1000000000:65535 >> /etc/subuid || exit 1
+      echo ${containerUser}:1000000000:65535 >> /etc/subgid || exit 1
       chmod 0644 /etc/subuid /etc/subgid || exit 1
     '';
 
@@ -319,7 +376,8 @@ in
     '';
 
     config = {
-      User = containerUser;
+      #User = containerUser;
+      User = "root";
       Labels = {
         "org.opencontainers.image.description" = "tanzu";
       };
@@ -344,7 +402,7 @@ in
         "ENVIRONMENT_VSCODE=none"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        "LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib64;/lib64/stdenv;/lib64/glibc"
+        #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib64;/lib64/stdenv;/lib64/glibc"
         "NIX_PAGER=less"
         "PAGER=less"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
@@ -353,7 +411,6 @@ in
         "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
         "TERM=xterm"
         "TZ=UTC"
-        "USER=${containerUser}"
         "WORKDIR=/workdir"
       ];
       WorkingDir = "/workdir";

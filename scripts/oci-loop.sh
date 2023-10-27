@@ -62,9 +62,6 @@ case "${OCI_TOOL}" in
 		--device /dev/fuse \
 		--mount "type=bind,source=${XDG_RUNTIME_DIR}/docker.sock,target=/var/run/docker.sock" \
 		"${OCI_NAME}:latest"
-	#--user root \
-	#"${OCI_NAME}:latest" \
-	#/bin/bash
 
 	;;
 

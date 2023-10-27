@@ -7,9 +7,9 @@
 # If not running interactively, don't do anything
 case $- in
 
-	*i*) ;;
+*i*) ;;
 
-	*) return ;;
+*) return ;;
 
 esac
 
@@ -45,7 +45,7 @@ fi
 
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
-	xterm-color | *-256color) color_prompt=yes ;;
+xterm-color | *-256color) color_prompt=yes ;;
 esac
 
 # uncomment for a colored prompt, if the terminal has the capability; turned
@@ -73,10 +73,10 @@ unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
-	xterm* | rxvt*)
-		PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-		;;
-	*) ;;
+xterm* | rxvt*)
+	PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+	;;
+*) ;;
 esac
 
 # enable color support of ls and also add handy aliases
@@ -160,5 +160,12 @@ else
 
 fi
 
+# Make sure the wrappers are the first in the PATH
+if [[ -d "/run/wrappers/bin" ]]; then
+	if ! grep "/run/wrappers/bin" <<<"${PATH}"; then
+		export PATH=/run/wrappers/bin:$PATH
+	fi
+fi
+
 # When running in a VSCode environment, drop a log file for tracking
-echo "$(date '+%Y/%m/%d %T'): INFO: Login to Devcontainer Environment: ${ENVIRONMENT_VSCODE}" >> "/tmp/environment.log"
+echo "$(date '+%Y/%m/%d %T'): INFO: Login to Devcontainer Environment: ${ENVIRONMENT_VSCODE}" | tee -a "/tmp/environment.log"

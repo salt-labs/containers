@@ -150,4 +150,4 @@ if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 fi
 
 # When running in a VSCode environment, drop a log file for tracking
-echo "$(date '+%Y/%m/%d %T'): INFO: Login to Devcontainer Environment: ${ENVIRONMENT_VSCODE}" >>"/tmp/environment.log"
+echo "$(date '+%Y/%m/%d %T'): INFO: Login to Devcontainer Environment: ${ENVIRONMENT_VSCODE}" | tee -a "/tmp/environment.log"

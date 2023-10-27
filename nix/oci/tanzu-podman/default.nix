@@ -21,8 +21,8 @@
 
   baseImage = pkgs.dockerTools.pullImage {
     imageName = "quay.io/podman/stable";
-    imageDigest = "sha256:a21adc8ce2a9a61a06ff5e2a317c4333c20abb2fd7ff19238980d06c273650fb";
-    sha256 = "sha256-2rSmCipEga1+mpU1Y+WZomsTDNWOdBBvAqjAObGF6Ng=";
+    imageDigest = "sha256:747486b56698c469b48e42270c16806e4e1dd3708afe33a378e2ea4f525e8c1c";
+    sha256 = "sha256-FoX0vQNvYzpQFZyrxQ78o7Rnu8DmFIkagBHyIjjBlhI=";
     finalImageTag = "v4.7.0";
     finalImageName = "podman";
   };

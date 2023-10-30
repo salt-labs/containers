@@ -23,20 +23,16 @@ HISTSIZE=10000
 # append to the history file, don't overwrite it
 shopt -s histappend
 
-# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=1000
-HISTFILESIZE=2000
-
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
 # If set, the pattern "**" used in a pathname expansion context will
 # match all files and zero or more directories and subdirectories.
-#shopt -s globstar
+shopt -s globstar
 
 # make less more friendly for non-text input files, see lesspipe(1)
-#[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot-}" ] && [ -r /etc/debian_chroot ]; then
@@ -129,13 +125,23 @@ if ! shopt -oq posix; then
 	fi
 fi
 
+#########################
+# Custom
+#########################
+
+# shellcheck disable=SC1091
+source functions.sh || {
+	echo "Failed to import required common functions!"
+	exit 1
+}
+
 # Load all the custom scripts.
 if [[ -d "${HOME}/.config/bash" ]]; then
 	for FILE in "${HOME}/.config/bash/"*.sh; do
 		if [[ -r ${FILE} ]]; then
 			# shellcheck disable=SC1090
 			source "${FILE}" || {
-				echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to load ${FILE}"
+				writeLog "ERROR" "Failed to load file ${FILE}"
 			}
 		fi
 	done
@@ -145,28 +151,51 @@ fi
 # Make sure that the interactive parts are not run in a a VSCode remote env.
 if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 
-	echo "$(date '+%Y/%m/%d %T'): INFO: Devcontainer running, skipping interactive config" | tee -a "/tmp/environment.log"
+	writeLog "INFO" "Devcontainer running, skipping interactive config"
 
 else
 
 	# Starship
 	if [[ ${ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
-		echo "$(date '+%Y/%m/%d %T'): INFO: Launching Starship prompt..."
+
+		writeLog "INFO" "Launching Starship"
+
 		# shellcheck disable=SC1090
 		source <(/bin/starship init bash)
+
 	else
-		echo "$(date '+%Y/%m/%d %T'): INFO: Starship prompt is disabled."
+
+		writeLog "DEBUG" "Starship prompt is disabled"
+
 	fi
 
 fi
 
 # Make sure the wrappers are the first in the PATH
 if [[ -d "/run/wrappers/bin" ]]; then
+
+	writeLog "DEBUG" "Wrappers dir found, checking PATH"
+
 	if ! grep "/run/wrappers/bin" <<<"${PATH}"; then
-		echo "$(date '+%Y/%m/%d %T'): INFO: Adding wrapper to PATH for user ${USER}" | tee -a "/tmp/environment.log"
+
+		writeLog "DEBUG" "Adding wrappers dir to PATH"
 		export PATH=/run/wrappers/bin:$PATH
+
+	else
+
+		writeLog "DEBUG" "Wrappers dir already in PATH"
+
 	fi
+
+else
+
+	writeLog "DEBUG" "Wrappers dir not found"
+
 fi
 
-# When running in a VSCode environment, drop a log file for tracking
-echo "$(date '+%Y/%m/%d %T'): INFO: Login to Tanzu Tools environment: ${ENVIRONMENT_VSCODE}" | tee -a "/tmp/environment.log"
+# shellcheck disable=SC1090
+source <(tanzu completion bash) || {
+	writeLog "ERROR" "Failed to source Tanzu CLI bash completion"
+}
+
+writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"

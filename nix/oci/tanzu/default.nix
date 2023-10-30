@@ -406,6 +406,9 @@ in
         "TERM=xterm"
         "TZ=UTC"
         "WORKDIR=/workdir"
+        "LOG_FILE=/tmp/environment.log"
+        "LOG_LEVEL=INFO"
+        "LOG_DESTINATION=all"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";

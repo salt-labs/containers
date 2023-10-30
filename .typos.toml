@@ -3,7 +3,7 @@
 # Reference: https://github.com/crate-ci/typos/blob/master/docs/reference.md
 #
 # typos --type-list
-# typos --dump-config
+# typos --dump-config -
 #
 ##################################################
 
@@ -15,7 +15,7 @@ check-file = true
 unicode = true
 ignore-hex = true
 identifier-leading-digits = false
-locale = "en_AU"
+locale = "en-au"
 
 [default.extend-identifiers]
 
@@ -27,7 +27,7 @@ doas = "doas"
 
 [files]
 
-extend-exclude = [".typos.toml", "bootstrap/", "bootstrap/**"]
+extend-exclude = [".typos.toml"]
 
 ignore-hidden = true
 ignore-files = true

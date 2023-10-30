@@ -11,8 +11,8 @@
 
   # A non-root user that will be used inside the image.
   containerUser = "tanzu";
-  containerUID = "1001";
-  containerGID = "1001";
+  containerUID = "1000";
+  containerGID = "1000";
 
   tanzu = pkgs.callPackage ./tanzu.nix {
     inherit pkgs;
@@ -263,7 +263,7 @@ in
             exit -1
           }
         else
-          echo "No additioanl capabilities being added for ''${BIN}"
+          echo "No additional capabilities being added for ''${BIN}"
         fi
 
         echo "Finished creating wrapper for ''${BIN}"
@@ -335,7 +335,7 @@ in
       sed \
         --in-place \
         --regexp-extended \
-        --expression "s/^UID_MAX.*$/UID_MAX                 1000000000/" \
+        --expression "s/^UID_MAX.*$/UID_MAX                 2000000000/" \
         /etc/login.defs || {
           echo "Failed to update UID_MAX"
           exit 1
@@ -343,7 +343,7 @@ in
       sed \
         --in-place \
         --regexp-extended \
-        --expression "s/^SUB_UID_MIN.*$/SUB_UID_MIN             1000000000/" \
+        --expression "s/^SUB_UID_MIN.*$/SUB_UID_MIN             3000000000/" \
         /etc/login.defs || {
           echo "Failed to update SUB_UID_MIN"
           exit 1
@@ -351,7 +351,7 @@ in
       sed \
         --in-place \
         --regexp-extended \
-        --expression "s/^SUB_UID_MAX.*$/SUB_UID_MAX             2000000000/" \
+        --expression "s/^SUB_UID_MAX.*$/SUB_UID_MAX             4000000000/" \
         /etc/login.defs || {
           echo "Failed to update SUB_UID_MAX"
           exit 1
@@ -364,11 +364,6 @@ in
       SKEL=/etc/skel
       CREATE_MAIL_SPOOL=no
       EOF
-
-      echo "Setting up Sub IDs and GIDs for ${containerUser}"
-      echo ${containerUser}:1000000000:65535 >> /etc/subuid || exit 1
-      echo ${containerUser}:1000000000:65535 >> /etc/subgid || exit 1
-      chmod 0644 /etc/subuid /etc/subgid || exit 1
     '';
 
     # Runs in the final layer, on top of other layers.
@@ -376,7 +371,6 @@ in
     '';
 
     config = {
-      #User = containerUser;
       User = "root";
       Labels = {
         "org.opencontainers.image.description" = "tanzu";

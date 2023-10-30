@@ -163,9 +163,10 @@ fi
 # Make sure the wrappers are the first in the PATH
 if [[ -d "/run/wrappers/bin" ]]; then
 	if ! grep "/run/wrappers/bin" <<<"${PATH}"; then
+		echo "$(date '+%Y/%m/%d %T'): INFO: Adding wrapper to PATH for user ${USER}" | tee -a "/tmp/environment.log"
 		export PATH=/run/wrappers/bin:$PATH
 	fi
 fi
 
 # When running in a VSCode environment, drop a log file for tracking
-echo "$(date '+%Y/%m/%d %T'): INFO: Login to Devcontainer Environment: ${ENVIRONMENT_VSCODE}" | tee -a "/tmp/environment.log"
+echo "$(date '+%Y/%m/%d %T'): INFO: Login to Tanzu Tools environment: ${ENVIRONMENT_VSCODE}" | tee -a "/tmp/environment.log"

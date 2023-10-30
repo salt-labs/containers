@@ -24,17 +24,28 @@ function start_shell() {
 	# If a custom CMD was provided, run that and not the interactive shell.
 	if [[ $# -gt 0 ]]; then
 
-		exec sudo --user=tanzu --set-home --preserve-groups --preserve-env -- "$@"
+		exec sudo --user=tanzu --set-home --preserve-env -- "$@" || {
+			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to start shell for user 'tanzu'" | tee -a "/tmp/environment.log"
+			return 1
+		}
 
 	elif [[ ${UID} -eq 0 ]]; then
 
-		exec sudo --user=tanzu --set-home --preserve-groups --preserve-env -- bash --login -i
+		exec sudo --user=tanzu --set-home --preserve-env -- bash --login -i || {
+			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to start shell for user 'tanzu'" | tee -a "/tmp/environment.log"
+			return 1
+		}
 
 	else
 
-		exec sudo --user=tanzu --set-home --preserve-groups --preserve-env -- bash --login -i
+		exec sudo --user=tanzu --set-home --preserve-env -- bash --login -i || {
+			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to start shell for user 'tanzu'" | tee -a "/tmp/environment.log"
+			return 1
+		}
 
 	fi
+
+	return 0
 
 }
 
@@ -48,6 +59,12 @@ fi
 # If running as root, setup the 'tanzu' user to match host user.
 # https://www.joyfulbikeshedding.com/blog/2021-03-15-docker-and-the-host-filesystem-owner-matching-problem.html
 if [[ ${UID} -eq 0 ]]; then
+
+	# Make tmp shared between all users.
+	chmod 1777 /tmp || {
+		echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set permissions on '/tmp'" | tee -a "/tmp/environment.log"
+		exit 1
+	}
 
 	# Make sure there is a shared log file.
 	if [[ ! -f "/tmp/environment.log" ]]; then
@@ -63,13 +80,7 @@ if [[ ${UID} -eq 0 ]]; then
 		exit 1
 	}
 
-	# Make tmp shared between all users.
-	chmod 1777 /tmp || {
-		echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set permissions on '/tmp'" | tee -a "/tmp/environment.log"
-		exit 1
-	}
-
-	# If a HOST_UID and HOST_GID is provided, do the janky permisions setup...
+	# If a HOST_UID and HOST_GID is provided, do the janky permissions setup...
 	if [[ ${HOST_UID:-EMPTY} == "EMPTY" ]] || [[ ${HOST_GID:-EMPTY} == "EMPTY" ]]; then
 
 		echo "$(date '+%Y/%m/%d %T'): ERROR: This container requires you to pass the '\${HOST_UID}' and '\${HOST_GID}' variables" | tee -a "/tmp/environment.log"
@@ -144,6 +155,11 @@ if [[ ${UID} -eq 0 ]]; then
 			}
 
 		fi
+
+		echo "$(date '+%Y/%m/%d %T'): INFO: Setting up Sub IDs and GIDs for 'tanzu'" | tee -a "/tmp/environment.log"
+		echo "tanzu:3000000000:65535" >/etc/subuid || exit 1
+		echo "tanzu:3000000000:65535" >/etc/subgid || exit 1
+		chmod 0644 /etc/subuid /etc/subgid || exit 1
 
 	fi
 

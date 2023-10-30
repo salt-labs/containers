@@ -70,6 +70,7 @@
     ncurses
     nettools
     openssh
+    openssl
     procps
     ripgrep
     rsync

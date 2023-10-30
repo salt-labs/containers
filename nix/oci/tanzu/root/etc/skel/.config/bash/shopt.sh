@@ -9,7 +9,7 @@
 function shell_options() {
 
 	# Confirm bash is actually running
-	if ! type shopt > /dev/null 2>&1; then
+	if ! type shopt >/dev/null 2>&1; then
 		echo "$(date '+%Y/%m/%d %T'): ERROR: This function: ${FUNCNAME[0]} needs to be called from within Bash"
 		return 1
 	fi
@@ -252,5 +252,5 @@ function shell_options() {
 }
 
 shell_options || {
-	echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set one or more Shell Options for Bash using shopt!"
+	writeLog "ERROR" "Failed to set one or more Shell Options for Bash using shopt!"
 }

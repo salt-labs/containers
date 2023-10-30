@@ -1,8 +1,6 @@
-set -m
+#!/usr/bin/env bash
 
-if [[ ${ENABLE_DEBUG:-FALSE} == "TRUE" ]]; then
-	set -x
-fi
+set -m
 
 # Variables
 export YTT_LIB="/usr/lib/ytt/"
@@ -15,20 +13,20 @@ if [[ ${ENABLE_PROXY_SCRIPT:-FALSE} == "TRUE" ]]; then
 
 	if [[ -f "${WORKDIR}/scripts/proxy.sh" ]]; then
 
-		echo "$(date '+%Y/%m/%d %T'): INFO: Loading proxy settings from ${WORKDIR}/scripts/proxy.sh"
+		writeLog "INFO" "Loading proxy settings from ${WORKDIR}/scripts/proxy.sh"
 
 		# shellcheck disable=SC1091
 		source "${WORKDIR}/scripts/proxy.sh" || {
-			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to load proxy settings!"
+			writeLog "ERROR" "Failed to load proxy settings!"
 		}
 
 		proxy_on || {
-			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to enable proxy settings!"
+			writeLog "ERROR" "Failed to enable proxy settings!"
 		}
 
 	else
 
-		echo "$(date '+%Y/%m/%d %T'): ERROR: Proxy settings are enabled but ${WORKDIR}/scripts/proxy.sh does not exist. Have you mounted the bind volume?"
+		writeLog "ERROR" "Proxy settings are enabled but ${WORKDIR}/scripts/proxy.sh does not exist. Have you mounted the bind volume?"
 		sleep 3
 		exit 1
 
@@ -36,7 +34,7 @@ if [[ ${ENABLE_PROXY_SCRIPT:-FALSE} == "TRUE" ]]; then
 
 else
 
-	echo "$(date '+%Y/%m/%d %T'): INFO: Proxy script is not enabled, assuming direct internet access."
+	writeLog "INFO" " Proxy script is disabled, assuming direct internet access."
 
 fi
 
@@ -53,14 +51,14 @@ fi
 # Make sure that the interactive parts are not run in a a VSCode remote env.
 if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 
-	echo "$(date '+%Y/%m/%d %T'): INFO: Devcontainer is running, skipping Tanzu init." | tee -a "/tmp/environment.log"
+	writeLog "INFO" "Devcontainer is running, skipping Tanzu init."
 
 else
 
 	# Initialise the Tanzu CLI
 	if [[ ${TANZU_CLI_INIT_DONE:-FALSE} == "TRUE" ]]; then
 
-		echo "$(date '+%Y/%m/%d %T'): INFO: Tanzu CLI is already initialised."
+		writeLog "INFO" "Tanzu CLI is already initialised."
 
 	else
 
@@ -73,14 +71,14 @@ else
 
 			[Yy]*)
 
-				echo "$(date '+%Y/%m/%d %T'): INFO: Initialising Tanzu CLI..."
+				writeLog "INFO" " Initialising Tanzu CLI..."
 
 				tanzu plugin clean || {
-					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to clean the Tanzu CLI plugins"
+					writeLog "ERROR" "Failed to clean the Tanzu CLI plugins"
 				}
 
 				tanzu init || {
-					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to initialise the Tanzu CLI configuration"
+					writeLog "ERROR" "Failed to initialise the Tanzu CLI configuration. Please try again!"
 				}
 
 				# There are 3 options for the Tanzu CLI OCI registry in preference order:
@@ -97,12 +95,12 @@ else
 				# Add the user provided image tag.
 				TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_CLI_PLUGIN_SOURCE_TAG}"
 
-				echo "$(date '+%Y/%m/%d %T'): INFO: Tanzu CLI OCI URL set to ${TANZU_CLI_OCI_URL}"
+				writeLog "INFO" " Tanzu CLI OCI URL set to ${TANZU_CLI_OCI_URL}"
 
 				# If there is a custom registry, use it as priority.
 				if [[ ${TANZU_CUSTOM_REGISTRY:-EMPTY} != "EMPTY" ]]; then
 
-					echo "$(date '+%Y/%m/%d %T'): INFO: Custom registry provided, using ${TANZU_CUSTOM_REGISTRY}"
+					writeLog "INFO" "Custom registry provided, using ${TANZU_CUSTOM_REGISTRY}"
 
 					# Strip the VMware registry prefix.
 					TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL#*projects.registry.vmware.com}"
@@ -110,40 +108,40 @@ else
 					# Add the custom registry OCI URL.
 					TANZU_CLI_OCI_URL="${TANZU_CUSTOM_REGISTRY}${TANZU_CLI_OCI_URL}"
 
-					echo "$(date '+%Y/%m/%d %T'): INFO: Custom registry OCI URL set to ${TANZU_CLI_OCI_URL}"
+					writeLog "DEBUG" "Custom registry OCI URL set to ${TANZU_CLI_OCI_URL}"
 
 				elif [[ ${TANZU_PULL_THROUGH_CACHE:-EMPTY} != "EMPTY" ]]; then
 
 					# Add the pull-through prefix
 					TANZU_CLI_OCI_URL="${TANZU_PULL_THROUGH_CACHE}/${TANZU_CLI_OCI_URL}"
 
-					echo "$(date '+%Y/%m/%d %T'): INFO: Pull-through cache OCI URL set to ${TANZU_CLI_OCI_URL}"
+					writeLog "INFO" "Pull-through cache OCI URL set to ${TANZU_CLI_OCI_URL}"
 
 				else
 
-					echo "$(date '+%Y/%m/%d %T'): INFO: No custom registry or pull-through cache provided, pulling direct from internet."
+					writeLog "INFO" "INFO: No custom registry or pull-through cache provided, pulling direct from internet."
 
 				fi
 
-				echo "$(date '+%Y/%m/%d %T'): INFO: Updating Tanzu CLI plugin source..."
+				writeLog "INFO" " Updating Tanzu CLI plugin source..."
 
 				# Add the pull-through cache OCI URL and update the plugin cache.
 				tanzu plugin source update \
 					default \
 					--uri "${TANZU_CLI_OCI_URL}" || {
-					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to update plugin source to ${TANZU_CLI_OCI_URL}"
+					writeLog "ERROR" "Failed to update plugin source to ${TANZU_CLI_OCI_URL}"
 				}
 
-				echo "$(date '+%Y/%m/%d %T'): INFO: Installing Tanzu CLI plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
+				writeLog "ERROR" "Installing Tanzu CLI plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
 
 				# Add the VMWare TKG group of plugins at the configured version to match the CLI.
 				tanzu plugin install \
 					--group "vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}" || {
-					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to install the Tanzu plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
+					writeLog "ERROR" "Failed to install the Tanzu plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
 				}
 
 				tanzu plugin sync || {
-					echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to synchronise Tanzu CLI plugins"
+					writeLog "ERROR" "Failed to synchronise Tanzu CLI plugins"
 				}
 
 				break
@@ -182,7 +180,7 @@ else
 	)
 	# TODO: vendir
 	# vendir issue: https://github.com/carvel-dev/vendir/issues/275
-	# The workaround is fragile.
+	# The workaround is fragile...
 
 	if shopt -q progcomp; then
 
@@ -190,7 +188,7 @@ else
 
 			# shellcheck disable=SC1090
 			source <(${BIN} completion bash) || {
-				echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to source bash completion for ${BIN}, skipping..."
+				writeLog "ERROR" "Failed to source bash completion for ${BIN}, skipping..."
 			}
 
 		done

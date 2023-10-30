@@ -30,7 +30,7 @@ function start_shell() {
 
 		writeLog "INFO" "Running user provided CMD"
 
-		exec sudo --user=tanzu --set-home --preserve-env -- "$@" || {
+		sudo --user=tanzu --set-home --preserve-env -- "$@" || {
 			writeLog "ERROR" "Failed to start shell for user 'tanzu'"
 			return 1
 		}
@@ -39,7 +39,7 @@ function start_shell() {
 
 		writeLog "INFO" "Switching to 'tanzu' user"
 
-		exec sudo --user=tanzu --set-home --preserve-env -- bash --login -i || {
+		sudo --user=tanzu --set-home --preserve-env -- bash --login -i || {
 			writeLog "ERROR" "Failed to start shell for user 'tanzu'"
 			return 1
 		}
@@ -103,7 +103,7 @@ if [[ ${UID} -eq 0 ]]; then
 	fi
 
 	# Always ensure the environment log is all users writable.
-	chmod 777 "${LOG_FILE}" || {
+	chmod 0777 "${LOG_FILE}" || {
 		writeLog "ERROR" "Failed to set permissions on the log file ${LOG_FILE}"
 		exit 1
 	}
@@ -156,12 +156,18 @@ if [[ ${UID} -eq 0 ]]; then
 
 		chown --recursive tanzu:tanzu /home/tanzu || {
 			writeLog "ERROR" "Failed to set owner to user 'tanzu' on /home/tanzu"
-			exit 1
+			#exit 1
 		}
 
 		chmod --recursive 0751 /home/tanzu || {
 			writeLog "ERROR" "Failed to chmod 0751 on /home/tanzu"
-			exit 1
+			#exit 1
+		}
+
+		# HACK: Need to fix the UID > 65535 issue
+		chmod --recursive 0777 /home/tanzu || {
+			writeLog "ERROR" "Failed to chmod 0777 on /home/tanzu"
+			#exit 1
 		}
 
 	else
@@ -211,24 +217,25 @@ pwck || {
 }
 
 # Start a new login shell with any modified UID or GIDs applied.
-start_shell "$@" || true
+start_shell "$@" || {
+	SHELL_EXIT_CODE=$?
+}
 
-# Start a fresh shell session.
 SHELL_COUNTER=0
 while true; do
 
 	((SHELL_COUNTER = SHELL_COUNTER + 1))
 	if [[ ${SHELL_COUNTER} -ge 3 ]]; then
 		printf "\n"
-		echo "It seems that today is not your day, why not take a break?"
-		sleep 3
+		echo "big ooof! That's 3x failed sessions, you're out!"
+		exit 1
 	fi
 
 	# If bash exits, ask if we should restart or break and exit.
 	printf "\n"
-	echo "Your current shell session in this container has ended"
+	echo "Your current shell session in this container has ended."
 
-	if [[ -f ${LOG_FILE} ]]; then
+	if [[ -f ${LOG_FILE} ]] && [[ ${SHELL_EXIT_CODE:-0} -ne 0 ]]; then
 		printf "\n"
 		echo "Displaying session logs"
 		cat "${LOG_FILE}" || true
@@ -244,7 +251,9 @@ while true; do
 	[Yy]*)
 
 		echo "Restarting shell..."
-		start_shell "$@" || true
+		start_shell "$@" || {
+			SHELL_EXIT_CODE=$?
+		}
 
 		;;
 

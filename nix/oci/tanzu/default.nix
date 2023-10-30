@@ -51,6 +51,7 @@
     curlFull
     diffutils
     figlet
+    fortune
     file
     fuse3
     gawk

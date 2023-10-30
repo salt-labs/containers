@@ -135,17 +135,46 @@ source functions.sh || {
 	exit 1
 }
 
+# Make sure the wrappers are the first in the PATH
+if [[ -d "/run/wrappers/bin" ]]; then
+
+	writeLog "DEBUG" "Wrappers dir found, checking PATH"
+
+	if ! grep "/run/wrappers/bin" <<<"${PATH}"; then
+
+		writeLog "DEBUG" "Adding wrappers dir to PATH"
+		export PATH=/run/wrappers/bin:$PATH
+
+	else
+
+		writeLog "DEBUG" "Wrappers dir already in PATH"
+
+	fi
+
+else
+
+	writeLog "DEBUG" "Wrappers dir not found"
+
+fi
+
 # Load all the custom scripts.
 if [[ -d "${HOME}/.config/bash" ]]; then
+
 	for FILE in "${HOME}/.config/bash/"*.sh; do
+
+		writeLog "DEBUG" "Sourcing file ${FILE}"
 		if [[ -r ${FILE} ]]; then
+
 			# shellcheck disable=SC1090
 			source "${FILE}" || {
 				writeLog "ERROR" "Failed to load file ${FILE}"
 			}
+
 		fi
+
 	done
 	unset FILE
+
 fi
 
 # Make sure that the interactive parts are not run in a a VSCode remote env.
@@ -171,31 +200,14 @@ else
 
 fi
 
-# Make sure the wrappers are the first in the PATH
-if [[ -d "/run/wrappers/bin" ]]; then
-
-	writeLog "DEBUG" "Wrappers dir found, checking PATH"
-
-	if ! grep "/run/wrappers/bin" <<<"${PATH}"; then
-
-		writeLog "DEBUG" "Adding wrappers dir to PATH"
-		export PATH=/run/wrappers/bin:$PATH
-
-	else
-
-		writeLog "DEBUG" "Wrappers dir already in PATH"
-
-	fi
-
-else
-
-	writeLog "DEBUG" "Wrappers dir not found"
-
-fi
-
-# shellcheck disable=SC1090
-source <(tanzu completion bash) || {
-	writeLog "ERROR" "Failed to source Tanzu CLI bash completion"
-}
-
 writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
+
+#########################
+# Tanzu
+#########################
+
+# shellcheck disable=SC1091
+source tanzu.sh || {
+	writeLog "ERROR" "Failed to launch Tanzu CLI script"
+	exit 1
+}

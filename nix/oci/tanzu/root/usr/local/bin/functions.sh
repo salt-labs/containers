@@ -204,9 +204,10 @@ function writeLog() {
 	#   file = file only
 	#   all = both stdout and file
 	DESTINATION="${LOG_DESTINATION:=stdout}"
-	#DESTINATION=$(echo "${DESTINATION}" | tr '[:lower:]' '[:upper:]')
+	# macos bash v3 friendly.
+	DESTINATION=$(echo "${DESTINATION}" | tr '[:lower:]' '[:upper:]')
 
-	case "${DESTINATION,,}" in
+	case "${DESTINATION}" in
 
 	"STDOUT")
 

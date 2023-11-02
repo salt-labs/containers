@@ -152,29 +152,29 @@ if [[ ${UID} -eq 0 ]]; then
 			exit 1
 		}
 
-		writeLog "DEBUG" "Setting home permissions for Tanzu user"
-
-		chown --recursive tanzu:tanzu /home/tanzu || {
-			writeLog "ERROR" "Failed to set owner to user 'tanzu' on /home/tanzu"
-			#exit 1
-		}
-
-		chmod --recursive 0751 /home/tanzu || {
-			writeLog "ERROR" "Failed to chmod 0751 on /home/tanzu"
-			#exit 1
-		}
-
-		# HACK: Need to fix the UID > 65535 issue
-		chmod --recursive 0777 /home/tanzu || {
-			writeLog "ERROR" "Failed to chmod 0777 on /home/tanzu"
-			#exit 1
-		}
-
 	else
 
 		writeLog "INFO" "A profile already exists for user 'tanzu', skipping setup"
 
 	fi
+
+	writeLog "DEBUG" "Setting home permissions for Tanzu user"
+
+	chown --recursive tanzu:tanzu /home/tanzu || {
+		writeLog "ERROR" "Failed to set owner to user 'tanzu' on /home/tanzu"
+		exit 1
+	}
+
+	chmod --recursive 0751 /home/tanzu || {
+		writeLog "ERROR" "Failed to chmod 0751 on /home/tanzu"
+		exit 1
+	}
+
+	# HACK: Need to fix the error 'invalid parameter' when UID > 65535
+	chmod --recursive 0777 /home/tanzu || {
+		writeLog "ERROR" "Failed to chmod 0777 on /home/tanzu"
+		exit 1
+	}
 
 	# If the docker socket was mounted, make sure the user can access it.
 	DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3)

@@ -72,7 +72,7 @@ if [[ ${UID} -eq 0 ]]; then
 			OPTION_1_STATUS="FAILED"
 		}
 	fi
-	chown --recursive "${HOST_UID}:${HOST_GID}" /home/tanzu || {
+	chown -R "${HOST_UID}:${HOST_GID}" /home/tanzu || {
 		echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'tanzu' user home directory permissions"
 		OPTION_1_STATUS="FAILED"
 	}

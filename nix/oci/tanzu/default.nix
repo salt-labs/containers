@@ -111,7 +111,6 @@
     iproute
 
     # Docker Tools
-    #containerd
     dive
     #docker
     #docker-client
@@ -150,6 +149,7 @@
     # TODO: Check when docker-client is up to v24+
     docker_24
     kind
+    glibc
   ];
 in
   pkgs.dockerTools.buildLayeredImage {
@@ -343,7 +343,7 @@ in
 
       # Setup root user profile
       cp --recursive --dereference /etc/skel /root
-      chown --recursive root:root /root || {
+      chown -R root:root /root || {
         echo "Failed to chown /root"
         exit 1
       }
@@ -426,7 +426,7 @@ in
         "ENVIRONMENT_VSCODE=none"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        "LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
+        #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
         "NIX_PAGER=less"
         "PAGER=less"
         "SHELL=${pkgs.bashInteractive}/bin/bash"

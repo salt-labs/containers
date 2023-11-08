@@ -59,11 +59,11 @@ function checkLogLevel() {
 	#   ERR or ERROR
 
 	local LEVEL="${1}"
+	export LOGLEVEL="${LOGLEVEL:=INFO}"
 
-	LEVEL="${LEVEL:=INFO}" # Default to info if not present.
-	LEVEL=$(echo "${LEVEL}" | tr '[:lower:]' '[:upper:]')
-
-	case "${LEVEL}" in
+	# POSIX be gone!
+	# LOGLEVEL="$( echo "${1}" | tr '[:lower:]' '[:upper:]' )"
+	case "${LEVEL^^}" in
 
 	"DEBUG" | "TRACE")
 		LOG_LEVEL="DEBUG"
@@ -115,7 +115,8 @@ function writeLog() {
 		echo "Please provide a Log Level as parameter #1"
 		return 1
 	else
-		LEVEL=$(echo "${LEVEL}" | tr '[:lower:]' '[:upper:]')
+		#LEVEL=$(echo "${LEVEL}" | tr '[:lower:]' '[:upper:]')
+		LEVEL="${LEVEL^^}"
 	fi
 
 	# The message provided cannot be empty.
@@ -205,9 +206,9 @@ function writeLog() {
 	#   all = both stdout and file
 	DESTINATION="${LOG_DESTINATION:=stdout}"
 	# macos bash v3 friendly.
-	DESTINATION=$(echo "${DESTINATION}" | tr '[:lower:]' '[:upper:]')
+	#DESTINATION=$(echo "${DESTINATION}" | tr '[:lower:]' '[:upper:]')
 
-	case "${DESTINATION}" in
+	case "${DESTINATION^^}" in
 
 	"STDOUT")
 
@@ -238,7 +239,7 @@ function writeLog() {
 		}
 
 		if [[ ${APPEND:-TRUE} == "TRUE" ]]; then
-			echo -e "$(date +"%Y/%m/%d %H:%M:%S") [$LEVEL] $MESSAGE" | tee --append "${LOG_FILE}"
+			echo -e "$(date +"%Y/%m/%d %H:%M:%S") [$LEVEL] $MESSAGE" | tee -a "${LOG_FILE}"
 		else
 			echo -e "$(date +"%Y/%m/%d %H:%M:%S") [$LEVEL] $MESSAGE" | tee "${LOG_FILE}"
 		fi

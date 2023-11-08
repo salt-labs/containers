@@ -200,6 +200,9 @@ else
 
 fi
 
+# Preload libnss for uid > 65535
+export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
+
 writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
 
 #########################

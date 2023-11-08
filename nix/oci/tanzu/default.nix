@@ -39,6 +39,12 @@
   ];
 
   stablePkgs = with pkgs; [
+    # Coreutils
+    #busybox
+    coreutils-full
+    #toybox
+    #uutils-coreutils
+
     # Common
     bash-completion
     bashInteractive
@@ -47,7 +53,6 @@
     bind
     bindfs
     cacert
-    coreutils-full
     curlFull
     diffutils
     figlet
@@ -93,6 +98,10 @@
     sudo
     libcap
 
+    # UID > 65535
+    sssd
+    #nsncd
+
     # Nix
     direnv
     nil
@@ -131,10 +140,6 @@
     pinniped
     sonobuoy
     velero
-
-    # Custom derivations
-    carvel
-    tanzu
 
     # Custom derivations
     carvel
@@ -183,6 +188,7 @@ in
         "/usr/share/bash-completion"
         "/var"
         "/var/run"
+        "/var/lib"
         "/var/lib/docker"
       ];
 
@@ -221,8 +227,10 @@ in
       declare -A BINS_SUID
       BINS_SUID[sudo]=""
       BINS_SUID[ping]="cap_net_raw+ep"
-      #BINS_SUID[setuid]=""
-      #BINS_SUID[su]=""
+      BINS_SUID[setuid]=""
+      BINS_SUID[su]=""
+      BINS_SUID[newuidmap]=""
+      BINS_SUID[newgidmap]=""
 
       for BIN in "''${!BINS_SUID[@]}" ;
       do
@@ -232,10 +240,23 @@ in
 
         echo "Creating wrapper for ''${BIN}"
 
-        cp --dereference /bin/''${BIN} /run/wrappers/bin/''${BIN} || {
-          echo "Failed to copy ''${BIN} to /run/wrappers/bin/"
-          exit -1
-        }
+        if [[ -f /bin/''${BIN} ]];
+        then
+
+          cp --dereference /bin/''${BIN} /run/wrappers/bin/''${BIN} || {
+            echo "Failed to copy ''${BIN} from /bin to /run/wrappers/bin/"
+            exit -1
+          }
+
+        elif [[ -f /sbin/''${BIN} ]];
+        then
+
+          cp --dereference /sbin/''${BIN} /run/wrappers/bin/''${BIN} || {
+            echo "Failed to copy ''${BIN} from /sbin to /run/wrappers/bin/"
+            exit -1
+          }
+
+        fi
 
         chmod 0000 /run/wrappers/bin/''${BIN} || {
           echo "Failed to reset permissions on ''${BIN}"
@@ -313,13 +334,20 @@ in
         exit 1
       }
 
+      # Systems with sssd will have user and group ids > 65535
+      # For those systems you need libnss loaded.
+      ln -s ${pkgs.sssd}/lib /lib/lib-sssd  || {
+        echo "Failed to create /lib/lib-sssd symlink"
+        exit 1
+      }
+
       # Setup root user profile
       cp --recursive --dereference /etc/skel /root
       chown --recursive root:root /root || {
         echo "Failed to chown /root"
         exit 1
       }
-      chmod --recursive 0751 /root || {
+      chmod -R 0751 /root || {
         echo "Failed to chmod /root"
         exit 1
       }
@@ -398,7 +426,7 @@ in
         "ENVIRONMENT_VSCODE=none"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib64;/lib64/stdenv;/lib64/glibc"
+        "LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
         "NIX_PAGER=less"
         "PAGER=less"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
@@ -411,6 +439,7 @@ in
         "LOG_FILE=/tmp/environment.log"
         "LOG_LEVEL=INFO"
         "LOG_DESTINATION=all"
+        "RUN_AS_ROOT=FALSE"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";

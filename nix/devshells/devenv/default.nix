@@ -186,7 +186,14 @@ inputs.devenv.lib.mkShell {
             write = true;
           };
 
+          typos = {
+            format = "long";
+            diff = true;
+            write = false;
+          };
+
           yamllint = {
+            configPath = ".linters/config/.yamllint.yml";
           };
         };
       };

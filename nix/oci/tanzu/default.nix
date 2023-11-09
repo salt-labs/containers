@@ -123,6 +123,7 @@
 
     # Kubernetes Tools
     clusterctl
+    k9s
     kail
     kapp
     #kind

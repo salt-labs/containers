@@ -1,196 +1,332 @@
 #!/usr/bin/env bash
 
+# Preload libnss for uid > 65535
+#export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
+
 if [[ ${ENABLE_DEBUG:-FALSE} == "TRUE" ]]; then
 	set -x
 fi
 
-export ENTRYPOINT_EXECUTED="TRUE"
+# shellcheck disable=SC1091
+source functions.sh || {
+	echo "Failed to import required common functions!"
+	exit 1
+}
 
 # Make sure that the interactive parts are not run in a a VSCode container env.
 # VSCode handles it's own userID mapping and mounts.
 if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 
 	while true; do
-		echo "$(date '+%Y/%m/%d %T'): INFO: Devcontainer environment is running..." | tee -a "/tmp/environment.log"
+		writeLog "INFO "INFO: Devcontainer environment is running...
 		sleep 300
 	done
 
-fi
-
-# If the container is run as root, then we need to setup the user.
-if [[ "${UID}" -eq 0  ]]; then
-
-	echo "$(date '+%Y/%m/%d %T'): INFO: Running as root user, performing user setup steps..." | tee -a "/tmp/environment.log"
-
-	# Make tmp shared between all users.
-	chmod 1777 /tmp || {
-		echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set permissions on '/tmp'"
-		exit 1
-	}
-
-	# Always ensure the environment log is all users writable.
-	chmod 777 /tmp/environment.log || {
-		echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set permissions on '/tmp/environment.log'"
-		exit 1
-	}
-
-	# --env HOST_UID=$(id -u)
-	if [[ "${HOST_UID:-EMPTY}" == "EMPTY" ]]; then
-		echo "$(date '+%Y/%m/%d %T'): ERROR: When running as 'root' please set the 'HOST_UID' env" >&2
-		exit 1
-	fi
-
-	# --env HOST_GID=$(id -g)
-	if [[ "${HOST_GID:-EMPTY}" == "EMPTY" ]]; then
-		echo "$(date '+%Y/%m/%d %T'): ERROR: When running as 'root' please set the 'HOST_GID' env" >&2
-		exit 1
-	fi
-
-	# There are two options the container will attempt.
-	# Option 1. Map the host user to the container user.
-	# Option 2. Attempt to use bindFS to re-mount the home directory with the correct permissions.
-
-	# Option 1.
-
-	# If the group named 'tanzu' does not have the same id, change it.
-	OPTION_1_STATUS="SUCCESS"
-	TANZU_GROUP_ID=$(getent group tanzu | cut -d: -f3)
-	if [[ "${TANZU_GROUP_ID}" -ne "${HOST_GID}" ]]; then
-		echo "$(date '+%Y/%m/%d %T'): INFO: Updating the container user 'tanzu' GID to '${HOST_GID}'" | tee -a "/tmp/environment.log"
-		groupmod --gid "$HOST_GID" tanzu || {
-			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'tanzu' group GID to '${HOST_GID}'"
-			OPTION_1_STATUS="FAILED"
-		}
-	fi
-
-	# If the user named 'tanzu' does not have the same id, change it.
-	TANZU_USER_ID=$(id -u tanzu)
-	if [[ "${TANZU_USER_ID}" -ne "${HOST_UID}" ]]; then
-		echo "$(date '+%Y/%m/%d %T'): INFO: Updating the container user tanzu' UID to '${HOST_UID}'" | tee -a "/tmp/environment.log"
-		usermod --uid "$HOST_UID" tanzu || {
-			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'tanzu' user UID to '${HOST_UID}'"
-			OPTION_1_STATUS="FAILED"
-		}
-	fi
-	chown --recursive "${HOST_UID}:${HOST_GID}" /home/tanzu || {
-		echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'tanzu' user home directory permissions"
-		OPTION_1_STATUS="FAILED"
-	}
-
-	# If the docker socket was mounted, make sure the user can access it.
-	DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3)
-	if [[ -S /var/run/docker.sock ]]; then
-		DOCKER_SOCKET_ID=$(stat -c '%g' /var/run/docker.sock)
-		# If the docker socket group id does not match the docker group id, change the group id.
-		if [[ "${DOCKER_GROUP_ID}" -ne "${DOCKER_SOCKET_ID}" ]]; then
-			groupmod --gid "${DOCKER_SOCKET_ID}" docker || {
-				echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'docker' group GID to '${DOCKER_SOCKET_ID}'"
-				OPTION_1_STATUS="FAILED"
-			}
-		fi
-	fi
-
-	# Option 2.
-
-	# If Option 1 fails, attempt Option 2.
-	if [[ ! "${OPTION_1_STATUS:-FAILED}" == "SUCCESS" ]]; then
-
-		echo "$(date '+%Y/%m/%d %T'): WARN: Using bindFS fallback method for user permissions" | tee -a "/tmp/environment.log"
-
-		# Create the required bindFS directories.
-		mkdir --parents /home/tanzu-bindfs || {
-			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to create required bindFS directory '/home/tanzu-bindfs'"
-			exit 1
-		}
-
-		# Option 1. --cap-add SYS_ADMIN
-		# Option 2. --privileged
-		# Option 3. --device /dev/fuse
-		# Setup the bindFS mounts to re-mount with the correct permissions as the 'tanzu' user.
-		modprobe fuse || {
-			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to load the 'fuse' kernel module. Did you forget '--cap-add SYS_ADMIN'"
-			exit 1
-		}
-		bindfs \
-			--force-user=tanzu \
-			--force-group=tanzu \
-			--create-for-user="$(id -u tanzu)" \
-			--create-for-group="$(getent group tanzu | cut -d: -f3)" \
-			--chown-ignore \
-			--chgrp-ignore \
-			/home/tanzu /home/tanzu-bindfs || {
-			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to setup bindFS mount for '/home/tanzu'"
-			exit 1
-		}
-
-	fi
-
-	CMD_PREFIX=(
-		"exec"
-		"sudo"
-		"--preserve-env"
-		"--set-home"
-		"--user"
-		"tanzu"
-		"--"
-	)
+	exit 0
 
 fi
 
-# If a custom CMD was provided, run that and not the interactive loop.
-if [[ $# -gt 0 ]]; then
+function start_shell() {
 
-	"${CMD_PREFIX[@]}" "$@"
+	# If run as root is enabled drop into a root shell.
+	if [[ ${RUN_AS_ROOT:-FALSE} == "TRUE" ]]; then
+
+		writeLog "INFO" "Dropping into a root user shell"
+
+		bash --login -i || {
+			writeLog "ERROR" "Failed to start shell for user 'root'"
+			return 1
+		}
+
+	# If a custom CMD was provided, run that and not the interactive shell.
+	elif [[ $# -gt 0 ]]; then
+
+		writeLog "INFO" "Running user provided CMD"
+
+		sudo --user=tanzu --set-home --preserve-env -- "$@" || {
+			writeLog "ERROR" "Failed to start shell for user 'tanzu'"
+			return 1
+		}
+
+	# if you are root but run as root is not enabled,
+	elif [[ ${UID} -eq 0 ]]; then
+
+		writeLog "INFO" "Switching to 'tanzu' user"
+
+		sudo --user=tanzu --set-home --preserve-env -- bash --login -i || {
+			writeLog "ERROR" "Failed to start shell for user 'tanzu'"
+			return 1
+		}
+
+	# Not sure what purpose this serves yet with no other users in the container.
+	else
+
+		writeLog "INFO" "Starting shall as $USER"
+
+		bash --login -i || {
+			writeLog "ERROR" "Failed to start shell for user $USER"
+			return 1
+		}
+
+	fi
+
+	return 0
+
+}
+
+# Make sure the wrappers are the first in the PATH
+if [[ -d "/run/wrappers/bin" ]]; then
+
+	writeLog "DEBUG" "Wrappers dir found, checking PATH"
+
+	if ! grep "/run/wrappers/bin" <<<"${PATH}"; then
+
+		writeLog "DEBUG" "Adding wrappers dir to PATH"
+		export PATH=/run/wrappers/bin:$PATH
+
+	else
+
+		writeLog "DEBUG" "Wrappers dir already in PATH"
+
+	fi
 
 else
 
-	COMMAND=(
-		"/usr/bin/env"
-		"bash"
-		"--login"
-		"-i"
-	)
-
-	"${CMD_PREFIX[@]}" "${COMMAND[@]}" || true
-
-	# Start a fresh shell session.
-	while true; do
-
-		clear
-
-		# If bash exits, ask if we should restart or break and exit.
-		printf "\n"
-		echo "Your current shell session in this container has terminated."
-		read -r -p "Start a new shell session? y/n: " CHOICE
-
-		case $CHOICE in
-
-			[Yy]*)
-
-				echo "Restarting shell..."
-				"${CMD_PREFIX[@]}" "${COMMAND[@]}" || true
-
-				;;
-
-			[Nn]*)
-
-				echo "Exiting..."
-				break
-
-				;;
-
-			*)
-
-				echo "Please answer yes or no."
-				sleep 1
-
-				;;
-
-		esac
-
-	done
+	writeLog "DEBUG" "Wrappers dir not found"
 
 fi
+
+# If running as root, setup the 'tanzu' user to match host user.
+# https://www.joyfulbikeshedding.com/blog/2021-03-15-docker-and-the-host-filesystem-owner-matching-problem.html
+if [[ ${UID} -eq 0 ]]; then
+
+	writeLog "DEBUG" "Running as root"
+
+	# Make tmp shared between all users.
+	chmod 1777 /tmp || {
+		writeLog "ERROR" "Failed to set permissions on '/tmp'"
+		exit 1
+	}
+
+	# Make sure there is a shared log file.
+	if [[ ! -f ${LOG_FILE} ]]; then
+		writeLog "DEBUG" "Creating new log file ${LOG_FILE}"
+		touch "${LOG_FILE}" || {
+			writeLog "ERROR" "Failed to create a new log file at ${LOG_FILE}. Are the permissions valid?"
+			exit 1
+		}
+	fi
+
+	# Always ensure the environment log is all users writable.
+	chmod 0777 "${LOG_FILE}" || {
+		writeLog "ERROR" "Failed to set permissions on the log file ${LOG_FILE}"
+		exit 1
+	}
+
+	# If this flag was provided, we will run as the root user.
+	# This is useful in a docker rootless setup where the root user
+	# inside the container is auto-mapped to the local system user.
+	if [[ ${RUN_AS_ROOT:-FALSE} == "TRUE" ]]; then
+
+		if [[ ! -f "/root/.profile" ]]; then
+
+			writeLog "DEBUG" "Copying root users profile"
+
+			rsync -a /etc/skel/ /root --copy-links || {
+				writeLog "ERROR" "Failed to rsync the root user's profile"
+				exit 1
+			}
+
+		else
+
+			writeLog "INFO" "A profile already exists for user 'root', skipping setup"
+
+		fi
+
+		chown -R root:root /root || {
+			writeLog "ERROR" "Failed to set owner to user 'root' on /root"
+			exit 1
+		}
+
+		chmod -R 0751 /root || {
+			writeLog "ERROR" "Failed to chmod 0751 on /root"
+			exit 1
+		}
+
+	else
+
+		# If a HOST_UID and HOST_GID is provided, do the janky permissions setup...
+		if [[ ${HOST_UID:-EMPTY} == "EMPTY" ]] || [[ ${HOST_GID:-EMPTY} == "EMPTY" ]]; then
+
+			writeLog "ERROR" "This container requires you to pass the '\${HOST_UID}' and '\${HOST_GID}' variables"
+			exit 1
+
+		fi
+
+		writeLog "DEBUG" "Adding Tanzu group with user provided GID ${HOST_GID}"
+
+		groupadd \
+			tanzu \
+			--gid "${HOST_GID}" || {
+			writeLog "ERROR" "Failed to create 'tanzu' group with GID ${HOST_GID}"
+			exit 1
+		}
+
+		writeLog "DEBUG" "Adding Tanzu user with user provided UID ${HOST_UID}"
+
+		useradd \
+			--uid "${HOST_UID}" \
+			--gid "${HOST_GID}" \
+			--comment "Tanzu CLI" \
+			--home /home/tanzu \
+			--shell /bin/bash \
+			--groups tanzu,docker \
+			--no-user-group \
+			--no-create-home \
+			tanzu || {
+			writeLog "ERROR" "Failed to create 'tanzu' user with UID ${HOST_UID}"
+			exit 1
+		}
+
+		writeLog "DEBUG" "Checking for Tanzu user home"
+
+		if [[ ! -f "/home/tanzu/.profile" ]]; then
+
+			writeLog "DEBUG" "Copying Tanzu users profile"
+
+			rsync -a /etc/skel/ /home/tanzu --copy-links || {
+				writeLog "ERROR" "Failed to rsync the Tanzu user's profile"
+				exit 1
+			}
+
+		else
+
+			writeLog "INFO" "A profile already exists for user 'tanzu', skipping setup"
+
+		fi
+
+		writeLog "DEBUG" "Setting home permissions for Tanzu user"
+
+		chown -R tanzu:tanzu /home/tanzu || {
+			writeLog "ERROR" "Failed to set owner to user 'tanzu' on /home/tanzu"
+			exit 1
+		}
+
+		chmod -R 0751 /home/tanzu || {
+			writeLog "ERROR" "Failed to chmod 0751 on /home/tanzu"
+			exit 1
+		}
+
+		# HACK: Need to fix the error 'invalid parameter' when UID > 65535
+		#chmod -R 0777 /home/tanzu || {
+		#	writeLog "ERROR" "Failed to chmod 0777 on /home/tanzu"
+		#	exit 1
+		#}
+
+		# If the docker socket was mounted, make sure the user can access it.
+		DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3)
+		if [[ -S /var/run/docker.sock ]]; then
+
+			writeLog "INFO" "Docker socket present, checking permissions"
+
+			DOCKER_SOCKET_ID=$(stat -c '%g' /var/run/docker.sock)
+
+			# If the docker socket group id does not match the docker group id, change the group id.
+			if [[ ${DOCKER_GROUP_ID} -ne ${DOCKER_SOCKET_ID} ]]; then
+
+				writeLog "INFO" "Updating docker socket group id to ${DOCKER_SOCKET_ID}"
+
+				groupmod --gid "${DOCKER_SOCKET_ID}" docker || {
+					writeLog "ERROR" "Failed to set 'docker' group GID to ${DOCKER_SOCKET_ID}"
+					exit 1
+				}
+
+			fi
+
+			writeLog "INFO" "Updating Sub IDs and and GIDs for 'tanzu'"
+
+			echo "tanzu:3000000000:65535" >/etc/subuid || exit 1
+			echo "tanzu:3000000000:65535" >/etc/subgid || exit 1
+			chmod 0644 /etc/subuid /etc/subgid || exit 1
+
+		fi
+
+	fi
+
+else
+
+	writeLog "WARN" "Not running as root, skipping user setup..."
+
+fi
+
+# Perform group and user check
+grpck || {
+	writeLog "ERROR" "Group check failed. Please check the contents of /etc/group."
+	exit 1
+}
+pwck || {
+	writeLog "ERROR" "User check failed. Please check the contents of /etc/passwd."
+	exit 1
+}
+
+# Start a new login shell with any modified UID or GIDs applied.
+start_shell "$@" || {
+	SHELL_EXIT_CODE=$?
+}
+
+SHELL_COUNTER=0
+while true; do
+
+	((SHELL_COUNTER = SHELL_COUNTER + 1))
+	if [[ ${SHELL_COUNTER} -ge 3 ]]; then
+		printf "\n"
+		echo "big ooof! That's 3x failed sessions, you're out!"
+		exit 1
+	fi
+
+	# If bash exits, ask if we should restart or break and exit.
+	printf "\n"
+	echo "Your current shell session in this container has ended."
+
+	if [[ -f ${LOG_FILE} ]] && [[ ${SHELL_EXIT_CODE:-0} -ne 0 ]]; then
+		printf "\n"
+		echo "Displaying session logs"
+		cat "${LOG_FILE}" || true
+	fi
+
+	printf "\n"
+	read -r -p "Would you like to start a new shell session? y/n: " CHOICE
+
+	clear
+
+	case $CHOICE in
+
+	[Yy]*)
+
+		echo "Restarting shell..."
+		start_shell "$@" || {
+			SHELL_EXIT_CODE=$?
+		}
+
+		;;
+
+	[Nn]*)
+
+		echo "Exiting..."
+		break 1
+
+		;;
+
+	*)
+
+		echo "Please answer yes or no."
+		sleep 1
+
+		;;
+
+	esac
+
+done
 
 figlet -f slant "Goodbye!"
 exit 0

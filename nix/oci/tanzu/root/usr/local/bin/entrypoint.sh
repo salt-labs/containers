@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Preload libnss for uid > 65535
-export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
+#export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
 
 if [[ ${ENABLE_DEBUG:-FALSE} == "TRUE" ]]; then
 	set -x
@@ -143,7 +143,7 @@ if [[ ${UID} -eq 0 ]]; then
 
 		fi
 
-		chown --recursive root:root /root || {
+		chown -R root:root /root || {
 			writeLog "ERROR" "Failed to set owner to user 'root' on /root"
 			exit 1
 		}
@@ -207,7 +207,7 @@ if [[ ${UID} -eq 0 ]]; then
 
 		writeLog "DEBUG" "Setting home permissions for Tanzu user"
 
-		chown --recursive tanzu:tanzu /home/tanzu || {
+		chown -R tanzu:tanzu /home/tanzu || {
 			writeLog "ERROR" "Failed to set owner to user 'tanzu' on /home/tanzu"
 			exit 1
 		}

@@ -201,7 +201,10 @@ else
 fi
 
 # Preload libnss for uid > 65535
-export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
+#export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
+
+# Make sure there is a user environment variable set.
+export USER="${USER:-$(whoami)}"
 
 writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
 

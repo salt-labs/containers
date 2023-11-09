@@ -382,6 +382,14 @@
         inherit crossPkgs;
       };
 
+      #podman = import ./nix/oci/podman {
+      #  inherit self;
+      #  inherit pkgs;
+      #  inherit pkgsUnstable;
+      #  inherit crossPkgs;
+      #  inherit crossPkgsUnstable;
+      #};
+
       pivnet = import ./nix/oci/pivnet {
         inherit self;
         inherit pkgs;
@@ -427,7 +435,9 @@
       tanzu = import ./nix/oci/tanzu {
         inherit self;
         inherit pkgs;
+        inherit pkgsUnstable;
         inherit crossPkgs;
+        inherit crossPkgsUnstable;
       };
 
       terraform = import ./nix/oci/terraform {

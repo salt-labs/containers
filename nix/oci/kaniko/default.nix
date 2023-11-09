@@ -68,7 +68,7 @@ in
       # https://github.com/GoogleContainerTools/kaniko/blob/main/deploy/Dockerfile#L52-L56
       mkdir --parents /kaniko/.docker /kaniko/ssl/certs
       touch /kaniko/.docker/config.json
-      chmod -r 777 /kaniko/
+      chmod -R 777 /kaniko/
       cat /etc/ssl/certs/ca-bundle.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
     '';
 

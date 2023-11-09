@@ -252,5 +252,5 @@ function shell_options() {
 }
 
 shell_options || {
-	writeLog "ERROR" "Failed to set one or more Shell Options for Bash using shopt!"
+	echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set one or more Shell Options for Bash using shopt!"
 }

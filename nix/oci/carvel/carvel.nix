@@ -4,44 +4,41 @@
   ...
 }: let
   carvel = {
-    # ytt now in Nixpkgs
-    #ytt = pkgs.fetchurl {
-    #  name = "ytt";
-    #  url = "https://github.com/carvel-dev/ytt/releases/download/v0.45.1/ytt-linux-amd64";
-    #  sha256 = "";
-    #};
+    ytt = pkgs.fetchurl {
+      name = "ytt";
+      url = "https://github.com/carvel-dev/ytt/releases/download/v0.46.0/ytt-linux-amd64";
+      sha256 = "sha256-NIyzSWW2TAf9URjmnv2aT65+IvV9tOkeLZkDwa0Z8EE=";
+    };
 
-    # kapp now in Nixpkgs
-    #kapp = pkgs.fetchurl {
-    #  name = "kapp";
-    #  url = "https://github.com/carvel-dev/kapp/releases/download/v0.56.0/kapp-linux-amd64";
-    #  sha256 = "";
-    #};
+    kapp = pkgs.fetchurl {
+      name = "kapp";
+      url = "https://github.com/carvel-dev/kapp/releases/download/v0.59.0/kapp-linux-amd64";
+      sha256 = "sha256-zBzKeDFzut1edO3B8Q3s/K6FUlz+znOz1DrP2h6sy+U=";
+    };
 
-    kapp-controller = pkgs.fetchurl {
+    kctrl = pkgs.fetchurl {
       name = "kctrl";
-      url = "https://github.com/carvel-dev/kapp-controller/releases/download/v0.46.1/kctrl-linux-amd64";
-      sha256 = "sha256-+NsFTbieIE0rHKsWWZisFDSp9fqPxP/q5SpMF7HlKUI=";
+      url = "https://github.com/carvel-dev/kapp-controller/releases/download/v0.48.1/kctrl-linux-amd64";
+      sha256 = "sha256-xtMi7ZUN3GESwdHbof7qvCTyIuSiTey6LWDAJAMZRAY=";
     };
 
     kbld = pkgs.fetchurl {
       name = "kbld";
-      url = "https://github.com/carvel-dev/kbld/releases/download/v0.37.1/kbld-linux-amd64";
-      sha256 = "sha256-8y+xJR/Ltw0ZJUIQUETFKRxuZ/vKf7Rnvw042Sub8gQ=";
+      url = "https://github.com/carvel-dev/kbld/releases/download/v0.38.0/kbld-linux-amd64";
+      sha256 = "sha256-xuzy02t6cvK6tX+uKm6KKohsKwByOIqffdBzY/wPE/w=";
     };
 
     imgpkg = pkgs.fetchurl {
       name = "imgpkg";
-      url = "https://github.com/carvel-dev/imgpkg/releases/download/v0.37.2/imgpkg-linux-amd64";
-      sha256 = "sha256-GjuBui8nv8e36/B6uiLA5XRZZQg1PXfm1jPqk4NB+/w=";
+      url = "https://github.com/carvel-dev/imgpkg/releases/download/v0.38.0/imgpkg-linux-amd64";
+      sha256 = "sha256-Pycvx+rLEpqYm49obqWUVat+ZUIxkoA8Fdav+5Y/hqk=";
     };
 
-    # vendir now in Nixpkgs
-    #vendir = pkgs.fetchurl {
-    #  name = "vendir";
-    #  url = "https://github.com/carvel-dev/vendir/releases/download/v0.33.2/vendir-linux-amd64";
-    #  sha256 = "";
-    #};
+    vendir = pkgs.fetchurl {
+      name = "vendir";
+      url = "https://github.com/carvel-dev/vendir/releases/download/v0.35.0/vendir-linux-amd64";
+      sha256 = "sha256-2RCfuPB77auCC2DkeJorGDhXBz+jks1gO5yr6seVugQ=";
+    };
   };
 in
   pkgs.stdenv.mkDerivation {
@@ -51,14 +48,14 @@ in
     phases = ["installPhase"];
 
     installPhase = ''
-      mkdir --parents $out/bin
+      mkdir --parents $out/usr/local/bin
 
-      #install --verbose $\{carvel.ytt} $out/bin/ytt
-      #install --verbose $\{carvel.kapp} $out/bin/kapp
-      install --verbose ${carvel.kapp-controller} $out/bin/kctrl
-      install --verbose ${carvel.kbld} $out/bin/kbld
-      install --verbose ${carvel.imgpkg} $out/bin/imgpkg
-      #install --verbose $\{carvel.vendir} $out/bin/vendir
+      install --verbose ${carvel.ytt} $out/usr/local/bin/ytt
+      install --verbose ${carvel.kapp} $out/usr/local/bin/kapp
+      install --verbose ${carvel.kctrl} $out/usr/local/bin/kctrl
+      install --verbose ${carvel.kbld} $out/usr/local/bin/kbld
+      install --verbose ${carvel.imgpkg} $out/usr/local/bin/imgpkg
+      install --verbose ${carvel.vendir} $out/usr/local/bin/vendir
     '';
 
     meta = {

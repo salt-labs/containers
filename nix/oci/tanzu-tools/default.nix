@@ -154,7 +154,7 @@
   ];
 in
   pkgs.dockerTools.buildLayeredImage {
-    name = "tanzu";
+    name = "tanzu-tools";
     tag = "latest";
     created = creationDate;
 

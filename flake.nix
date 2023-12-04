@@ -432,7 +432,7 @@
         inherit crossPkgs;
       };
 
-      tanzu = import ./nix/oci/tanzu {
+      tanzu-tools = import ./nix/oci/tanzu-tools {
         inherit self;
         inherit pkgs;
         inherit pkgsUnstable;

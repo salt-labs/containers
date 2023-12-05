@@ -7,18 +7,65 @@ clear
 
 set -euo pipefail
 
-if [[ ${1:-EMPTY} == "EMPTY" ]]; then
-	echo "Defaulting to docker"
-	OCI_TOOL="docker"
-else
-	OCI_TOOL=$1
-fi
+# Allow users to overide docker vs podman.
+OCI_TOOL="${OCI_TOOL:-docker}"
 
-if [[ ${2:-EMPTY} == "EMPTY" ]]; then
-	echo 'Provide the OCI image name as parameter #2'
+#########################
+# Functions
+#########################
+
+function troubleshooting_tips() {
+
+	cat <<-EOF
+
+		Troubleshooting Tips
+
+		Here are some troubleshooting tips to try modifying the script with.
+
+		# Test with SELinux disabled
+		--security-opt label=disable
+
+		# Test with AppArmor disabled
+		--security-opt apparmor=unconfined
+
+		# Test with unrestricted syscalls
+		--security-opt seccomp=unconfined
+
+		# Test with unmasked filesystems
+		--security-opt unmask=all
+
+		# Test with network namespace isolation disabled
+		--net=host
+
+		# Test with PID and IPC namespace isolation disabled
+		--pid=host --ipc=host
+
+		# Test with passing in required devices
+		--device /dev/fuse
+
+		# Test with just certain capabilities like; SYSADMIN, SYS_PTRACE, MKNOD, NET_BIND_SERVICE, NET_BROADCAST, NET_ADMIN, NET_RAW, CAP_IPC_LOCK
+		--cap-add=sys_admin,sys_ptrace,mknod
+
+		# Test with full privs
+		--privileged
+
+		# And finally, try with root
+		sudo podman ...
+	EOF
+
+	return 0
+
+}
+
+#########################
+# Pre-flight checks
+#########################
+
+if [[ ${1:-EMPTY} == "EMPTY" ]]; then
+	echo 'Provide the OCI image name as parameter #1'
 	exit 1
 else
-	OCI_NAME=$2
+	OCI_NAME=$1
 fi
 
 if ! type "${OCI_TOOL}" >/dev/null 2>&1; then
@@ -26,11 +73,17 @@ if ! type "${OCI_TOOL}" >/dev/null 2>&1; then
 	exit 1
 fi
 
+#########################
+# Main
+#########################
+
+# Stage the files so Nix picks up the changes.
 git add --all || {
 	echo "Failed to stage git files"
 	exit 1
 }
 
+# Build the container image
 nix build \
 	--impure \
 	.#packages.\"x86_64-linux.x86_64-linux\"."${OCI_NAME}" \
@@ -40,11 +93,13 @@ nix build \
 	exit 1
 }
 
+# Load the result into the local container image store.
 "${OCI_TOOL}" load <result || {
 	echo "Failed to load OCI image"
 	exit 1
 }
 
+# Test it with the flags that suit the tool.
 case "${OCI_TOOL}" in
 
 "docker")
@@ -61,7 +116,7 @@ case "${OCI_TOOL}" in
 		--security-opt seccomp=unconfined \
 		--device /dev/fuse \
 		--mount "type=bind,source=${XDG_RUNTIME_DIR}/docker.sock,target=/var/run/docker.sock" \
-		"${OCI_NAME}:latest"
+		"${OCI_NAME}:latest" || RESULT=1
 
 	;;
 
@@ -79,60 +134,20 @@ case "${OCI_TOOL}" in
 		--security-opt seccomp=unconfined \
 		--device /dev/fuse \
 		--mount "type=bind,source=${XDG_RUNTIME_DIR}/podman/podman.sock,target=/var/run/docker.sock,relabel=shared,U=true" \
-		localhost/"${OCI_NAME}:latest"
+		localhost/"${OCI_NAME}:latest" || RESULT=1
 
 	;;
 
 esac
 
-# Scratch
-#    --mount type=bind,source="${XDG_RUNTIME_DIR}/podman/podman.sock",target="/run/podman/podman.sock" \
-#
-#   --tmpfs /tmp \
-#   --tmpfs /run \
-#    -v "/run/user/$(id -u)":/run \
-#    -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-#	localhost/"${OCI_NAME}:latest"
-# podman --remote run busybox echo hi
-#
-# podman run \
-#   --security-opt label=disable \
-#   --rm \
-#   -ti \
-#   -v $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:z \
-#   docker.io/library/docker run -ti --rm hello-world
-#
-#
+if [[ ${RESULT:-0} -ne 0 ]]; then
 
-# Troubleshooting
+	echo "Testing ${OCI_NAME} has failed!"
 
-# Test with SELinux disabled
-# --security-opt label=disable
+	troubleshooting_tips
 
-# Test with AppArmor disabled
-# --security-opt apparmor=unconfined
+	exit 1
 
-# Test with unrestricted syscalls
-# --security-opt seccomp=unconfined
+fi
 
-# Test with unmasked filesystems
-# --security-opt unmask=all
-
-# Test with network namespace isolation disabled
-# --net=host
-
-# Test with PID and IPC namespace isolation disabled
-# --pid=host --ipc=host
-
-# Test with passing in required devices
-# --device /dev/fuse
-
-# Test with just certain capabilities
-# SYSADMIN, SYS_PTRACE, MKNOD, NET_BIND_SERVICE, NET_BROADCAST, NET_ADMIN, NET_RAW, CAP_IPC_LOCK
-# --cap-add=sys_admin,sys_ptrace,mknod
-
-# Test with full privs
-# --privileged
-
-# And finally, try with root
-# sudo podman ...
+exit 0

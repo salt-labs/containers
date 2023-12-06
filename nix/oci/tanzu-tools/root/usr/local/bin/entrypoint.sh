@@ -1,11 +1,40 @@
 #!/usr/bin/env bash
 
-# Preload libnss for uid > 65535
-#export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
-
 if [[ ${ENABLE_DEBUG:-FALSE} == "TRUE" ]]; then
 	set -x
 fi
+
+#set -e
+set -u
+set -o pipefail
+
+#########################
+# Variables
+#########################
+
+# The name of the script used in logs.
+export SCRIPT="tanzu-tools"
+
+# No phoning home is allowed.
+export TANZU_CLI_CEIP_OPT_IN_PROMPT_ANSWER="no"
+
+# Write all logs to file.
+export LOG_DESTINATION="${LOG_DESTINATION:-file}"
+export LOG_FILE="${LOG_FILE:-/tmp/$SCRIPT.log}"
+export LOG_LEVEL="${LOG_LEVEL:-INFO}"
+
+# Interactive loop
+export TANZU_TOOLS_RUN=FALSE
+
+# Dialog theme
+export DIALOGRC="${HOME}/.dialogrc/${TANZU_TOOLS_DIALOG_THEME}"
+
+# Preload libnss for uid > 65535
+#export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
+
+#########################
+# Dependencies
+#########################
 
 # shellcheck disable=SC1091
 source functions.sh || {
@@ -13,18 +42,36 @@ source functions.sh || {
 	exit 1
 }
 
+# shellcheck disable=SC1091
+source dialog.sh || {
+	writeLog "ERROR" "Failed to import required dialog functions!"
+	exit_script 1
+}
+
+#########################
+# Checks
+#########################
+
 # Make sure that the interactive parts are not run in a a VSCode container env.
 # VSCode handles it's own userID mapping and mounts.
 if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 
 	while true; do
+
 		writeLog "INFO "INFO: Devcontainer environment is running...
 		sleep 300
+
 	done
+
+	writeLog "INFO" "Finished"
 
 	exit 0
 
 fi
+
+#########################
+# Functions
+#########################
 
 function start_shell() {
 
@@ -74,6 +121,10 @@ function start_shell() {
 
 }
 
+#########################
+# Setup
+#########################
+
 # Make sure the wrappers are the first in the PATH
 if [[ -d "/run/wrappers/bin" ]]; then
 
@@ -105,7 +156,7 @@ if [[ ${UID} -eq 0 ]]; then
 	# Make tmp shared between all users.
 	chmod 1777 /tmp || {
 		writeLog "ERROR" "Failed to set permissions on '/tmp'"
-		exit 1
+		exit_script 1
 	}
 
 	# Make sure there is a shared log file.
@@ -113,14 +164,14 @@ if [[ ${UID} -eq 0 ]]; then
 		writeLog "DEBUG" "Creating new log file ${LOG_FILE}"
 		touch "${LOG_FILE}" || {
 			writeLog "ERROR" "Failed to create a new log file at ${LOG_FILE}. Are the permissions valid?"
-			exit 1
+			exit_script 1
 		}
 	fi
 
 	# Always ensure the environment log is all users writable.
 	chmod 0777 "${LOG_FILE}" || {
 		writeLog "ERROR" "Failed to set permissions on the log file ${LOG_FILE}"
-		exit 1
+		exit_script 1
 	}
 
 	# If this flag was provided, we will run as the root user.
@@ -134,7 +185,7 @@ if [[ ${UID} -eq 0 ]]; then
 
 			rsync -a /etc/skel/ /root --copy-links || {
 				writeLog "ERROR" "Failed to rsync the root user's profile"
-				exit 1
+				exit_script 1
 			}
 
 		else
@@ -145,12 +196,12 @@ if [[ ${UID} -eq 0 ]]; then
 
 		chown -R root:root /root || {
 			writeLog "ERROR" "Failed to set owner to user 'root' on /root"
-			exit 1
+			exit_script 1
 		}
 
 		chmod -R 0751 /root || {
 			writeLog "ERROR" "Failed to chmod 0751 on /root"
-			exit 1
+			exit_script 1
 		}
 
 	else
@@ -159,7 +210,7 @@ if [[ ${UID} -eq 0 ]]; then
 		if [[ ${HOST_UID:-EMPTY} == "EMPTY" ]] || [[ ${HOST_GID:-EMPTY} == "EMPTY" ]]; then
 
 			writeLog "ERROR" "This container requires you to pass the '\${HOST_UID}' and '\${HOST_GID}' variables"
-			exit 1
+			exit_script 1
 
 		fi
 
@@ -169,7 +220,7 @@ if [[ ${UID} -eq 0 ]]; then
 			tanzu \
 			--gid "${HOST_GID}" || {
 			writeLog "ERROR" "Failed to create 'tanzu' group with GID ${HOST_GID}"
-			exit 1
+			exit_script 1
 		}
 
 		writeLog "DEBUG" "Adding Tanzu user with user provided UID ${HOST_UID}"
@@ -185,7 +236,7 @@ if [[ ${UID} -eq 0 ]]; then
 			--no-create-home \
 			tanzu || {
 			writeLog "ERROR" "Failed to create 'tanzu' user with UID ${HOST_UID}"
-			exit 1
+			exit_script 1
 		}
 
 		writeLog "DEBUG" "Checking for Tanzu user home"
@@ -196,7 +247,7 @@ if [[ ${UID} -eq 0 ]]; then
 
 			rsync -a /etc/skel/ /home/tanzu --copy-links || {
 				writeLog "ERROR" "Failed to rsync the Tanzu user's profile"
-				exit 1
+				exit_script 1
 			}
 
 		else
@@ -209,18 +260,18 @@ if [[ ${UID} -eq 0 ]]; then
 
 		chown -R tanzu:tanzu /home/tanzu || {
 			writeLog "ERROR" "Failed to set owner to user 'tanzu' on /home/tanzu"
-			exit 1
+			exit_script 1
 		}
 
 		chmod -R 0751 /home/tanzu || {
 			writeLog "ERROR" "Failed to chmod 0751 on /home/tanzu"
-			exit 1
+			exit_script 1
 		}
 
 		# HACK: Need to fix the error 'invalid parameter' when UID > 65535
 		#chmod -R 0777 /home/tanzu || {
 		#	writeLog "ERROR" "Failed to chmod 0777 on /home/tanzu"
-		#	exit 1
+		#	exit_script 1
 		#}
 
 		# If the docker socket was mounted, make sure the user can access it.
@@ -238,16 +289,16 @@ if [[ ${UID} -eq 0 ]]; then
 
 				groupmod --gid "${DOCKER_SOCKET_ID}" docker || {
 					writeLog "ERROR" "Failed to set 'docker' group GID to ${DOCKER_SOCKET_ID}"
-					exit 1
+					exit_script 1
 				}
 
 			fi
 
 			writeLog "INFO" "Updating Sub IDs and and GIDs for 'tanzu'"
 
-			echo "tanzu:3000000000:65535" >/etc/subuid || exit 1
-			echo "tanzu:3000000000:65535" >/etc/subgid || exit 1
-			chmod 0644 /etc/subuid /etc/subgid || exit 1
+			echo "tanzu:3000000000:65535" >/etc/subuid || exit_script 1
+			echo "tanzu:3000000000:65535" >/etc/subgid || exit_script 1
+			chmod 0644 /etc/subuid /etc/subgid || exit_script 1
 
 		fi
 
@@ -262,65 +313,83 @@ fi
 # Perform group and user check
 grpck || {
 	writeLog "ERROR" "Group check failed. Please check the contents of /etc/group."
-	exit 1
+	exit_script 1
 }
 pwck || {
 	writeLog "ERROR" "User check failed. Please check the contents of /etc/passwd."
-	exit 1
+	exit_script 1
 }
+
+#########################
+# Main
+#########################
 
 # Start a new login shell with any modified UID or GIDs applied.
-start_shell "$@" || {
-	SHELL_EXIT_CODE=$?
-}
+dialogProgress "Tanzu Tools: Starting Shell..." "100"
 
-SHELL_COUNTER=0
+if start_shell "$@"; then
+	SHELL_EXIT_CODE=$?
+	writeLog "INFO" "The initial shell session has terminated successfully."
+else
+	SHELL_EXIT_CODE=$?
+	writeLog "ERROR" "The initial shell session has terminated with exit code ${SHELL_EXIT_CODE}"
+fi
+
 while true; do
 
-	((SHELL_COUNTER = SHELL_COUNTER + 1))
-	if [[ ${SHELL_COUNTER} -ge 3 ]]; then
-		printf "\n"
-		echo "big ooof! That's 3x failed sessions, you're out!"
-		exit 1
+	if [[ ${SHELL_EXIT_CODE:-0} -ne 0 ]]; then
+		show_logs || true
+		read -r -p "Press any key to continue."
 	fi
 
-	# If bash exits, ask if we should restart or break and exit.
-	printf "\n"
-	echo "Your current shell session in this container has ended."
+	dialogYesNo "Tanzu Tools: Session Ended" "Would you like to start a new session?"
 
-	if [[ -f ${LOG_FILE} ]] && [[ ${SHELL_EXIT_CODE:-0} -ne 0 ]]; then
-		printf "\n"
-		echo "Displaying session logs"
-		cat "${LOG_FILE}" || true
-	fi
+	#  0 = Yes
+	#  1 = No
+	#  2 = Help
+	#  3 = Extra
+	# -1 = Error
 
-	printf "\n"
-	read -r -p "Would you like to start a new shell session? y/n: " CHOICE
+	"${CMD[@]}" "${BOX_OPTIONS[@]}" "${OPTIONS[@]}"
+	RETURN_CODE=$?
 
-	clear
+	writeLog "DEBUG" "Dialog return: ${RETURN_CODE:-EMPTY}"
 
-	case $CHOICE in
+	case "${RETURN_CODE:-EMPTY}" in
 
-	[Yy]*)
+	0) # YES
 
-		echo "Restarting shell..."
-		start_shell "$@" || {
+		writeLog "DEBUG" "Return code was ${RETURN_CODE}, user selected YES to starting new shell session"
+
+		dialogProgress "Tanzu Tools: Starting Shell..." "100"
+
+		if start_shell "$@"; then
 			SHELL_EXIT_CODE=$?
-		}
+			writeLog "INFO" "The shell session has terminated successfully."
+		else
+			SHELL_EXIT_CODE=$?
+			writeLog "ERROR" "The shell session has terminated with exit code ${SHELL_EXIT_CODE}"
+		fi
 
 		;;
 
-	[Nn]*)
+	1) # NO
 
-		echo "Exiting..."
-		break 1
+		writeLog "DEBUG" "Return code was ${RETURN_CODE}, the user selected NO to starting new shell session."
+
+		dialogProgress "Tanzu Tools: Exiting Shell..." "100"
+		sleep 0.5
+
+		break
 
 		;;
 
-	*)
+	*) # NO IDEA
 
-		echo "Please answer yes or no."
-		sleep 1
+		writeLog "WARN" "Return code was ${RETURN_CODE}, the user either hit escape or there was an unhandled error starting new shell session"
+
+		dialogProgress "Tanzu Tools: Only YES or NO are valid answers." "0"
+		sleep 3
 
 		;;
 
@@ -328,5 +397,8 @@ while true; do
 
 done
 
+tput clear
+
 figlet -f slant "Goodbye!"
+
 exit 0

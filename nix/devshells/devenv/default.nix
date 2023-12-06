@@ -29,6 +29,8 @@ inputs.devenv.lib.mkShell {
 
         bashInteractive
         bash-completion
+        shellcheck
+        dialog
         tree
 
         ccid

@@ -22,7 +22,9 @@
       type = "github";
       owner = "NixOS";
       repo = "nixpkgs";
-      ref = "nixos-23.11";
+      ref = "nixos-23.05";
+      # TODO: Check on https://github.com/NixOS/nixpkgs/issues/271146 and upgrade when done.
+      #ref = "nixos-23.11";
       flake = true;
     };
 

@@ -259,6 +259,90 @@ function writeLog() {
 
 }
 
-export -f checkLog
-export -f checkLogLevel
-export -f writeLog
+function checkBin() {
+
+	# Checks the binary name is available in the path
+
+	local COMMAND="$1"
+
+	#if ( command -v "${COMMAND}" 1> /dev/null ) ; # command breaks with aliases
+	if (type -P "${COMMAND}" &>/dev/null); then
+		writeLog "DEBUG" "The command $COMMAND is available in the Path"
+		return 0
+	else
+		writeLog "DEBUG" "The command $COMMAND is not available in the Path"
+		return 1
+	fi
+
+}
+
+function checkVarEmpty() {
+
+	# Returns true if the variable is empty
+
+	# NOTE:
+	#	Pass this function the string NAME of the variable
+	#	Not the expanded contents of the variable itself.
+
+	local VAR_NAME="${1}"
+	local VAR_DESC="${2}"
+
+	if [[ ${!VAR_NAME:-EMPTY} == "EMPTY" ]]; then
+		writeLog "ERROR" "The variable ${VAR_DESC} is empty."
+		return 0
+	else
+		writeLog "DEBUG" "The variable ${VAR_DESC} is not empty, it is set to ${!VAR_NAME}"
+		return 1
+	fi
+
+}
+
+function checkResult() {
+
+	local RESULT="${1}"
+
+	if [ "${RESULT}" -ne 0 ]; then
+		return 1
+	else
+		return 0
+	fi
+
+}
+
+function show_logs() {
+
+	# If logs are being written, show them
+	if [[ ${LOG_DESTINATION:-EMPTY} == "file" ]] || [[ ${LOG_DESTINATION:-EMPTY} == "all" ]]; then
+
+		if [[ -f ${LOG_FILE} ]]; then
+
+			tput clear
+			echo -e "Tanzu Tools has exited with an error. Displaying a copy of the session log."
+
+			echo -e "\nSTART: Show session logs...\n"
+
+			cat "${LOG_FILE}"
+
+			echo -e "\nEND: Show session logs...\n"
+
+		fi
+
+	fi
+
+	return 0
+
+}
+
+function exit_script() {
+
+	EXIT_CODE="$1"
+
+	show_logs || true
+
+	exit "${EXIT_CODE}"
+
+}
+
+export -f checkLog checkLogLevel writeLog
+export -f checkBin checkVarEmpty checkResult
+export -f show_logs exit_script

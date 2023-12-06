@@ -1,0 +1,109 @@
+# $Id: slackware.rc,v 1.2 2001/12/02 21:19:05 Patrick.J.Volkerding Exp $
+# Run-time configuration file for dialog, matches Slackware color scheme.
+#
+# Types of values:
+#
+# Number     -  <number>
+# String     -  "string"
+# Boolean    -  <ON|OFF>
+# Attribute  -  (foreground,background,highlight?)
+#
+
+# Shadow dialog boxes? This also turns on color.
+use_shadow = ON
+
+# Turn color support ON or OFF
+use_colors = ON
+
+# Screen color
+screen_color = (WHITE,BLACK,OFF)
+
+# Shadow color
+shadow_color = (WHITE,BLACK,OFF)
+
+# Dialog box color
+dialog_color = (GREEN,BLACK,OFF)
+
+# Dialog box title color
+title_color = (YELLOW,BLACK,ON)
+
+# Dialog box border color
+border_color = (BLACK,BLACK,ON)
+
+# Active button color
+button_active_color = (WHITE,BLUE,ON)
+
+# Inactive button color
+button_inactive_color = (WHITE,BLACK,OFF)
+
+# Active button key color
+button_key_active_color = (WHITE,BLUE,ON)
+
+# Inactive button key color
+button_key_inactive_color = (CYAN,BLACK,OFF)
+
+# Active button label color
+button_label_active_color = (WHITE,BLUE,ON)
+
+# Inactive button label color
+button_label_inactive_color = (WHITE,BLACK,ON)
+
+# Input box color
+inputbox_color = (BLUE,WHITE,OFF)
+
+# Input box border color
+inputbox_border_color = (BLACK,BLACK,ON)
+
+# Search box color
+searchbox_color = (YELLOW,WHITE,ON)
+
+# Search box title color
+searchbox_title_color = (WHITE,WHITE,ON)
+
+# Search box border color
+searchbox_border_color = (RED,WHITE,OFF)
+
+# File position indicator color
+position_indicator_color = (YELLOW,BLACK,OFF)
+
+# Menu box color
+menubox_color = (GREEN,BLACK,OFF)
+
+
+# Menu box border color
+menubox_border_color = (BLACK,BLACK,ON)
+
+
+#
+# Item color
+item_color = (GREEN,BLACK,OFF)
+
+# Selected item color
+item_selected_color = (RED,BLACK,OFF)
+
+# Tag color
+tag_color = (YELLOW,BLACK,ON)
+
+# Selected tag color
+tag_selected_color = (WHITE,BLUE,OFF)
+
+# Tag key color
+tag_key_color = (CYAN,BLACK,OFF)
+
+# Selected tag key color
+tag_key_selected_color = (GREEN,BLUE,ON)
+
+# Check box color
+check_color = (CYAN,BLACK,OFF)
+
+# Selected check box color
+check_selected_color = (WHITE,CYAN,ON)
+
+# Up arrow color
+uarrow_color = (GREEN,BLUE,ON)
+
+# Down arrow color
+darrow_color = (GREEN,BLUE,ON)
+
+# Item help-text color
+itemhelp_color = (RED,BLACK,OFF)

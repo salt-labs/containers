@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo "TODO: This is not finished, DinD is not yet an option."
-exit 1
+exit_script 1
 
 # References:
 # https://github.com/moby/moby/blob/master/hack/dind#L14
@@ -21,7 +21,7 @@ CGROUP=/sys/fs/cgroup
 mountpoint -q $CGROUP ||
 	mount -n -t tmpfs -o uid=0,gid=0,mode=0755 cgroup $CGROUP || {
 	echo "Could not make a tmpfs mount. Did you use --privileged?"
-	exit 1
+	exit_script 1
 }
 
 if [ -d /sys/kernel/security ] && ! mountpoint -q /sys/kernel/security; then

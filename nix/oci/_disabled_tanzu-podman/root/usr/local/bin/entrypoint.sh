@@ -54,8 +54,8 @@ if [[ ${UID} -eq 0 ]]; then
 
 	# If the group named 'tanzu' does not have the same id, change it.
 	OPTION_1_STATUS="SUCCESS"
-	TANZU_GROUP_ID=$(getent group tanzu | cut -d: -f3)
-	if [[ ${TANZU_GROUP_ID} -ne ${HOST_GID} ]]; then
+	TANZU_TOOLS_GROUP_ID=$(getent group tanzu | cut -d: -f3)
+	if [[ ${TANZU_TOOLS_GROUP_ID} -ne ${HOST_GID} ]]; then
 		echo "$(date '+%Y/%m/%d %T'): INFO: Updating the container user 'tanzu' GID to '${HOST_GID}'" | tee -a "/tmp/environment.log"
 		groupmod --gid "$HOST_GID" tanzu || {
 			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'tanzu' group GID to '${HOST_GID}'"
@@ -64,8 +64,8 @@ if [[ ${UID} -eq 0 ]]; then
 	fi
 
 	# If the user named 'tanzu' does not have the same id, change it.
-	TANZU_USER_ID=$(id -u tanzu)
-	if [[ ${TANZU_USER_ID} -ne ${HOST_UID} ]]; then
+	TANZU_TOOLS_USER_ID=$(id -u tanzu)
+	if [[ ${TANZU_TOOLS_USER_ID} -ne ${HOST_UID} ]]; then
 		echo "$(date '+%Y/%m/%d %T'): INFO: Updating the container user tanzu' UID to '${HOST_UID}'" | tee -a "/tmp/environment.log"
 		usermod --uid "$HOST_UID" tanzu || {
 			echo "$(date '+%Y/%m/%d %T'): ERROR: Failed to set 'tanzu' user UID to '${HOST_UID}'"

@@ -6,44 +6,44 @@
   carvel = {
     ytt = pkgs.fetchurl {
       name = "ytt";
-      url = "https://github.com/carvel-dev/ytt/releases/download/v0.46.0/ytt-linux-amd64";
-      sha256 = "sha256-NIyzSWW2TAf9URjmnv2aT65+IvV9tOkeLZkDwa0Z8EE=";
+      url = "https://github.com/carvel-dev/ytt/releases/download/v0.46.2/ytt-linux-amd64";
+      sha256 = "sha256-rpvGalV1bu1g24b4wPjFVwSzq4RlE61FAhEcKoZz7Kw=";
     };
 
     kapp = pkgs.fetchurl {
       name = "kapp";
-      url = "https://github.com/carvel-dev/kapp/releases/download/v0.59.0/kapp-linux-amd64";
-      sha256 = "sha256-zBzKeDFzut1edO3B8Q3s/K6FUlz+znOz1DrP2h6sy+U=";
+      url = "https://github.com/carvel-dev/kapp/releases/download/v0.59.1/kapp-linux-amd64";
+      sha256 = "sha256-pto0xzNRTCxRuWoS5wzQUCUKRbLuddaWapBOcSswfRU=";
     };
 
     kctrl = pkgs.fetchurl {
       name = "kctrl";
-      url = "https://github.com/carvel-dev/kapp-controller/releases/download/v0.48.1/kctrl-linux-amd64";
-      sha256 = "sha256-xtMi7ZUN3GESwdHbof7qvCTyIuSiTey6LWDAJAMZRAY=";
+      url = "https://github.com/carvel-dev/kapp-controller/releases/download/v0.49.0/kctrl-linux-amd64";
+      sha256 = "sha256-7UeEeFADnPVXKvSUINA2WyzGijpzH7xeiiOxPrj/sCA=";
     };
 
     kbld = pkgs.fetchurl {
       name = "kbld";
-      url = "https://github.com/carvel-dev/kbld/releases/download/v0.38.0/kbld-linux-amd64";
-      sha256 = "sha256-xuzy02t6cvK6tX+uKm6KKohsKwByOIqffdBzY/wPE/w=";
+      url = "https://github.com/carvel-dev/kbld/releases/download/v0.38.1/kbld-linux-amd64";
+      sha256 = "sha256-AOEUKGWIMH0HhcS/sbuPaKzKHqGG63nNhHUhQhRBMpE=";
     };
 
     imgpkg = pkgs.fetchurl {
       name = "imgpkg";
-      url = "https://github.com/carvel-dev/imgpkg/releases/download/v0.38.0/imgpkg-linux-amd64";
-      sha256 = "sha256-Pycvx+rLEpqYm49obqWUVat+ZUIxkoA8Fdav+5Y/hqk=";
+      url = "https://github.com/carvel-dev/imgpkg/releases/download/v0.39.0/imgpkg-linux-amd64";
+      sha256 = "sha256-mLgLql1mXFEZ/I4qYpePnRk8lkfjxHq3KGewVblNFP8=";
     };
 
     vendir = pkgs.fetchurl {
       name = "vendir";
-      url = "https://github.com/carvel-dev/vendir/releases/download/v0.35.0/vendir-linux-amd64";
-      sha256 = "sha256-2RCfuPB77auCC2DkeJorGDhXBz+jks1gO5yr6seVugQ=";
+      url = "https://github.com/carvel-dev/vendir/releases/download/v0.37.0/vendir-linux-amd64";
+      sha256 = "sha256-8Ucr95lVBoMPp5Rz8K5AbqOIXgiB+7sJYkDvsbBT3RU=";
     };
   };
 in
   pkgs.stdenv.mkDerivation {
     name = "carvel-dev";
-    version = "1.1.0";
+    version = "1.2.0";
 
     phases = ["installPhase"];
 

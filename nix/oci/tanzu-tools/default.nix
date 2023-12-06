@@ -54,6 +54,7 @@
     bindfs
     cacert
     curlFull
+    dialog
     diffutils
     figlet
     fortune
@@ -94,9 +95,9 @@
     shadow
     getent
     su
-    super
     sudo
     libcap
+    super
 
     # UID > 65535
     sssd
@@ -422,25 +423,27 @@ in
       Env = [
         "CHARSET=UTF-8"
         "ENABLE_DEBUG=FALSE"
-        "ENABLE_PROXY_SCRIPT=FALSE"
-        "ENABLE_STARSHIP=FALSE"
         "ENVIRONMENT_VSCODE=none"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
-        #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
+        "LOG_DESTINATION=file"
+        "LOG_FILE=/tmp/tanzu-tools.log"
+        "LOG_LEVEL=INFO"
         "NIX_PAGER=less"
         "PAGER=less"
+        "RUN_AS_ROOT=FALSE"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-        "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
-        "TANZU_CLI_PLUGIN_SOURCE_TAG=latest"
+        "TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG=latest"
+        "TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG=latest"
+        "TANZU_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
+        "TANZU_TOOLS_ENABLE_STARSHIP=FALSE"
+        "TANZU_TOOLS_DIALOG_THEME=default"
+        "TANZU_TOOLS_SYNC_YTT_LIB=FALSE"
         "TERM=xterm"
         "TZ=UTC"
         "WORKDIR=/workdir"
-        "LOG_FILE=/tmp/environment.log"
-        "LOG_LEVEL=INFO"
-        "LOG_DESTINATION=all"
-        "RUN_AS_ROOT=FALSE"
+        #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";

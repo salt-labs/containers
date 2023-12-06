@@ -129,10 +129,19 @@ fi
 # Custom
 #########################
 
+# Dialog theme
+export DIALOGRC="${HOME}/.dialogrc/${TANZU_TOOLS_DIALOG_THEME}"
+
 # shellcheck disable=SC1091
 source functions.sh || {
 	echo "Failed to import required common functions!"
 	exit 1
+}
+
+# shellcheck disable=SC1091
+source dialog.sh || {
+	echo "Failed to import required dialog functions!"
+	exit_script 1
 }
 
 # Make sure the wrappers are the first in the PATH
@@ -185,7 +194,7 @@ if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 else
 
 	# Starship
-	if [[ ${ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
+	if [[ ${TANZU_TOOLS_ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
 
 		writeLog "INFO" "Launching Starship"
 
@@ -200,9 +209,6 @@ else
 
 fi
 
-# Preload libnss for uid > 65535
-#export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
-
 # Make sure there is a user environment variable set.
 export USER="${USER:-$(whoami)}"
 
@@ -212,8 +218,8 @@ writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
 # Tanzu
 #########################
 
-# shellcheck disable=SC1091
-source tanzu.sh || {
-	writeLog "ERROR" "Failed to launch Tanzu CLI script"
+# Let the games begin...
+tanzu_tools_launch || {
+	writeLog "ERROR" "Failed to launch Tanzu Tools"
 	exit 1
 }

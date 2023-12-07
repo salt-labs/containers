@@ -174,8 +174,11 @@ function tanzu_tools_multi_site() {
 	# Convert string to uppercase
 	REGISTRY_VAR=${REGISTRY_VAR^^}
 
-	# Replace any dashes with underscore
+	# Replace any dashes with underscores
 	REGISTRY_VAR=${REGISTRY_VAR//-/_}
+
+	# Replace any spaces with underscores
+	REGISTRY_VAR=${REGISTRY_VAR// /_}
 
 	# Check whether the variable is empty or not.
 	if checkVarEmpty "${REGISTRY_VAR}" "Container registry for site ${SITES_ARRAY[$VALUE]} "; then

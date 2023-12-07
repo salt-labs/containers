@@ -298,7 +298,7 @@ function tanzu_tools_cli_custom() {
 
 			MESSAGE="Failed to configure Tanzu Tools for multi-site!"
 			writeLog "ERROR" "${MESSAGE}"
-			dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
+			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 			return 1
 
 		}
@@ -313,7 +313,7 @@ function tanzu_tools_cli_custom() {
 
 			MESSAGE="Failed to configure Tanzu Tools with a custom registry"
 			writeLog "ERROR" "${MESSAGE}"
-			dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
+			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 			return 1
 
 		}
@@ -328,7 +328,7 @@ function tanzu_tools_cli_custom() {
 
 			MESSAGE="Failed to configure Tanzu Tools with a pull-through registry cache"
 			writeLog "ERROR" "${MESSAGE}"
-			dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
+			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 			return 1
 
 		}
@@ -350,8 +350,9 @@ function tanzu_tools_cli_custom() {
 	# Now that the container registry has been configured, update the variables and plugins.
 	tanzu plugin source update default --uri "${TANZU_TOOLS_CLI_OCI_URL}" 1>>"${LOG_FILE}" 2>&1 || {
 
-		writeLog "ERROR" "Failed to update plugin source to ${TANZU_TOOLS_CLI_OCI_URL}"
-		writeLog "ERROR" "Please check connectivity to ${TANZU_TOOLS_CLI_OCI_URL}"
+		MESSAGE="Failed to update plugin source to ${TANZU_TOOLS_CLI_OCI_URL}. Please check connectivity"
+		writeLog "ERROR" "${MESSAGE}"
+		dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 		return 1
 
 	}
@@ -589,7 +590,7 @@ function tanzu_tools_launch() {
 	tanzu_tools_proxy || {
 		MESSAGE="Failed to run user proxy configuration"
 		writeLog "ERROR" "${MESSAGE}"
-		dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
+		dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 		return 1
 	}
 
@@ -600,7 +601,7 @@ function tanzu_tools_launch() {
 	tanzu_tools_cli_init || {
 		MESSAGE="Failed to initialize the Tanzu CLI"
 		writeLog "ERROR" "${MESSAGE}"
-		dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
+		dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 		return 1
 	}
 
@@ -609,10 +610,10 @@ function tanzu_tools_launch() {
 		dialogProgress "Tanzu Tools: Launching..." "30"
 
 		# Apply user customizations based on provided variables.
+		# The user customizations function displays it's own dialog boxes.
 		tanzu_tools_cli_custom || {
 			MESSAGE="Failed to set the Tanzu CLI user customisations"
 			writeLog "ERROR" "${MESSAGE}"
-			dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
 			return 1
 		}
 
@@ -622,7 +623,7 @@ function tanzu_tools_launch() {
 		tanzu_tools_cli_plugins || {
 			MESSAGE="Failed to download the Tanzu CLI plugins"
 			writeLog "ERROR" "${MESSAGE}"
-			dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
+			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 			return 1
 		}
 
@@ -634,7 +635,7 @@ function tanzu_tools_launch() {
 			tanzu_tools_ytt_lib_sync || {
 				MESSAGE="Failed to sync ytt library"
 				writeLog "ERROR" "${MESSAGE}"
-				dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
+				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 				return 1
 			}
 
@@ -654,7 +655,7 @@ function tanzu_tools_launch() {
 	tanzu_tools_bash_completions || {
 		MESSAGE="Failed to source Tanzu Tools bash completions"
 		writeLog "ERROR" "${MESSAGE}"
-		dialogMsgBox "ERROR" "${MESSAGE}.\nReview the session logs for further information."
+		dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 		return 1
 	}
 

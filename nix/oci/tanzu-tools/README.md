@@ -74,14 +74,16 @@ TANZU_TOOLS_SITES_ENABLED=TRUE
 - Next, define the list of sites in a comma-separated docker environment variable.
 
 ```bash
-TANZU_TOOLS_SITES=site_1,site_2
+# NOTE: This example has dashes in the names...
+TANZU_TOOLS_SITES=site-1,site-2
 ```
 
 - Then, for each site set the variable for the registry like so.
 
 ```bash
-TANZU_TOOLS_SITE_SITE_1_NAME_REGISTRY=harbor.site_1.mydomain
-TANZU_TOOLS_SITE_SITE_2_NAME_REGISTRY=harbor.site_2.mydomain
+# NOTE: The variable names must be all in uppercase and any dashes '-' converted to an underscore.
+TANZU_TOOLS_SITE_SITE_1_NAME_REGISTRY=harbor.site-1.mydomain
+TANZU_TOOLS_SITE_SITE_2_NAME_REGISTRY=harbor.site-2.mydomain
 ```
 
 - When launching the container, you will be asked in a dialog screen which site you are going to administer.

@@ -288,7 +288,7 @@ function checkVarEmpty() {
 	local VAR_DESC="${2}"
 
 	if [[ ${!VAR_NAME:-EMPTY} == "EMPTY" ]]; then
-		writeLog "ERROR" "The variable ${VAR_DESC} is empty."
+		writeLog "ERROR" "The variable ${VAR_NAME} with description ${VAR_DESC} is empty."
 		return 0
 	else
 		writeLog "DEBUG" "The variable ${VAR_DESC} is not empty, it is set to ${!VAR_NAME}"

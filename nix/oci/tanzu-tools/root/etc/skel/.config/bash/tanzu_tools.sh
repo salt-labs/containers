@@ -96,7 +96,7 @@ function tanzu_tools_multi_site() {
 	# If the user has provided a list of sites.
 	if [[ ${TANZU_TOOLS_SITES:-EMPTY} == "EMPTY" ]]; then
 		writeLog "ERROR" "Failed to configure Multi-Site support"
-		writeLog "ERROR" "In order to use Mult-Site support you must provide a comma-seperated value of sites in the variable named 'TANZU_TOOLS_SITES'"
+		writeLog "ERROR" "In order to use Multi-Site support you must provide a comma-separated value of sites in the variable named 'TANZU_TOOLS_SITES'"
 		return 1
 	else
 		writeLog "INFO" "Processing sites ${TANZU_TOOLS_SITES}"
@@ -168,12 +168,27 @@ function tanzu_tools_multi_site() {
 
 	writeLog "DEBUG" "Checking variables for site ${SITES_ARRAY[$VALUE]}"
 
+	# Build the variable name as a string
 	REGISTRY_VAR="TANZU_TOOLS_SITE_${SITES_ARRAY[$VALUE]}_REGISTRY"
+
+	# Convert string to uppercase
+	REGISTRY_VAR=${REGISTRY_VAR^^}
+
+	# Replace any dashes with underscore
+	REGISTRY_VAR=${REGISTRY_VAR//-/_}
+
+	# Check whether the variable is empty or not.
+	if checkVarEmpty "${REGISTRY_VAR}" "Container registry for site ${SITES_ARRAY[$VALUE]} "; then
+		dialogMsgBox "ERROR" "The required site variable is missing. Please set the variable named ${REGISTRY_VAR}"
+		return 1
+	fi
+
+	# Obtain the current contents of the variable
 	REGISTRY="${!REGISTRY_VAR:-EMPTY}"
 
+	# Double check our work.
 	if [[ ${REGISTRY} == "EMPTY" ]]; then
-		writeLog "ERROR" "The site ${SITES_ARRAY[$VALUE]} is missing the registry variable ${REGISTRY_VAR}"
-		dialogMsgBox "ERROR" "The required site variable is missing. Please set ${REGISTRY_VAR}"
+		writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${REGISTRY_VAR}"
 		return 1
 	else
 		writeLog "DEBUG" "The site ${SITES_ARRAY[$VALUE]} has a registry value of ${REGISTRY}"

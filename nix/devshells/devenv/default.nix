@@ -51,6 +51,7 @@ inputs.devenv.lib.mkShell {
         ytt
         kapp
         vendir
+        docker-slim
       ];
 
       env = {

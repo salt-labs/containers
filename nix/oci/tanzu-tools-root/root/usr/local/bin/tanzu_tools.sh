@@ -598,12 +598,14 @@ function tanzu_tools_sync_ytt_lib() {
 
 }
 
-function tanzu_tools_sync_scripts() {
+function tanzu_tools_sync_vendor() {
 
-	local VENDIR_FILE_CONFIG="${TANZU_TOOLS_SYNC_SCRIPTS_CONFIG:-vendir.yml}"
-	local VENDIR_FILE_LOCK="${TANZU_TOOLS_SYNC_SCRIPTS_LOCK:-vendir.lock.yml}"
-
+	# This is the location to push into.
 	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-/vendor}"
+
+	# These files are relative to the location of the vendor directory.
+	local VENDIR_FILE_CONFIG="${TANZU_TOOLS_SYNC_VENDOR_CONFIG:-vendir.yml}"
+	local VENDIR_FILE_LOCK="${TANZU_TOOLS_SYNC_VENDOR_LOCK:-vendir.lock.yml}"
 
 	# Confirm the vendor directory already exists.
 	if [[ ! -d ${VENDOR_DIR} ]]; then
@@ -612,14 +614,14 @@ function tanzu_tools_sync_scripts() {
 	fi
 
 	# Confirm the vendir file already exists but the lock is optional.
-	if [[ ! -f ${VENDIR_FILE} ]]; then
-		writeLog "ERROR" "The vendir file ${VENDIR_FILE} does not exist"
+	if [[ ! -f ${VENDIR_FILE_CONFIG} ]]; then
+		writeLog "ERROR" "The vendir file ${VENDIR_FILE_CONFIG} does not exist"
 		return 1
 	fi
 
 	vendir sync \
-		--file "${VENDIR_FILE_CONFIG}" \
 		--chdir "${VENDOR_DIR}" \
+		--file "${VENDIR_FILE_CONFIG}" \
 		"${VENDIR_FILE_LOCK:+--lock-file $VENDIR_FILE_LOCK}" \
 		"${VENDIR_FILE_LOCK:+--locked}" \
 		--yes || {
@@ -754,9 +756,9 @@ function tanzu_tools_launch() {
 		fi
 
 		# Use vendir to pull pinned scripts.
-		if [[ ${TANZU_TOOLS_SYNC_SCRIPTS:-FALSE} == "TRUE" ]]; then
+		if [[ ${TANZU_TOOLS_SYNC_VENDOR:-FALSE} == "TRUE" ]]; then
 
-			tanzu_tools_sync_scripts || {
+			tanzu_tools_sync_vendor || {
 				MESSAGE="Failed to sync scripts"
 				writeLog "ERROR" "${MESSAGE}"
 				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."

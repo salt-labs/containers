@@ -20,11 +20,7 @@
   };
 
   super_custom = pkgs.callPackage ./derivations/super {
-    lib = pkgs.lib;
-    stdenv = pkgs.stdenv;
-    fetchurl = pkgs.fetchurl;
-    fetchpatch = pkgs.fetchpatch;
-    libxcrypt = pkgs.libxcrypt;
+    inherit pkgs;
   };
 
   carvel = pkgs.callPackage ../carvel/carvel.nix {

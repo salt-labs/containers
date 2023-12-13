@@ -1,15 +1,9 @@
-{
-  lib,
-  stdenv,
-  fetchurl,
-  fetchpatch,
-  libxcrypt,
-}:
-stdenv.mkDerivation rec {
+{pkgs}:
+pkgs.stdenv.mkDerivation rec {
   pname = "super";
   version = "3.30.0";
 
-  src = fetchurl {
+  src = pkgs.fetchurl {
     name = "super-${version}.tar.gz";
     url = "https://www.ucolick.org/~will/RUE/super/super-${version}-tar.gz";
     sha256 = "0k476f83w7f45y9jpyxwr00ikv1vhjiq0c26fgjch9hnv18icvwy";
@@ -24,7 +18,7 @@ stdenv.mkDerivation rec {
 
   patches = [
     ./0001-Remove-references-to-dropped-sys_nerr-sys_errlist-fo.patch
-    (fetchpatch {
+    (pkgs.fetchpatch {
       name = "CVE-2014-0470.patch";
       url = "https://salsa.debian.org/debian/super/raw/debian/3.30.0-7/debian/patches/14-Fix-unchecked-setuid-call.patch";
       sha256 = "08m9hw4kyfjv0kqns1cqha4v5hkgp4s4z0q1rgif1fnk14xh7wqh";
@@ -42,7 +36,7 @@ stdenv.mkDerivation rec {
     "--localstatedir=/var"
   ];
 
-  buildInputs = [libxcrypt];
+  buildInputs = [pkgs.libxcrypt];
 
   installFlags = ["sysconfdir=$(out)/etc" "localstatedir=$(TMPDIR)"];
 
@@ -55,6 +49,6 @@ stdenv.mkDerivation rec {
       in /etc/super.tab); and 2) “setuid”, which allows root to
       execute a command under a different uid.
     '';
-    platforms = lib.platforms.linux;
+    platforms = pkgs.lib.platforms.linux;
   };
 }

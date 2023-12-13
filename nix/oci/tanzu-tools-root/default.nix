@@ -46,23 +46,24 @@
     #toybox
     #uutils-coreutils
 
-    # Common
+    # User tools
     bash-completion
     bashInteractive
     bat
-    bottom
     bind
     bindfs
+    bottom
     cacert
     curlFull
     dialog
     diffutils
     figlet
-    fortune
     file
+    fortune
     fuse3
     gawk
     git
+    glibc
     gnugrep
     gnupg
     gnused
@@ -91,8 +92,6 @@
     which
     xz
     yq-go
-
-    # User tools
     shadow
     getent
     libcap
@@ -107,13 +106,12 @@
 
     # Docker Tools
     dive
-    #docker
-    #docker-client
     docker-buildx
+    docker-client
     docker-gc
     docker-ls
-    docker-slim
     docker-proxy
+    docker-slim
     runc
 
     # Kubernetes Tools
@@ -121,7 +119,7 @@
     k9s
     kail
     kapp
-    #kind
+    kind
     krew
     kube-bench
     kube-linter
@@ -143,10 +141,6 @@
   ];
 
   unstablePkgs = with pkgsUnstable; [
-    # TODO: Check when docker-client is up to v24+
-    docker_24
-    kind
-    glibc
   ];
 in
   pkgs.dockerTools.buildLayeredImage {

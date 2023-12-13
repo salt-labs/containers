@@ -22,9 +22,8 @@
       type = "github";
       owner = "NixOS";
       repo = "nixpkgs";
-      ref = "nixos-23.05";
-      # TODO: Check on https://github.com/NixOS/nixpkgs/issues/271146 and upgrade when done.
-      #ref = "nixos-23.11";
+      #ref = "nixos-23.05";
+      ref = "nixos-23.11";
       flake = true;
     };
 
@@ -435,6 +434,14 @@
       };
 
       tanzu-tools = import ./nix/oci/tanzu-tools {
+        inherit self;
+        inherit pkgs;
+        inherit pkgsUnstable;
+        inherit crossPkgs;
+        inherit crossPkgsUnstable;
+      };
+
+      tanzu-tools-root = import ./nix/oci/tanzu-tools-root {
         inherit self;
         inherit pkgs;
         inherit pkgsUnstable;

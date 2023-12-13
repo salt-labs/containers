@@ -169,41 +169,113 @@ function tanzu_tools_multi_site() {
 	writeLog "DEBUG" "Checking variables for site ${SITES_ARRAY[$VALUE]}"
 
 	# Build the variable name as a string
-	REGISTRY_VAR="TANZU_TOOLS_SITE_${SITES_ARRAY[$VALUE]}_REGISTRY"
+	VAR_REGISTRY="TANZU_TOOLS_SITE_${SITES_ARRAY[$VALUE]}_REGISTRY"
+	VAR_CLI_PLUGIN_INVENTORY_TAG="TANZU_TOOLS_SITE_${SITES_ARRAY[$VALUE]}_CLI_PLUGIN_INVENTORY_TAG"
+	VAR_CLI_PLUGIN_GROUP_TKG_TAG="TANZU_TOOLS_SITE_${SITES_ARRAY[$VALUE]}_CLI_PLUGIN_GROUP_TKG_TAG"
 
 	# Convert string to uppercase
-	REGISTRY_VAR=${REGISTRY_VAR^^}
+	VAR_REGISTRY=${VAR_REGISTRY^^}
+	VAR_CLI_PLUGIN_INVENTORY_TAG=${VAR_CLI_PLUGIN_INVENTORY_TAG^^}
+	VAR_CLI_PLUGIN_GROUP_TKG_TAG=${VAR_CLI_PLUGIN_GROUP_TKG_TAG^^}
 
 	# Replace any dashes with underscores
-	REGISTRY_VAR=${REGISTRY_VAR//-/_}
+	VAR_REGISTRY=${VAR_REGISTRY//-/_}
+	VAR_CLI_PLUGIN_INVENTORY_TAG=${VAR_CLI_PLUGIN_INVENTORY_TAG//-/_}
+	VAR_CLI_PLUGIN_GROUP_TKG_TAG=${VAR_CLI_PLUGIN_GROUP_TKG_TAG//-/_}
 
 	# Replace any spaces with underscores
-	REGISTRY_VAR=${REGISTRY_VAR// /_}
+	VAR_REGISTRY=${VAR_REGISTRY// /_}
+	VAR_CLI_PLUGIN_INVENTORY_TAG=${VAR_CLI_PLUGIN_INVENTORY_TAG// /_}
+	VAR_CLI_PLUGIN_GROUP_TKG_TAG=${VAR_CLI_PLUGIN_GROUP_TKG_TAG// /_}
+
+	##########
+	# Registry
+	##########
+
+	# The Registry variable is not optional when using multi-site.
 
 	# Check whether the variable is empty or not.
-	if checkVarEmpty "${REGISTRY_VAR}" "Container registry for site ${SITES_ARRAY[$VALUE]} "; then
-		dialogMsgBox "ERROR" "The required site variable is missing. Please set the variable named ${REGISTRY_VAR}"
+	if checkVarEmpty "${VAR_REGISTRY}" "Container registry for site ${SITES_ARRAY[$VALUE]}"; then
+		dialogMsgBox "ERROR" "The required site variable is missing. Please set the variable named ${VAR_REGISTRY}"
 		return 1
 	fi
 
 	# Obtain the current contents of the variable
-	REGISTRY="${!REGISTRY_VAR:-EMPTY}"
+	REGISTRY="${!VAR_REGISTRY:-EMPTY}"
 
 	# Double check our work.
 	if [[ ${REGISTRY} == "EMPTY" ]]; then
-		writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${REGISTRY_VAR}"
+		writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_REGISTRY}"
 		return 1
 	else
 		writeLog "DEBUG" "The site ${SITES_ARRAY[$VALUE]} has a registry value of ${REGISTRY}"
 	fi
 
-	# Export the correct variables for the selected site.
+	##########
+	# Versions
+	##########
+
+	# The versions tags are optional when using multi-site.
+
+	# Check whether the Inventory tag variable is empty or not.
+	if checkVarEmpty "${VAR_CLI_PLUGIN_INVENTORY_TAG}" "Tanzu CLI Inventory tag for site ${SITES_ARRAY[$VALUE]}"; then
+
+		writeLog "INFO" "The Tanzu CLI Inventory tag for site ${SITES_ARRAY[$VALUE]} is empty, using default"
+
+	else
+
+		# Obtain the current contents of the variable
+		CLI_PLUGIN_INVENTORY_TAG="${!VAR_CLI_PLUGIN_INVENTORY_TAG:-EMPTY}"
+
+		# Double check our work.
+		if [[ ${CLI_PLUGIN_INVENTORY_TAG} == "EMPTY" ]]; then
+			writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_CLI_PLUGIN_INVENTORY_TAG}"
+			return 1
+		else
+			writeLog "INFO" "The site ${SITES_ARRAY[$VALUE]} has a Tanzu CLI Inventory tag value of ${CLI_PLUGIN_INVENTORY_TAG}"
+			export TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG="${CLI_PLUGIN_INVENTORY_TAG}"
+		fi
+
+	fi
+
+	# Check whether the TKG version tag variable is empty or not.
+	if checkVarEmpty "${VAR_CLI_PLUGIN_GROUP_TKG_TAG}" "Tanzu CLI TKG version tag for site ${SITES_ARRAY[$VALUE]}"; then
+
+		writeLog "INFO" "The Tanzu CLI TKG version tag for site ${SITES_ARRAY[$VALUE]} is empty, using default"
+
+	else
+
+		# Obtain the current contents of the variable
+		CLI_PLUGIN_GROUP_TKG_TAG="${!VAR_CLI_PLUGIN_GROUP_TKG_TAG:-EMPTY}"
+
+		# Double check our work.
+		if [[ ${CLI_PLUGIN_GROUP_TKG_TAG} == "EMPTY" ]]; then
+			writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_CLI_PLUGIN_GROUP_TKG_TAG}"
+			return 1
+		else
+			writeLog "INFO" "The site ${SITES_ARRAY[$VALUE]} has a Tanzu CLI TKG version tag value of ${CLI_PLUGIN_GROUP_TKG_TAG}"
+			export TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG="${CLI_PLUGIN_GROUP_TKG_TAG}"
+		fi
+
+	fi
+
+	##########
+	# Export variables
+	##########
+
+	# Export the correct registry variables for the selected site.
 
 	# Strip the VMware registry prefix.
 	TANZU_TOOLS_CLI_OCI_URL="${TANZU_TOOLS_CLI_OCI_URL#*projects.registry.vmware.com}"
 
 	# Add the multi-site registry OCI URL to the Tanzu CLI URL
 	TANZU_TOOLS_CLI_OCI_URL="${REGISTRY}${TANZU_TOOLS_CLI_OCI_URL}"
+
+	# Strip the current inventory image tag.
+	TANZU_TOOLS_CLI_OCI_URL="${TANZU_TOOLS_CLI_OCI_URL%:*}"
+
+	# Add the user provided image tag.
+	TANZU_TOOLS_CLI_OCI_URL="${TANZU_TOOLS_CLI_OCI_URL}:${TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG}"
 
 	# Add the multi-site registry OCI URL to the TKG URL
 	export TKG_CUSTOM_IMAGE_REPOSITORY="${REGISTRY}/tkg"
@@ -497,7 +569,7 @@ function tanzu_tools_cli_plugins() {
 
 }
 
-function tanzu_tools_ytt_lib_sync() {
+function tanzu_tools_sync_ytt_lib() {
 
 	# Rsync the users ytt library into the TKG location.
 	# NOTE: As of TKG v2.x user provided ytt customizations are being phased out.
@@ -519,6 +591,41 @@ function tanzu_tools_ytt_lib_sync() {
 
 	rsync -av "${YTT_LIB}" "${YTT_LIB_TKG}" || {
 		writeLog "ERROR" "Failed to sync ytt library from ${YTT_LIB} to ${YTT_LIB_TKG}"
+		return 1
+	}
+
+	return 0
+
+}
+
+function tanzu_tools_sync_vendor() {
+
+	# This is the location to push into.
+	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-/vendor}"
+
+	# These files are relative to the location of the vendor directory.
+	local VENDIR_FILE_CONFIG="${TANZU_TOOLS_SYNC_VENDOR_CONFIG:-vendir.yml}"
+	local VENDIR_FILE_LOCK="${TANZU_TOOLS_SYNC_VENDOR_LOCK:-vendir.lock.yml}"
+
+	# Confirm the vendor directory already exists.
+	if [[ ! -d ${VENDOR_DIR} ]]; then
+		writeLog "ERROR" "The vendor directory ${VENDOR_DIR} does not exist"
+		return 1
+	fi
+
+	# Confirm the vendir file already exists but the lock is optional.
+	if [[ ! -f ${VENDIR_FILE_CONFIG} ]]; then
+		writeLog "ERROR" "The vendir file ${VENDIR_FILE_CONFIG} does not exist"
+		return 1
+	fi
+
+	vendir sync \
+		--chdir "${VENDOR_DIR}" \
+		--file "${VENDIR_FILE_CONFIG}" \
+		"${VENDIR_FILE_LOCK:+--lock-file $VENDIR_FILE_LOCK}" \
+		"${VENDIR_FILE_LOCK:+--locked}" \
+		--yes || {
+		writeLog "ERROR" "Failed to run vendir sync"
 		return 1
 	}
 
@@ -635,7 +742,7 @@ function tanzu_tools_launch() {
 		# RSync the users ytt library into TKG
 		if [[ ${TANZU_TOOLS_SYNC_YTT_LIB:-FALSE} == "TRUE" ]]; then
 
-			tanzu_tools_ytt_lib_sync || {
+			tanzu_tools_sync_ytt_lib || {
 				MESSAGE="Failed to sync ytt library"
 				writeLog "ERROR" "${MESSAGE}"
 				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
@@ -645,6 +752,22 @@ function tanzu_tools_launch() {
 		else
 
 			writeLog "INFO" "Tanzu Tools is not enabled to sync the ytt library, skipping."
+
+		fi
+
+		# Use vendir to pull pinned scripts.
+		if [[ ${TANZU_TOOLS_SYNC_VENDOR:-FALSE} == "TRUE" ]]; then
+
+			tanzu_tools_sync_vendor || {
+				MESSAGE="Failed to sync scripts"
+				writeLog "ERROR" "${MESSAGE}"
+				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
+				return 1
+			}
+
+		else
+
+			writeLog "INFO" "Tanzu Tools is not enabled to sync scripts, skipping."
 
 		fi
 

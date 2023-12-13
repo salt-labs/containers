@@ -27,7 +27,7 @@ export LOG_LEVEL="${LOG_LEVEL:-INFO}"
 export TANZU_TOOLS_RUN=FALSE
 
 # Dialog theme
-export DIALOGRC="${HOME}/.dialogrc/${TANZU_TOOLS_DIALOG_THEME}"
+export DIALOGRC="${HOME}/.dialogrc/${TANZU_TOOLS_DIALOG_THEME:-default}"
 
 # Preload libnss for uid > 65535
 #export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2

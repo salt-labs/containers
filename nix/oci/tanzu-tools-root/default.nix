@@ -9,22 +9,15 @@
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   creationDate = builtins.substring 0 8 modifiedDate;
 
-  # A non-root user that will be used inside the image.
-  containerUser = "tanzu";
-  containerUID = "1000";
-  containerGID = "1000";
+  # This container runs as the root user however it's intended
+  # to be run from Docker rootless.
+  containerUser = "root";
+  containerUID = "0";
+  containerGID = "0";
 
   tanzu = pkgs.callPackage ./derivations/tanzu {
     inherit pkgs;
     inherit crossPkgs;
-  };
-
-  super_custom = pkgs.callPackage ./derivations/super {
-    lib = pkgs.lib;
-    stdenv = pkgs.stdenv;
-    fetchurl = pkgs.fetchurl;
-    fetchpatch = pkgs.fetchpatch;
-    libxcrypt = pkgs.libxcrypt;
   };
 
   carvel = pkgs.callPackage ../carvel/carvel.nix {
@@ -102,14 +95,7 @@
     # User tools
     shadow
     getent
-    su
-    sudo
     libcap
-    #super # Removed in 23.11
-
-    # UID > 65535
-    sssd
-    #nsncd
 
     # Nix
     direnv
@@ -154,7 +140,6 @@
     # Custom derivations
     carvel
     tanzu
-    super_custom # Added for 23.11
   ];
 
   unstablePkgs = with pkgsUnstable; [
@@ -165,7 +150,7 @@
   ];
 in
   pkgs.dockerTools.buildLayeredImage {
-    name = "tanzu-tools";
+    name = "tanzu-tools-root";
     tag = "latest";
     created = creationDate;
 
@@ -189,11 +174,8 @@ in
         "/lib64"
         "/nix"
         "/run"
-        #"/run/wrappers"
-        #"/run/wrappers/bin"
         "/share"
         "/sbin"
-        #"/sys"
         "/usr"
         "/usr/lib"
         "/usr/lib64"
@@ -232,94 +214,6 @@ in
       groupadd docker \
         --gid 998 || {
         echo "Failed to add group docker"
-        exit 1
-      }
-
-      # Create a wrappers dir for SUID binaries
-      mkdir --parents --mode 0755 /run/wrappers/bin || {
-        echo "Failed to create wrappers directory"
-        exit 1
-      }
-      declare -A BINS_SUID
-      #BINS_SUID[sudo]=""
-      #BINS_SUID[ping]="cap_net_raw+ep"
-      #BINS_SUID[setuid]=""
-      #BINS_SUID[su]=""
-      #BINS_SUID[newuidmap]=""
-      #BINS_SUID[newgidmap]=""
-
-      for BIN in "''${!BINS_SUID[@]}" ;
-      do
-
-        BIN_NAME="''${BIN}"
-        BIN_CAPS="''${BINS_SUID[''$BIN]}"
-
-        echo "Creating wrapper for ''${BIN}"
-
-        if [[ -f /bin/''${BIN} ]];
-        then
-
-          cp --dereference /bin/''${BIN} /run/wrappers/bin/''${BIN} || {
-            echo "Failed to copy ''${BIN} from /bin to /run/wrappers/bin/"
-            exit -1
-          }
-
-        elif [[ -f /sbin/''${BIN} ]];
-        then
-
-          cp --dereference /sbin/''${BIN} /run/wrappers/bin/''${BIN} || {
-            echo "Failed to copy ''${BIN} from /sbin to /run/wrappers/bin/"
-            exit -1
-          }
-
-        fi
-
-        chmod 0000 /run/wrappers/bin/''${BIN} || {
-          echo "Failed to reset permissions on ''${BIN}"
-          exit -1
-        }
-
-        chown root:root /run/wrappers/bin/''${BIN} || {
-          echo "Failed to reset owner and group on ''${BIN}"
-           exit -1
-        }
-
-        chmod "u+rx,g+rx,o+rx" /run/wrappers/bin/''${BIN_NAME} || {
-          echo "Failed to set permissions on ''${BIN_NAME}"
-          exit -1
-        }
-
-        chmod "+s" /run/wrappers/bin/''${BIN_NAME} || {
-          echo "Failed to set SUID on ''${BIN_NAME}"
-          exit -1
-        }
-
-        if [[ ! "''${BIN_CAPS:-EMPTY}" == "EMPTY" ]];
-        then
-          ${pkgs.libcap.out}/bin/setcap "cap_setpcap,''${BIN_CAPS}" /run/wrappers/bin/''${BIN} || {
-            echo "Failed to add capabilities ''${BIN_CAPS} to ''${BIN_NAME}"
-            echo "cap_setpcap''${BIN_CAPS:+,$BIN_CAPS} /run/wrappers/bin/''${BIN}"
-            exit -1
-          }
-        else
-          echo "No additional capabilities being added for ''${BIN}"
-        fi
-
-        echo "Finished creating wrapper for ''${BIN}"
-
-      done
-
-      # Setup sudo
-      chown root:root /etc/sudo.conf /etc/sudoers || {
-        echo "Failed to chown sudo files to root"
-        exit 1
-      }
-      mkdir --parents --mode 0755 /etc/sudoers.d || {
-        echo "Failed to create sudoers.d directory"
-        exit 1
-      }
-      echo "${containerUser}    ALL=(ALL)    NOPASSWD:    ALL" >> "/etc/sudoers.d/${containerUser}" || {
-        echo "Failed to write to sudoers file"
         exit 1
       }
 
@@ -381,32 +275,6 @@ in
       mkdir --parents --mode 1777 /workdir || exit 1
       mkdir --parents --mode 1777 /workspaces || exit 1
 
-      # Update login defaults.
-      sed \
-        --in-place \
-        --regexp-extended \
-        --expression "s/^UID_MAX.*$/UID_MAX                 2000000000/" \
-        /etc/login.defs || {
-          echo "Failed to update UID_MAX"
-          exit 1
-        }
-      sed \
-        --in-place \
-        --regexp-extended \
-        --expression "s/^SUB_UID_MIN.*$/SUB_UID_MIN             3000000000/" \
-        /etc/login.defs || {
-          echo "Failed to update SUB_UID_MIN"
-          exit 1
-        }
-      sed \
-        --in-place \
-        --regexp-extended \
-        --expression "s/^SUB_UID_MAX.*$/SUB_UID_MAX             4000000000/" \
-        /etc/login.defs || {
-          echo "Failed to update SUB_UID_MAX"
-          exit 1
-        }
-
       # Update user add defaults
       cat << EOF > /etc/default/useradd
       SHELL=/bin/bash
@@ -448,7 +316,6 @@ in
         "LOG_FILE=/tmp/tanzu-tools.log"
         "NIX_PAGER=less"
         "PAGER=less"
-        "RUN_AS_ROOT=FALSE"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "TERM=xterm"

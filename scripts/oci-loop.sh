@@ -10,6 +10,9 @@ set -euo pipefail
 # Allow users to overide docker vs podman.
 OCI_TOOL="${OCI_TOOL:-docker}"
 
+# Docker args --env-file
+declare DOCKER_ENV_FILES=()
+
 #########################
 # Functions
 #########################
@@ -99,6 +102,11 @@ nix build \
 	exit 1
 }
 
+# Add extra .env variables if present.
+if [[ -f .env ]]; then
+	DOCKER_ENV_FILES+=("--env-file .env")
+fi
+
 # Test it with the flags that suit the tool.
 case "${OCI_TOOL}" in
 
@@ -106,10 +114,12 @@ case "${OCI_TOOL}" in
 
 	"${OCI_TOOL}" \
 		--log-level=info \
+		container \
 		run \
 		-it \
 		--rm \
 		--name "test-${OCI_NAME}" \
+		${DOCKER_ENV_FILES[@]-} \
 		--privileged \
 		--security-opt label=disable \
 		--security-opt apparmor=unconfined \
@@ -124,10 +134,12 @@ case "${OCI_TOOL}" in
 
 	"${OCI_TOOL}" \
 		--log-level=info \
+		container \
 		run \
 		-it \
 		--rm \
 		--name "test-${OCI_NAME}" \
+		${DOCKER_ENV_FILES[@]-} \
 		--privileged \
 		--security-opt label=disable \
 		--security-opt apparmor=unconfined \

@@ -569,7 +569,7 @@ function tanzu_tools_cli_plugins() {
 
 }
 
-function tanzu_tools_ytt_lib_sync() {
+function tanzu_tools_sync_ytt_lib() {
 
 	# Rsync the users ytt library into the TKG location.
 	# NOTE: As of TKG v2.x user provided ytt customizations are being phased out.
@@ -591,6 +591,38 @@ function tanzu_tools_ytt_lib_sync() {
 
 	rsync -av "${YTT_LIB}" "${YTT_LIB_TKG}" || {
 		writeLog "ERROR" "Failed to sync ytt library from ${YTT_LIB} to ${YTT_LIB_TKG}"
+		return 1
+	}
+
+	return 0
+
+}
+
+function tanzu_tools_sync_scripts() {
+
+	local VENDIR_FILE_CONFIG="${TANZU_TOOLS_SYNC_SCRIPTS_CONFIG:-vendir.yml}"
+	local VENDIR_FILE_LOCK="${TANZU_TOOLS_SYNC_SCRIPTS_LOCK:-vendir.lock.yml}"
+	local VENDIR_DIR="${TANZU_TOOLS_SYNC_SCRIPTS_DIR:-/scripts}"
+
+	# Confirm the vendir directory already exists.
+	if [[ ! -d ${VENDIR_DIR} ]]; then
+		writeLog "ERROR" "The vendir directory ${VENDIR_DIR} does not exist"
+		return 1
+	fi
+
+	# Confirm the vendir file already exists
+	if [[ ! -f ${VENDIR_FILE} ]]; then
+		writeLog "ERROR" "The vendir filr ${VENDIR_FILE} does not exist"
+		return 1
+	fi
+
+	vendir sync \
+		--file "${VENDIR_FILE_CONFIG}" \
+		--lock-file "${VENDIR_FILE_LOCK} " \
+		--chdir "${VENDIR_DIR}" \
+		--locked \
+		--yes || {
+		writeLog "ERROR" "Failed to run vendir sync"
 		return 1
 	}
 
@@ -707,7 +739,7 @@ function tanzu_tools_launch() {
 		# RSync the users ytt library into TKG
 		if [[ ${TANZU_TOOLS_SYNC_YTT_LIB:-FALSE} == "TRUE" ]]; then
 
-			tanzu_tools_ytt_lib_sync || {
+			tanzu_tools_sync_ytt_lib || {
 				MESSAGE="Failed to sync ytt library"
 				writeLog "ERROR" "${MESSAGE}"
 				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
@@ -717,6 +749,22 @@ function tanzu_tools_launch() {
 		else
 
 			writeLog "INFO" "Tanzu Tools is not enabled to sync the ytt library, skipping."
+
+		fi
+
+		# Use vendir to pull pinned scripts.
+		if [[ ${TANZU_TOOLS_SYNC_SCRIPTS:-FALSE} == "TRUE" ]]; then
+
+			tanzu_tools_sync_scripts || {
+				MESSAGE="Failed to sync scripts"
+				writeLog "ERROR" "${MESSAGE}"
+				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
+				return 1
+			}
+
+		else
+
+			writeLog "INFO" "Tanzu Tools is not enabled to sync scripts, skipping."
 
 		fi
 

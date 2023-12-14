@@ -242,7 +242,7 @@ in
       mkdir --parents --mode 1777 /workdir || exit 1
       mkdir --parents --mode 1777 /workspaces || exit 1
 
-      # Update user add defaults
+      echo "Updating useradd defaults"
       cat << EOF > /etc/default/useradd
       SHELL=/bin/bash
       HOME=/home
@@ -252,7 +252,7 @@ in
 
       ls -la /usr/share/bash-completion/completions/
       # Link uutils bash completions
-      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completions /usr/share/bash-completion/completions || {
+      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completions/completions /usr/share/bash-completion/completions || {
         echo "Failed to symlink uutils bash completions."
         exit 1
       }

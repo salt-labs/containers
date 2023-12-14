@@ -41,7 +41,8 @@
 
   stablePkgs = with pkgs; [
     # Coreutils
-    (uutils-coreutils.override {prefix = "";})
+    #(uutils-coreutils.override {prefix = "";})
+    uutils-coreutils-noprefix
 
     # User tools
     bashInteractive
@@ -56,6 +57,7 @@
     figlet
     file
     fuse3
+    fzf
     gawk
     git
     gnugrep
@@ -240,13 +242,19 @@ in
       mkdir --parents --mode 1777 /workdir || exit 1
       mkdir --parents --mode 1777 /workspaces || exit 1
 
-      # Update user add defaults
+      echo "Updating useradd defaults"
       cat << EOF > /etc/default/useradd
       SHELL=/bin/bash
       HOME=/home
       SKEL=/etc/skel
       CREATE_MAIL_SPOOL=no
       EOF
+
+      echo "Linking uutils bash completions"
+      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completion/completions /usr/share/bash-completion/completions || {
+        echo "Failed to symlink uutils bash completions."
+        exit 1
+      }
     '';
 
     # Runs in the final layer, on top of other layers.

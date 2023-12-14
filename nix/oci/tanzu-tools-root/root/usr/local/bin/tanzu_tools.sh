@@ -647,7 +647,7 @@ function tanzu_tools_sync_vendor() {
 		--file "${VENDIR_FILE_CONFIG}" \
 		--lock-file "${VENDIR_FILE_LOCK}" \
 		${VENDIR_ARGS[@]:-} \
-		--yes || {
+		--yes 1>>"${LOG_FILE}" 2>&1 || {
 		writeLog "ERROR" "Failed to run vendir sync"
 		return 1
 	}
@@ -659,27 +659,36 @@ function tanzu_tools_sync_vendor() {
 function tanzu_tools_path_vendor() {
 
 	# This is the location to start from.
-	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-vendor}"
+	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-.}"
+
+	# The vendir configuration will place all files into 'vendor'
+	local VENDOR_DIR="${VENDOR_DIR}/vendor"
+
+	# It's opinionated, but lets look for scripts in 'scripts'
+	local SCRIPTS_HOME="${VENDOR_DIR}/scripts"
 
 	# If the directory does not exist, no point continuing.
 	if [[ ! -d ${VENDOR_DIR} ]]; then
+		writeLog "DEBUG" "No vendor directory ${VENDOR_DIR}, skipping add to PATH"
 		return 0
 	fi
 
 	# It's opinionated, but lets look for scripts in 'scripts'
-	if [[ ! -d "${VENDOR_DIR}/scripts" ]]; then
+	if [[ ! -d ${SCRIPTS_HOME} ]]; then
+		writeLog "DEBUG" "No scripts directory ${SCRIPTS_HOME}, skipping add to PATH"
 		return 0
 	else
-		echo "Adding folder ${VENDOR_DIR}/scripts to PATH"
-		export PATH="${VENDOR_DIR}/scripts:${PATH}"
+		writeLog "DEBUG" "Adding folder ${SCRIPTS_HOME} to PATH"
+		export PATH="${SCRIPTS_HOME}:${PATH}"
 	fi
 
 	while IFS= read -r -d '' FOLDER; do
 
-		echo "Adding folder ${FOLDER} to the PATH"
+		writeLog "DEBUG" "Adding folder ${FOLDER} to the PATH"
 		export PATH="${FOLDER}:${PATH}"
 
-	done < <(find "${VENDOR_DIR}/scripts" -maxdepth 1 -mindepth 1 -type d -print0)
+	done < <(find "${SCRIPTS_HOME}" -mindepth 1 -maxdepth 1 -type d -print0)
+	# TODO: How deep should scripts be allowed to be nested?
 
 	return 0
 

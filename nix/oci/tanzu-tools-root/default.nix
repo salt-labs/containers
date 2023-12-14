@@ -182,81 +182,73 @@ in
     # NOTE: This requires /dev/kvm
     runAsRoot = ''
       #!${pkgs.runtimeShell}
-      echo "I AM ROOT!"
+
+      # Setup shadow and pam for root
+      ${pkgs.dockerTools.shadowSetup}
+
+      # Make sure shadow bins are in the PATH
+      PATH=${pkgs.shadow}/bin/:$PATH
+
+      # VSCode includes a bundled nodejs binary which is
+      # dynamically linked and hardcoded to look in /lib
+      mkdir --parents /lib || {
+        echo "Failed to create /lib"
+        exit 1
+      }
+      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib/stdenv || {
+        echo "Failed to create /lib/stdenv symlink"
+        exit 1
+      }
+      ln -s ${pkgs.glibc}/lib /lib/glibc || {
+        echo "Failed to create /lib/glibc symlink"
+        exit 1
+      }
+      mkdir --parents /lib64 || {
+        echo "Failed to create /lib64"
+        exit 1
+      }
+      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib64/stdenv || {
+        echo "Failed to create /lib/stdenv symlink"
+        exit 1
+      }
+      ln -s ${pkgs.glibc}/lib /lib64/glibc || {
+        echo "Failed to create /lib64/glibc symlink"
+        exit 1
+      }
+      ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2 || {
+        echo "Failed to create /lib64/ld-linux-x86-64.so.2 symlink"
+        exit 1
+      }
+
+      # Setup root user profile
+      cp --recursive --dereference /etc/skel /root
+      chown -R root:root /root || {
+        echo "Failed to chown /root"
+        exit 1
+      }
+      chmod -R 0751 /root || {
+        echo "Failed to chmod /root"
+        exit 1
+      }
+
+      echo "Setting permissions permissions on required directories"
+      mkdir --parents --mode 1777 /run || exit 1
+      mkdir --parents --mode 1777 /tmp || exit 1
+      mkdir --parents --mode 1777 /usr/lib/ytt || exit 1
+      mkdir --parents --mode 1777 /var/devcontainer || exit 1
+      mkdir --parents --mode 1777 /vscode || exit 1
+      mkdir --parents --mode 1777 /workdir || exit 1
+      mkdir --parents --mode 1777 /workspaces || exit 1
+
+      # Update user add defaults
+      cat << EOF > /etc/default/useradd
+      SHELL=/bin/bash
+      HOME=/home
+      SKEL=/etc/skel
+      CREATE_MAIL_SPOOL=no
+      EOF
+      ;
     '';
-
-    # Enable fakeRootCommands in a fake chroot environment.
-    #enableFakechroot = true;
-
-    # Run these commands in the fake chroot environment.
-    #fakeRootCommands = ''
-    #  #!${pkgs.runtimeShell}
-
-    #  # Setup shadow and pam for root
-    #  ${pkgs.dockerTools.shadowSetup}
-
-    #  # Make sure shadow bins are in the PATH
-    #  PATH=${pkgs.shadow}/bin/:$PATH
-
-    #  # VSCode includes a bundled nodejs binary which is
-    #  # dynamically linked and hardcoded to look in /lib
-    #  mkdir --parents /lib || {
-    #    echo "Failed to create /lib"
-    #    exit 1
-    #  }
-    #  ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib/stdenv || {
-    #    echo "Failed to create /lib/stdenv symlink"
-    #    exit 1
-    #  }
-    #  ln -s ${pkgs.glibc}/lib /lib/glibc || {
-    #    echo "Failed to create /lib/glibc symlink"
-    #    exit 1
-    #  }
-    #  mkdir --parents /lib64 || {
-    #    echo "Failed to create /lib64"
-    #    exit 1
-    #  }
-    #  ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib64/stdenv || {
-    #    echo "Failed to create /lib/stdenv symlink"
-    #    exit 1
-    #  }
-    #  ln -s ${pkgs.glibc}/lib /lib64/glibc || {
-    #    echo "Failed to create /lib64/glibc symlink"
-    #    exit 1
-    #  }
-    #  ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2 || {
-    #    echo "Failed to create /lib64/ld-linux-x86-64.so.2 symlink"
-    #    exit 1
-    #  }
-
-    #  # Setup root user profile
-    #  cp --recursive --dereference /etc/skel /root
-    #  chown -R root:root /root || {
-    #    echo "Failed to chown /root"
-    #    exit 1
-    #  }
-    #  chmod -R 0751 /root || {
-    #    echo "Failed to chmod /root"
-    #    exit 1
-    #  }
-
-    #  echo "Setting permissions permissions on required directories"
-    #  mkdir --parents --mode 1777 /run || exit 1
-    #  mkdir --parents --mode 1777 /tmp || exit 1
-    #  mkdir --parents --mode 1777 /usr/lib/ytt || exit 1
-    #  mkdir --parents --mode 1777 /var/devcontainer || exit 1
-    #  mkdir --parents --mode 1777 /vscode || exit 1
-    #  mkdir --parents --mode 1777 /workdir || exit 1
-    #  mkdir --parents --mode 1777 /workspaces || exit 1
-
-    #  # Update user add defaults
-    #  cat << EOF > /etc/default/useradd
-    #  SHELL=/bin/bash
-    #  HOME=/home
-    #  SKEL=/etc/skel
-    #  CREATE_MAIL_SPOOL=no
-    #  EOF
-    #'';
 
     # Runs in the final layer, on top of other layers.
     extraCommands = ''

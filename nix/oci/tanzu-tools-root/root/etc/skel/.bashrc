@@ -145,6 +145,29 @@ source tanzu_tools.sh || {
 	exit_script 1
 }
 
+# Load uutils bash-completions.
+UUTILS_BASH_COMPLETIONS="/usr/share/bash-completion/completions"
+if [[ -d ${UUTILS_BASH_COMPLETIONS} ]]; then
+
+	writeLog "DEBUG" "Loading uutils bash completions"
+
+	for FILE in "${UUTILS_BASH_COMPLETIONS}"/*; do
+
+		writeLog "DEBUG" "Sourcing bash completion file ${FILE}"
+		if [[ -r ${FILE} ]]; then
+
+			# shellcheck disable=SC1090
+			source "${FILE}" || {
+				writeLog "ERROR" "Failed to source bash completion file ${FILE}, ignoring..."
+			}
+
+		fi
+
+	done
+	unset FILE
+
+fi
+
 # Make sure the wrappers are the first in the PATH
 if [[ -d "/run/wrappers/bin" ]]; then
 

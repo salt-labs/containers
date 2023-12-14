@@ -41,7 +41,8 @@
 
   stablePkgs = with pkgs; [
     # Coreutils
-    (uutils-coreutils.override {prefix = "";})
+    #(uutils-coreutils.override {prefix = "";})
+    uutils-coreutils-noprefix
 
     # User tools
     bashInteractive
@@ -172,6 +173,7 @@ in
         "/usr/local/bin"
         "/usr/share/"
         "/usr/share/bash-completion"
+        "/usr/share/bash-completion/completions"
         "/var"
         "/var/run"
         "/var/lib"
@@ -247,6 +249,16 @@ in
       SKEL=/etc/skel
       CREATE_MAIL_SPOOL=no
       EOF
+
+      ls -la /usr/share/bash-completion/
+      # Link uutils bash completions
+      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completions /usr/share/bash-completion/completions || {
+        echo "Failed to symlink uutils bash completions."
+        exit 1
+      }
+      /usr/share/bash-completion/
+      echo TEST COMPLETE
+      exit 1
     '';
 
     # Runs in the final layer, on top of other layers.

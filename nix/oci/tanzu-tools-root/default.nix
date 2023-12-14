@@ -256,7 +256,7 @@ in
         echo "Failed to symlink uutils bash completions."
         exit 1
       }
-      /usr/share/bash-completion/
+      ls -la /usr/share/bash-completion/
       echo TEST COMPLETE
       exit 1
     '';

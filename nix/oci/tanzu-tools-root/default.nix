@@ -173,7 +173,6 @@ in
         "/usr/local/bin"
         "/usr/share/"
         "/usr/share/bash-completion"
-        "/usr/share/bash-completion/completions"
         "/var"
         "/var/run"
         "/var/lib"
@@ -250,15 +249,11 @@ in
       CREATE_MAIL_SPOOL=no
       EOF
 
-      ls -la /usr/share/bash-completion/completions/
-      # Link uutils bash completions
-      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completions/completions /usr/share/bash-completion/completions || {
+      echo "Linking uutils bash completions"
+      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completion/completions /usr/share/bash-completion/completions || {
         echo "Failed to symlink uutils bash completions."
         exit 1
       }
-      ls -la /usr/share/bash-completion/completions/
-      echo TEST COMPLETE
-      exit 1
     '';
 
     # Runs in the final layer, on top of other layers.

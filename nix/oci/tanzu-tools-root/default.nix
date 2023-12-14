@@ -250,13 +250,13 @@ in
       CREATE_MAIL_SPOOL=no
       EOF
 
-      ls -la /usr/share/bash-completion/
+      ls -la /usr/share/bash-completion/completions/
       # Link uutils bash completions
       ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completions /usr/share/bash-completion/completions || {
         echo "Failed to symlink uutils bash completions."
         exit 1
       }
-      ls -la /usr/share/bash-completion/
+      ls -la /usr/share/bash-completion/completions/
       echo TEST COMPLETE
       exit 1
     '';

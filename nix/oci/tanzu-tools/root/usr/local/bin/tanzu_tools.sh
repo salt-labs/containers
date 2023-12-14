@@ -601,11 +601,22 @@ function tanzu_tools_sync_ytt_lib() {
 function tanzu_tools_sync_vendor() {
 
 	# This is the location to push into.
-	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-/vendor}"
+	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-vendor}"
 
 	# These files are relative to the location of the vendor directory.
 	local VENDIR_FILE_CONFIG="${TANZU_TOOLS_SYNC_VENDOR_CONFIG:-vendir.yml}"
-	local VENDIR_FILE_LOCK="${TANZU_TOOLS_SYNC_VENDOR_LOCK:-vendir.lock.yml}"
+
+	# The lock file will share the same name with modified extension.
+	local VENDIR_FILE_LOCK="${VENDIR_FILE_CONFIG/.yml/.lock.yml}"
+
+	# And just in case YAML != YML
+	local VENDIR_FILE_LOCK="${VENDIR_FILE_LOCK/.yaml/.lock.yaml}"
+
+	# Are the vendored dependencies pined
+	local VENDIR_LOCKED="${TANZU_TOOLS_SYNC_VENDOR_LOCKED:-FALSE}"
+
+	# There will likely be more args in the future.
+	local VENDIR_ARGS=()
 
 	# Confirm the vendor directory already exists.
 	if [[ ! -d ${VENDOR_DIR} ]]; then
@@ -613,21 +624,62 @@ function tanzu_tools_sync_vendor() {
 		return 1
 	fi
 
-	# Confirm the vendir file already exists but the lock is optional.
+	# Confirm the vendir file already exists.
 	if [[ ! -f ${VENDIR_FILE_CONFIG} ]]; then
-		writeLog "ERROR" "The vendir file ${VENDIR_FILE_CONFIG} does not exist"
+		writeLog "ERROR" "The vendir config file ${VENDIR_FILE_CONFIG} does not exist"
 		return 1
 	fi
 
+	# Confirm the vendir lock-file already exists.
+	if [[ ! -f ${VENDIR_FILE_LOCK} ]]; then
+		writeLog "ERROR" "The vendir lock file ${VENDIR_FILE_LOCK} does not exist"
+		return 1
+	fi
+
+	# To lock or not to lock, that is the question.
+	if [[ ${VENDIR_LOCKED^^} == "TRUE" ]]; then
+		VENDIR_ARGS+=("--locked")
+	fi
+
+	# shellcheck disable=SC2068
 	vendir sync \
 		--chdir "${VENDOR_DIR}" \
 		--file "${VENDIR_FILE_CONFIG}" \
-		"${VENDIR_FILE_LOCK:+--lock-file $VENDIR_FILE_LOCK}" \
-		"${VENDIR_FILE_LOCK:+--locked}" \
+		--lock-file "${VENDIR_FILE_LOCK}" \
+		${VENDIR_ARGS[@]:-} \
 		--yes || {
 		writeLog "ERROR" "Failed to run vendir sync"
 		return 1
 	}
+
+	return 0
+
+}
+
+function tanzu_tools_path_vendor() {
+
+	# This is the location to start from.
+	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-vendor}"
+
+	# If the directory does not exist, no point continuing.
+	if [[ ! -d ${VENDOR_DIR} ]]; then
+		return 0
+	fi
+
+	# It's opinionated, but lets look for scripts in 'scripts'
+	if [[ ! -d "${VENDOR_DIR}/scripts" ]]; then
+		return 0
+	else
+		echo "Adding folder ${VENDOR_DIR}/scripts to PATH"
+		export PATH="${VENDOR_DIR}/scripts:${PATH}"
+	fi
+
+	while IFS= read -r -d '' FOLDER; do
+
+		echo "Adding folder ${FOLDER} to the PATH"
+		export PATH="${FOLDER}:${PATH}"
+
+	done < <(find "${VENDOR_DIR}/scripts" -maxdepth 1 -mindepth 1 -type d -print0)
 
 	return 0
 
@@ -755,11 +807,19 @@ function tanzu_tools_launch() {
 
 		fi
 
-		# Use vendir to pull pinned scripts.
+		# Use vendir to sync vendored dependencies
 		if [[ ${TANZU_TOOLS_SYNC_VENDOR:-FALSE} == "TRUE" ]]; then
 
 			tanzu_tools_sync_vendor || {
-				MESSAGE="Failed to sync scripts"
+				MESSAGE="Failed to sync vendored dependencies with vendir"
+				writeLog "ERROR" "${MESSAGE}"
+				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
+				return 1
+			}
+
+			# If there is vendored scripts, add them to the path.
+			tanzu_tools_path_vendor || {
+				MESSAGE="Failed to update the PATH variable for vendored dependencies"
 				writeLog "ERROR" "${MESSAGE}"
 				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 				return 1
@@ -767,7 +827,7 @@ function tanzu_tools_launch() {
 
 		else
 
-			writeLog "INFO" "Tanzu Tools is not enabled to sync scripts, skipping."
+			writeLog "INFO" "Tanzu Tools is not enabled to sync vendored depencendies, skipping."
 
 		fi
 

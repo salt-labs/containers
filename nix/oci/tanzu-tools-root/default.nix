@@ -247,7 +247,6 @@ in
       SKEL=/etc/skel
       CREATE_MAIL_SPOOL=no
       EOF
-      ;
     '';
 
     # Runs in the final layer, on top of other layers.

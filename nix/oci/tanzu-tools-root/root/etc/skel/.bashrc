@@ -239,6 +239,8 @@ writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
 # Tanzu
 #########################
 
+alias launch='tanzu_tools_launch'
+
 if [[ ${TANZU_TOOLS_LAUNCH} == "TRUE" ]]; then
 
 	writeLog "INFO" "Launching Tanzu Tools..."

@@ -21,20 +21,21 @@ _This version runs the container as `root` and is expected to be used from Docke
 
 ## Variables
 
-| Variable                             | Description                                                                             | Default |                                 Example                                 |
-| :----------------------------------- | :-------------------------------------------------------------------------------------- | :-----: | :--------------------------------------------------------------------- |
-| LOG_LEVEL                            | The log level                                                                           |  INFO   |                         DEBUG, INFO, WARN, ERR                          |
-| TANZU_TOOLS_ENABLE_PROXY_SCRIPT      | Enable to run a user-provided `scripts/proxy.sh`                                        |  FALSE  |                               TRUE, FALSE                               |
-| TANZU_TOOLS_ENABLE_STARSHIP          | Enable the Starship prompt                                                              |  FALSE  |                               TRUE, FALSE                               |
+| Variable                             | Description                                                                             | Default | Example                                                                 |
+| :----------------------------------- | :-------------------------------------------------------------------------------------- | :-----: | :---------------------------------------------------------------------- |
+| LOG_LEVEL                            | The log level                                                                           |  INFO   | DEBUG, INFO, WARN, ERR                                                  |
+| TANZU_TOOLS_LAUNCH                   | Enable to launch the dialog menu on start                                               |  TRUE   | TRUE, FALSE                                                             |
+| TANZU_TOOLS_ENABLE_PROXY_SCRIPT      | Enable to run a user-provided `scripts/proxy.sh`                                        |  FALSE  | TRUE, FALSE                                                             |
+| TANZU_TOOLS_ENABLE_STARSHIP          | Enable the Starship prompt                                                              |  FALSE  | TRUE, FALSE                                                             |
 | TANZU_TOOLS_DIALOG_THEME             | Select the theme for dialog menus                                                       | default | See the [.dialogrc](nix/oci/tanzu-tools/root/etc/skel/.dialogrc) folder |
-| TANZU_TOOLS_SYNC_YTT_LIB             | **DEPRECATED:** Enable to sync the user ytt library into the TKG 04_user_customizations |  FALSE  |                               TRUE, FALSE                               |
-| TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG | The tag for the OCI inventory                                                           | latest  |                           latest, 2023.11.09                            |
-| TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG | The tag for the TKG Carvel Packages                                                     | latest  |                      latest, v2.20, v2.3.0, v2.3.1                      |
-| TANZU_TOOLS_SITES_ENABLED            | See _Registry Configuration_                                                            |  FALSE  |                               TRUE, FALSE                               |
-| TANZU_TOOLS_SITES                    | See _Registry Configuration_                                                            |  Empty  |                          site_1,site_2,site_3                           |
-| TANZU_TOOLS_SITE_SITE_NAME_REGISTRY  | See _Registry Configuration_                                                            | Empty | harbor.site_a.mydomain |
-| TANZU_TOOLS_CUSTOM_REGISTRY          | See _Registry Configuration_                                                            | Empty | harbor.mydomain |
-| TANZU_TOOLS_PULL_THROUGH_CACHE       | See _Registry Configuration_                                                            | Empty | harbor.dmz |
+| TANZU_TOOLS_SYNC_YTT_LIB             | **DEPRECATED:** Enable to sync the user ytt library into the TKG 04_user_customizations |  FALSE  | TRUE, FALSE                                                             |
+| TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG | The tag for the OCI inventory                                                           | latest  | latest, 2023.11.09                                                      |
+| TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG | The tag for the TKG Carvel Packages                                                     | latest  | latest, v2.20, v2.3.0, v2.3.1                                           |
+| TANZU_TOOLS_SITES_ENABLED            | See _Registry Configuration_                                                            |  FALSE  | TRUE, FALSE                                                             |
+| TANZU_TOOLS_SITES                    | See _Registry Configuration_                                                            |  Empty  | site_1,site_2,site_3                                                    |
+| TANZU_TOOLS_SITE_SITE_NAME_REGISTRY  | See _Registry Configuration_                                                            |  Empty  | harbor.site_a.mydomain                                                  |
+| TANZU_TOOLS_CUSTOM_REGISTRY          | See _Registry Configuration_                                                            |  Empty  | harbor.mydomain                                                         |
+| TANZU_TOOLS_PULL_THROUGH_CACHE       | See _Registry Configuration_                                                            |  Empty  | harbor.dmz                                                              |
 
 ## Registry Configuration
 

@@ -57,6 +57,7 @@
     figlet
     file
     fuse3
+    fzf
     gawk
     git
     gnugrep

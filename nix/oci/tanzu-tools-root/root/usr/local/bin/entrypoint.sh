@@ -110,11 +110,6 @@ chown -R root:root /root || {
 	exit_script 1
 }
 
-chmod -R 0751 /root || {
-	writeLog "ERROR" "Failed to chmod 0751 on /root"
-	exit_script 1
-}
-
 #########################
 # Main
 #########################

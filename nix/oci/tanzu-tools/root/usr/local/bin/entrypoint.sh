@@ -75,47 +75,12 @@ fi
 
 function start_shell() {
 
-	# If run as root is enabled drop into a root shell.
-	if [[ ${RUN_AS_ROOT:-FALSE} == "TRUE" ]]; then
+	writeLog "INFO" "Dropping into a root user shell"
 
-		writeLog "INFO" "Dropping into a root user shell"
-
-		bash --login -i || {
-			writeLog "ERROR" "Failed to start shell for user 'root'"
-			return 1
-		}
-
-	# If a custom CMD was provided, run that and not the interactive shell.
-	elif [[ $# -gt 0 ]]; then
-
-		writeLog "INFO" "Running user provided CMD"
-
-		sudo --user=tanzu --set-home --preserve-env -- "$@" || {
-			writeLog "ERROR" "Failed to start shell for user 'tanzu'"
-			return 1
-		}
-
-	# if you are root but run as root is not enabled,
-	elif [[ ${UID} -eq 0 ]]; then
-
-		writeLog "INFO" "Switching to 'tanzu' user"
-
-		sudo --user=tanzu --set-home --preserve-env -- bash --login -i || {
-			writeLog "ERROR" "Failed to start shell for user 'tanzu'"
-			return 1
-		}
-
-	# Not sure what purpose this serves yet with no other users in the container.
-	else
-
-		writeLog "INFO" "Starting shall as $USER"
-
-		bash --login -i || {
-			writeLog "ERROR" "Failed to start shell for user $USER"
-			return 1
-		}
-
-	fi
+	bash --login -i || {
+		writeLog "ERROR" "Failed to start shell for user 'root'"
+		return 1
+	}
 
 	return 0
 
@@ -125,198 +90,23 @@ function start_shell() {
 # Setup
 #########################
 
-# Make sure the wrappers are the first in the PATH
-if [[ -d "/run/wrappers/bin" ]]; then
+if [[ ! -f "/root/.profile" ]]; then
 
-	writeLog "DEBUG" "Wrappers dir found, checking PATH"
+	writeLog "DEBUG" "Copying root users profile"
 
-	if ! grep "/run/wrappers/bin" <<<"${PATH}"; then
-
-		writeLog "DEBUG" "Adding wrappers dir to PATH"
-		export PATH=/run/wrappers/bin:$PATH
-
-	else
-
-		writeLog "DEBUG" "Wrappers dir already in PATH"
-
-	fi
-
-else
-
-	writeLog "DEBUG" "Wrappers dir not found"
-
-fi
-
-# If running as root, setup the 'tanzu' user to match host user.
-# https://www.joyfulbikeshedding.com/blog/2021-03-15-docker-and-the-host-filesystem-owner-matching-problem.html
-if [[ ${UID} -eq 0 ]]; then
-
-	writeLog "DEBUG" "Running as root"
-
-	# Make tmp shared between all users.
-	chmod 1777 /tmp || {
-		writeLog "ERROR" "Failed to set permissions on '/tmp'"
+	rsync -a /etc/skel/ /root --copy-links || {
+		writeLog "ERROR" "Failed to rsync the root user's profile"
 		exit_script 1
 	}
 
-	# Make sure there is a shared log file.
-	if [[ ! -f ${LOG_FILE} ]]; then
-		writeLog "DEBUG" "Creating new log file ${LOG_FILE}"
-		touch "${LOG_FILE}" || {
-			writeLog "ERROR" "Failed to create a new log file at ${LOG_FILE}. Are the permissions valid?"
-			exit_script 1
-		}
-	fi
-
-	# Always ensure the environment log is all users writable.
-	chmod 0777 "${LOG_FILE}" || {
-		writeLog "ERROR" "Failed to set permissions on the log file ${LOG_FILE}"
-		exit_script 1
-	}
-
-	# If this flag was provided, we will run as the root user.
-	# This is useful in a docker rootless setup where the root user
-	# inside the container is auto-mapped to the local system user.
-	if [[ ${RUN_AS_ROOT:-FALSE} == "TRUE" ]]; then
-
-		if [[ ! -f "/root/.profile" ]]; then
-
-			writeLog "DEBUG" "Copying root users profile"
-
-			rsync -a /etc/skel/ /root --copy-links || {
-				writeLog "ERROR" "Failed to rsync the root user's profile"
-				exit_script 1
-			}
-
-		else
-
-			writeLog "INFO" "A profile already exists for user 'root', skipping setup"
-
-		fi
-
-		chown -R root:root /root || {
-			writeLog "ERROR" "Failed to set owner to user 'root' on /root"
-			exit_script 1
-		}
-
-		chmod -R 0751 /root || {
-			writeLog "ERROR" "Failed to chmod 0751 on /root"
-			exit_script 1
-		}
-
-	else
-
-		# If a HOST_UID and HOST_GID is provided, do the janky permissions setup...
-		if [[ ${HOST_UID:-EMPTY} == "EMPTY" ]] || [[ ${HOST_GID:-EMPTY} == "EMPTY" ]]; then
-
-			writeLog "ERROR" "This container requires you to pass the '\${HOST_UID}' and '\${HOST_GID}' variables"
-			exit_script 1
-
-		fi
-
-		writeLog "DEBUG" "Adding Tanzu group with user provided GID ${HOST_GID}"
-
-		groupadd \
-			tanzu \
-			--gid "${HOST_GID}" || {
-			writeLog "ERROR" "Failed to create 'tanzu' group with GID ${HOST_GID}"
-			exit_script 1
-		}
-
-		writeLog "DEBUG" "Adding Tanzu user with user provided UID ${HOST_UID}"
-
-		useradd \
-			--uid "${HOST_UID}" \
-			--gid "${HOST_GID}" \
-			--comment "Tanzu CLI" \
-			--home /home/tanzu \
-			--shell /bin/bash \
-			--groups tanzu,docker \
-			--no-user-group \
-			--no-create-home \
-			tanzu || {
-			writeLog "ERROR" "Failed to create 'tanzu' user with UID ${HOST_UID}"
-			exit_script 1
-		}
-
-		writeLog "DEBUG" "Checking for Tanzu user home"
-
-		if [[ ! -f "/home/tanzu/.profile" ]]; then
-
-			writeLog "DEBUG" "Copying Tanzu users profile"
-
-			rsync -a /etc/skel/ /home/tanzu --copy-links || {
-				writeLog "ERROR" "Failed to rsync the Tanzu user's profile"
-				exit_script 1
-			}
-
-		else
-
-			writeLog "INFO" "A profile already exists for user 'tanzu', skipping setup"
-
-		fi
-
-		writeLog "DEBUG" "Setting home permissions for Tanzu user"
-
-		chown -R tanzu:tanzu /home/tanzu || {
-			writeLog "ERROR" "Failed to set owner to user 'tanzu' on /home/tanzu"
-			exit_script 1
-		}
-
-		chmod -R 0751 /home/tanzu || {
-			writeLog "ERROR" "Failed to chmod 0751 on /home/tanzu"
-			exit_script 1
-		}
-
-		# HACK: Need to fix the error 'invalid parameter' when UID > 65535
-		#chmod -R 0777 /home/tanzu || {
-		#	writeLog "ERROR" "Failed to chmod 0777 on /home/tanzu"
-		#	exit_script 1
-		#}
-
-		# If the docker socket was mounted, make sure the user can access it.
-		DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3)
-		if [[ -S /var/run/docker.sock ]]; then
-
-			writeLog "INFO" "Docker socket present, checking permissions"
-
-			DOCKER_SOCKET_ID=$(stat -c '%g' /var/run/docker.sock)
-
-			# If the docker socket group id does not match the docker group id, change the group id.
-			if [[ ${DOCKER_GROUP_ID} -ne ${DOCKER_SOCKET_ID} ]]; then
-
-				writeLog "INFO" "Updating docker socket group id to ${DOCKER_SOCKET_ID}"
-
-				groupmod --gid "${DOCKER_SOCKET_ID}" docker || {
-					writeLog "ERROR" "Failed to set 'docker' group GID to ${DOCKER_SOCKET_ID}"
-					exit_script 1
-				}
-
-			fi
-
-			writeLog "INFO" "Updating Sub IDs and and GIDs for 'tanzu'"
-
-			echo "tanzu:3000000000:65535" >/etc/subuid || exit_script 1
-			echo "tanzu:3000000000:65535" >/etc/subgid || exit_script 1
-			chmod 0644 /etc/subuid /etc/subgid || exit_script 1
-
-		fi
-
-	fi
-
 else
 
-	writeLog "WARN" "Not running as root, skipping user setup..."
+	writeLog "INFO" "A profile already exists for user 'root', skipping setup"
 
 fi
 
-# Perform group and user check
-grpck || {
-	writeLog "ERROR" "Group check failed. Please check the contents of /etc/group."
-	exit_script 1
-}
-pwck || {
-	writeLog "ERROR" "User check failed. Please check the contents of /etc/passwd."
+chown -R root:root /root || {
+	writeLog "ERROR" "Failed to set owner to user 'root' on /root"
 	exit_script 1
 }
 

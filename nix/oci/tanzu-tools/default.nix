@@ -167,7 +167,7 @@ in
 
     architecture = "amd64";
 
-    maxLayers = 125;
+    maxLayers = 100;
 
     contents = pkgs.buildEnv {
       name = "image-root";

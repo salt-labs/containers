@@ -7,7 +7,8 @@
   ...
 }: let
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  creationDate = builtins.substring 0 8 modifiedDate;
+  #creationDate = builtins.substring 0 8 modifiedDate;
+  creationDate = "now";
 
   # This container runs as the root user however it's intended
   # to be run from Docker rootless.
@@ -35,19 +36,14 @@
     usrBinEnv
     binSh
     caCertificates
-    #fakeNss
     shadowSetup
   ];
 
   stablePkgs = with pkgs; [
     # Coreutils
-    #busybox
-    coreutils-full
-    #toybox
-    #uutils-coreutils
+    (uutils-coreutils.override {prefix = "";})
 
     # User tools
-    bash-completion
     bashInteractive
     bat
     bind
@@ -59,11 +55,9 @@
     diffutils
     figlet
     file
-    fortune
     fuse3
     gawk
     git
-    glibc
     gnugrep
     gnupg
     gnused
@@ -73,10 +67,8 @@
     htop
     iputils
     jq
-    kmod
     less
     ncurses
-    nettools
     openssh
     openssl
     procps
@@ -101,6 +93,7 @@
     nil
 
     # VSCode
+    #glibc
     findutils
     iproute
 
@@ -112,7 +105,6 @@
     docker-ls
     docker-proxy
     docker-slim
-    runc
 
     # Kubernetes Tools
     clusterctl
@@ -143,33 +135,35 @@
   unstablePkgs = with pkgsUnstable; [
   ];
 in
-  pkgs.dockerTools.buildLayeredImage {
+  #pkgs.dockerTools.buildLayeredImage {
+  pkgs.dockerTools.buildImage {
     name = "tanzu-tools-root";
     tag = "latest";
     created = creationDate;
 
     architecture = "amd64";
 
-    maxLayers = 125;
-
-    contents = pkgs.buildEnv {
+    copyToRoot = pkgs.buildEnv {
       name = "image-root";
 
+      paths =
+        stablePkgs
+        ++ unstablePkgs
+        ++ environmentHelpers
+        ++ [root_files];
+
       pathsToLink = [
-        "/"
         "/bin"
         "/etc"
         "/etc/default"
         "/etc/skel"
-        "/etc/sudoers.d"
-        "/etc/pam.d"
         "/home"
         "/lib"
         "/lib64"
-        "/nix"
         "/run"
         "/share"
         "/sbin"
+        "/sys"
         "/usr"
         "/usr/lib"
         "/usr/lib64"
@@ -183,100 +177,86 @@ in
         "/var/lib"
         "/var/lib/docker"
       ];
-
-      paths =
-        stablePkgs
-        ++ unstablePkgs
-        ++ environmentHelpers
-        ++ [root_files];
     };
 
+    # NOTE: This requires /dev/kvm
+    runAsRoot = ''
+      #!${pkgs.runtimeShell}
+      echo "I AM ROOT!"
+    '';
+
     # Enable fakeRootCommands in a fake chroot environment.
-    enableFakechroot = true;
+    #enableFakechroot = true;
 
     # Run these commands in the fake chroot environment.
-    fakeRootCommands = ''
-      #!${pkgs.runtimeShell}
+    #fakeRootCommands = ''
+    #  #!${pkgs.runtimeShell}
 
-      # Setup shadow and pam for root
-      ${pkgs.dockerTools.shadowSetup}
+    #  # Setup shadow and pam for root
+    #  ${pkgs.dockerTools.shadowSetup}
 
-      # Make sure shadow bins are in the PATH
-      PATH=${pkgs.shadow}/bin/:$PATH
+    #  # Make sure shadow bins are in the PATH
+    #  PATH=${pkgs.shadow}/bin/:$PATH
 
-      # Add required groups
-      groupadd docker \
-        --gid 998 || {
-        echo "Failed to add group docker"
-        exit 1
-      }
+    #  # VSCode includes a bundled nodejs binary which is
+    #  # dynamically linked and hardcoded to look in /lib
+    #  mkdir --parents /lib || {
+    #    echo "Failed to create /lib"
+    #    exit 1
+    #  }
+    #  ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib/stdenv || {
+    #    echo "Failed to create /lib/stdenv symlink"
+    #    exit 1
+    #  }
+    #  ln -s ${pkgs.glibc}/lib /lib/glibc || {
+    #    echo "Failed to create /lib/glibc symlink"
+    #    exit 1
+    #  }
+    #  mkdir --parents /lib64 || {
+    #    echo "Failed to create /lib64"
+    #    exit 1
+    #  }
+    #  ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib64/stdenv || {
+    #    echo "Failed to create /lib/stdenv symlink"
+    #    exit 1
+    #  }
+    #  ln -s ${pkgs.glibc}/lib /lib64/glibc || {
+    #    echo "Failed to create /lib64/glibc symlink"
+    #    exit 1
+    #  }
+    #  ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2 || {
+    #    echo "Failed to create /lib64/ld-linux-x86-64.so.2 symlink"
+    #    exit 1
+    #  }
 
-      # VSCode includes a bundled nodejs binary which is
-      # dynamically linked and hardcoded to look in /lib
-      mkdir --parents /lib || {
-        echo "Failed to create /lib"
-        exit 1
-      }
-      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib/stdenv || {
-        echo "Failed to create /lib/stdenv symlink"
-        exit 1
-      }
-      ln -s ${pkgs.glibc}/lib /lib/glibc || {
-        echo "Failed to create /lib/glibc symlink"
-        exit 1
-      }
-      mkdir --parents /lib64 || {
-        echo "Failed to create /lib64"
-        exit 1
-      }
-      ln -s ${pkgs.stdenv.cc.cc.lib}/lib /lib64/stdenv || {
-        echo "Failed to create /lib/stdenv symlink"
-        exit 1
-      }
-      ln -s ${pkgs.glibc}/lib /lib64/glibc || {
-        echo "Failed to create /lib64/glibc symlink"
-        exit 1
-      }
-      ln -s /lib64/glibc/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2 || {
-        echo "Failed to create /lib64/ld-linux-x86-64.so.2 symlink"
-        exit 1
-      }
+    #  # Setup root user profile
+    #  cp --recursive --dereference /etc/skel /root
+    #  chown -R root:root /root || {
+    #    echo "Failed to chown /root"
+    #    exit 1
+    #  }
+    #  chmod -R 0751 /root || {
+    #    echo "Failed to chmod /root"
+    #    exit 1
+    #  }
 
-      # Systems with sssd will have user and group ids > 65535
-      # For those systems you need libnss loaded.
-      ln -s ${pkgs.sssd}/lib /lib/lib-sssd  || {
-        echo "Failed to create /lib/lib-sssd symlink"
-        exit 1
-      }
+    #  echo "Setting permissions permissions on required directories"
+    #  mkdir --parents --mode 1777 /run || exit 1
+    #  mkdir --parents --mode 1777 /tmp || exit 1
+    #  mkdir --parents --mode 1777 /usr/lib/ytt || exit 1
+    #  mkdir --parents --mode 1777 /var/devcontainer || exit 1
+    #  mkdir --parents --mode 1777 /vscode || exit 1
+    #  mkdir --parents --mode 1777 /workdir || exit 1
+    #  mkdir --parents --mode 1777 /workspaces || exit 1
 
-      # Setup root user profile
-      cp --recursive --dereference /etc/skel /root
-      chown -R root:root /root || {
-        echo "Failed to chown /root"
-        exit 1
-      }
-      chmod -R 0751 /root || {
-        echo "Failed to chmod /root"
-        exit 1
-      }
-
-      echo "Setting permissions permissions on required directories"
-      mkdir --parents --mode 1777 /run || exit 1
-      mkdir --parents --mode 1777 /tmp || exit 1
-      mkdir --parents --mode 1777 /usr/lib/ytt || exit 1
-      mkdir --parents --mode 1777 /var/devcontainer || exit 1
-      mkdir --parents --mode 1777 /vscode || exit 1
-      mkdir --parents --mode 1777 /workdir || exit 1
-      mkdir --parents --mode 1777 /workspaces || exit 1
-
-      # Update user add defaults
-      cat << EOF > /etc/default/useradd
-      SHELL=/bin/bash
-      HOME=/home
-      SKEL=/etc/skel
-      CREATE_MAIL_SPOOL=no
-      EOF
-    '';
+    #  # Update user add defaults
+    #  cat << EOF > /etc/default/useradd
+    #  SHELL=/bin/bash
+    #  HOME=/home
+    #  SKEL=/etc/skel
+    #  CREATE_MAIL_SPOOL=no
+    #  EOF
+    #'';
 
     # Runs in the final layer, on top of other layers.
     extraCommands = ''
@@ -285,7 +265,7 @@ in
     config = {
       User = "root";
       Labels = {
-        "org.opencontainers.image.description" = "tanzu";
+        "org.opencontainers.image.description" = "tanzu-tools";
       };
       Entrypoint = [
         "tini"
@@ -329,6 +309,7 @@ in
       WorkingDir = "/workdir";
       WorkDir = "/workdir";
       Volumes = {
+        "/root" = {};
         "/home/${containerUser}" = {};
         "/tmp" = {};
         "/usr/lib/ytt" = {};

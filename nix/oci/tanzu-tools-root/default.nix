@@ -46,6 +46,9 @@
 
     # User tools
     bashInteractive
+    bash-completion
+    nix-bash-completions
+    complete-alias
     bat
     bind
     bindfs
@@ -58,6 +61,7 @@
     file
     fuse3
     fzf
+    fzf-obc
     gawk
     git
     gnugrep

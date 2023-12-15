@@ -98,6 +98,10 @@ if [ -f ~/.bash_aliases ]; then
 	. ~/.bash_aliases
 fi
 
+#########################
+# Completions
+#########################
+
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -112,6 +116,29 @@ if ! shopt -oq posix; then
 		# shellcheck disable=SC1091
 		. /etc/profile.d/bash_completion.sh
 	fi
+fi
+
+# Load uutils bash-completions.
+UUTILS_BASH_COMPLETIONS="/usr/share/bash-completion/completions-uutils"
+if [[ -d ${UUTILS_BASH_COMPLETIONS} ]]; then
+
+	writeLog "DEBUG" "Loading uutils bash completions"
+
+	for FILE in "${UUTILS_BASH_COMPLETIONS}"/*; do
+
+		writeLog "DEBUG" "Sourcing bash completion file ${FILE}"
+		if [[ -r ${FILE} ]]; then
+
+			# shellcheck disable=SC1090
+			source "${FILE}" || {
+				writeLog "ERROR" "Failed to source bash completion file ${FILE}, ignoring..."
+			}
+
+		fi
+
+	done
+	unset FILE
+
 fi
 
 #########################
@@ -144,29 +171,6 @@ source tanzu_tools.sh || {
 	writeLog "ERROR" "Failed to import required tanzu-tools functions!"
 	exit_script 1
 }
-
-# Load uutils bash-completions.
-UUTILS_BASH_COMPLETIONS="/usr/share/bash-completion/completions"
-if [[ -d ${UUTILS_BASH_COMPLETIONS} ]]; then
-
-	writeLog "DEBUG" "Loading uutils bash completions"
-
-	for FILE in "${UUTILS_BASH_COMPLETIONS}"/*; do
-
-		writeLog "DEBUG" "Sourcing bash completion file ${FILE}"
-		if [[ -r ${FILE} ]]; then
-
-			# shellcheck disable=SC1090
-			source "${FILE}" || {
-				writeLog "ERROR" "Failed to source bash completion file ${FILE}, ignoring..."
-			}
-
-		fi
-
-	done
-	unset FILE
-
-fi
 
 # Make sure the wrappers are the first in the PATH
 if [[ -d "/run/wrappers/bin" ]]; then
@@ -209,6 +213,10 @@ if [[ -d "${HOME}/.config/bash" ]]; then
 	unset FILE
 
 fi
+
+#########################
+# VSCode
+#########################
 
 # Make sure that the interactive parts are not run in a a VSCode remote env.
 if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then

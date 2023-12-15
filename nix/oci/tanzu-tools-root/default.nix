@@ -46,7 +46,7 @@
 
     # User tools
     bashInteractive
-    bash-completion
+    #bash-completion
     nix-bash-completions
     complete-alias
     bat
@@ -255,7 +255,7 @@ in
       EOF
 
       echo "Linking uutils bash completions"
-      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completion/completions /usr/share/bash-completion/completions || {
+      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completion/completions /usr/share/bash-completion/completions-uutils || {
         echo "Failed to symlink uutils bash completions."
         exit 1
       }

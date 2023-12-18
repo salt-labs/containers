@@ -24,6 +24,7 @@ locale = "en-au"
 SOM-ID = "SOM-ID"
 kubeconfig = "kubeconfig"
 doas = "doas"
+guage = "guage"
 
 [files]
 

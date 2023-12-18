@@ -41,7 +41,6 @@
 
   stablePkgs = with pkgs; [
     # Coreutils
-    #(uutils-coreutils.override {prefix = "";})
     uutils-coreutils-noprefix
 
     # User tools
@@ -254,9 +253,27 @@ in
       CREATE_MAIL_SPOOL=no
       EOF
 
-      echo "Linking uutils bash completions"
+      echo "Linking bash completion profile script"
+      ln -s ${pkgs.bash-completion}/etc/profile.d/bash_completion.sh /etc/profile.d/bash_completion.sh || {
+        echo "Failed to symlink bash completion profile script."
+        exit 1
+      }
+
+      echo "Linking bash completions"
+      ln -s ${pkgs.bash-completion}/share/bash-completion/completions /usr/share/bash-completion/completions || {
+        echo "Failed to symlink bash completions."
+        exit 1
+      }
+
+      echo "Linking bash completions (uutils)"
       ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completion/completions /usr/share/bash-completion/completions-uutils || {
-        echo "Failed to symlink uutils bash completions."
+        echo "Failed to symlink bash completions (uutils)."
+        exit 1
+      }
+
+      echo "Linking bash completions (nix)"
+      ln -s ${pkgs.nix-bash-completions}/share/bash-completion/completions /usr/share/bash-completion/completions-nix || {
+        echo "Failed to symlink bash completions (nix)."
         exit 1
       }
     '';

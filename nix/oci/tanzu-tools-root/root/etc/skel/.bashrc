@@ -118,28 +118,37 @@ if ! shopt -oq posix; then
 	fi
 fi
 
-# Load uutils bash-completions.
-UUTILS_BASH_COMPLETIONS="/usr/share/bash-completion/completions-uutils"
-if [[ -d ${UUTILS_BASH_COMPLETIONS} ]]; then
+BASH_COMPLETION_DIRS=(
+	"completions"
+	"completions-nix"
+	"completions-uutils"
+)
 
-	writeLog "DEBUG" "Loading uutils bash completions"
+for DIR in "${BASH_COMPLETION_DIRS[@]}"; do
 
-	for FILE in "${UUTILS_BASH_COMPLETIONS}"/*; do
+	if [[ -d "/usr/share/bash-completion/completions-${DIR}" ]]; then
 
-		writeLog "DEBUG" "Sourcing bash completion file ${FILE}"
-		if [[ -r ${FILE} ]]; then
+		writeLog "DEBUG" "Loading bash completions from /usr/share/bash-completion/completions-${DIR}"
 
-			# shellcheck disable=SC1090
-			source "${FILE}" || {
-				writeLog "ERROR" "Failed to source bash completion file ${FILE}, ignoring..."
-			}
+		for FILE in "/usr/share/bash-completion/completions-${DIR}"/*; do
 
-		fi
+			writeLog "DEBUG" "Sourcing bash completion file ${FILE}"
+			if [[ -r ${FILE} ]]; then
 
-	done
-	unset FILE
+				# shellcheck disable=SC1090
+				source "${FILE}" || {
+					writeLog "ERROR" "Failed to source bash completion file ${FILE}, ignoring..."
+				}
 
-fi
+			fi
+
+		done
+		unset FILE
+
+	fi
+
+done
+unset DIR
 
 #########################
 # Custom
@@ -244,7 +253,7 @@ fi
 writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
 
 #########################
-# Tanzu
+# Tanzu Tools
 #########################
 
 alias launch='tanzu_tools_launch'

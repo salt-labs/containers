@@ -7,7 +7,7 @@ clear
 
 set -euo pipefail
 
-# Allow users to overide docker vs podman.
+# Allow users to override docker vs podman.
 OCI_TOOL="${OCI_TOOL:-docker}"
 
 # Docker args --env-file
@@ -112,6 +112,7 @@ case "${OCI_TOOL}" in
 
 "docker")
 
+	# shellcheck disable=SC2068
 	"${OCI_TOOL}" \
 		--log-level=info \
 		container \
@@ -132,6 +133,7 @@ case "${OCI_TOOL}" in
 
 "podman")
 
+	# shellcheck disable=SC2068
 	"${OCI_TOOL}" \
 		--log-level=info \
 		container \

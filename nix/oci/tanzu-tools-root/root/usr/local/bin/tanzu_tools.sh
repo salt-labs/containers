@@ -168,6 +168,10 @@ function tanzu_tools_multi_site() {
 
 	writeLog "DEBUG" "Checking variables for site ${SITES_ARRAY[$VALUE]}"
 
+	# Export a variable into the environment with the site name.
+	# This is used by downstream scripts.
+	export TANZU_TOOLS_SITE_NAME="${SITES_ARRAY[$VALUE]}"
+
 	# Build the variable name as a string
 	VAR_REGISTRY="TANZU_TOOLS_SITE_${SITES_ARRAY[$VALUE]}_REGISTRY"
 	VAR_CLI_PLUGIN_INVENTORY_TAG="TANZU_TOOLS_SITE_${SITES_ARRAY[$VALUE]}_CLI_PLUGIN_INVENTORY_TAG"

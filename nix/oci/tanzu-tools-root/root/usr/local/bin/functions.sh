@@ -103,7 +103,7 @@ function writeLog() {
 	local LEVEL=$1    # The log level; DEBUG,INFO,WARN,ERROR
 	local MESSAGE=$2  # The log message
 	local DESTINATION # The log destination; stdout, file, all
-	local APPEND      # Boolean whether to append exsting log file.
+	local APPEND      # Boolean whether to append existing log file.
 
 	###############
 	# Checks

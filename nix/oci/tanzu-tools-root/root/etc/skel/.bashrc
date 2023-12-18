@@ -98,6 +98,10 @@ if [ -f ~/.bash_aliases ]; then
 	. ~/.bash_aliases
 fi
 
+#########################
+# Completions
+#########################
+
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -113,6 +117,38 @@ if ! shopt -oq posix; then
 		. /etc/profile.d/bash_completion.sh
 	fi
 fi
+
+BASH_COMPLETION_DIRS=(
+	"completions"
+	"completions-nix"
+	"completions-uutils"
+)
+
+for DIR in "${BASH_COMPLETION_DIRS[@]}"; do
+
+	if [[ -d "/usr/share/bash-completion/completions-${DIR}" ]]; then
+
+		writeLog "DEBUG" "Loading bash completions from /usr/share/bash-completion/completions-${DIR}"
+
+		for FILE in "/usr/share/bash-completion/completions-${DIR}"/*; do
+
+			writeLog "DEBUG" "Sourcing bash completion file ${FILE}"
+			if [[ -r ${FILE} ]]; then
+
+				# shellcheck disable=SC1090
+				source "${FILE}" || {
+					writeLog "ERROR" "Failed to source bash completion file ${FILE}, ignoring..."
+				}
+
+			fi
+
+		done
+		unset FILE
+
+	fi
+
+done
+unset DIR
 
 #########################
 # Custom
@@ -144,29 +180,6 @@ source tanzu_tools.sh || {
 	writeLog "ERROR" "Failed to import required tanzu-tools functions!"
 	exit_script 1
 }
-
-# Load uutils bash-completions.
-UUTILS_BASH_COMPLETIONS="/usr/share/bash-completion/completions"
-if [[ -d ${UUTILS_BASH_COMPLETIONS} ]]; then
-
-	writeLog "DEBUG" "Loading uutils bash completions"
-
-	for FILE in "${UUTILS_BASH_COMPLETIONS}"/*; do
-
-		writeLog "DEBUG" "Sourcing bash completion file ${FILE}"
-		if [[ -r ${FILE} ]]; then
-
-			# shellcheck disable=SC1090
-			source "${FILE}" || {
-				writeLog "ERROR" "Failed to source bash completion file ${FILE}, ignoring..."
-			}
-
-		fi
-
-	done
-	unset FILE
-
-fi
 
 # Make sure the wrappers are the first in the PATH
 if [[ -d "/run/wrappers/bin" ]]; then
@@ -210,6 +223,10 @@ if [[ -d "${HOME}/.config/bash" ]]; then
 
 fi
 
+#########################
+# VSCode
+#########################
+
 # Make sure that the interactive parts are not run in a a VSCode remote env.
 if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 
@@ -236,7 +253,7 @@ fi
 writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
 
 #########################
-# Tanzu
+# Tanzu Tools
 #########################
 
 alias launch='tanzu_tools_launch'

@@ -1,23 +1,29 @@
 # Tanzu Environments
 
-In configurations with multiple environments from the same codebase, it might be desirable to have different configuration paths for different reasons.
+In configurations with multiple environments from the same codebase, it might be desirable to have different configuration paths that use an entirely different folder tree, for times when the versions of TKG are way out of sync or plugins don't match.
 
-At present, there isn't a `TANZU_CLI_HOME` variable or anyway I can determine to make this easier so this is a quick hack.
+At present, there isn't a `TANZU_CLI_HOME` variable or anyway I can determine to make this easier so this is a quick hack to solve for this use case.
 
-Reference; https://github.com/vmware-tanzu/tanzu-cli/issues/620
+For additional info, see the [GitHub issue #620](https://github.com/vmware-tanzu/tanzu-cli/issues/620)
 
 ## Usage
 
-1. Create a folder with your environment name
+1. Enable the feature flag by passing the following environment variable into the container.
 
-```bash
-mkdir -p ~/.config/tanzu-env/MY_ENVIRONMENT
-```
+    ```bash
+    TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED=TRUE
+    ```
 
-2. Set the environment variable and launch the container
+1. In your bind directory, create a folder with your environment name
 
-```bash
-TANZU_TOOLS_ENVIRONMENT=MY_ENVIRONMENT
-```
+    ```bash
+    mkdir -p tanzu-cli/home/.config/tanzu-env/MY_ENVIRONMENT
+    ```
 
-If no variable is set, a "default" folder is symlinked as the default environment.
+1. Set the environment variable name to match the folder and launch the container
+
+    ```bash
+    TANZU_TOOLS_ENVIRONMENT=MY_ENVIRONMENT
+    ```
+
+    **NOTE:** _If no variable is set, an environment name of "default" is assumed._

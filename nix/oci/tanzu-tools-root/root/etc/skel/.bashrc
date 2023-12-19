@@ -283,3 +283,5 @@ else
 	writeLog "WARN" "Inside a Kubie shell, skipping Tanzu Tools launch. Run 'launch' manually if needed."
 
 fi
+
+tput clear

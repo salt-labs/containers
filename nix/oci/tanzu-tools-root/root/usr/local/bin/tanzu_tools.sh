@@ -355,7 +355,7 @@ function tanzu_tools_cli_custom() {
 	}
 
 	# Capture existing OCI URL as the default.
-	TANZU_TOOLS_CLI_DEFAULT_URL="$(tanzu plugin source list --output yaml | yq .[].image)"
+	TANZU_TOOLS_CLI_DEFAULT_URL=$(tanzu plugin source list --output yaml | yq '.[] | select(.name == "default") | .image')
 
 	# Strip the current inventory image tag.
 	TANZU_TOOLS_CLI_OCI_URL="${TANZU_TOOLS_CLI_DEFAULT_URL%:*}"

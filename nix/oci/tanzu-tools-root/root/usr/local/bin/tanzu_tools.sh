@@ -81,6 +81,56 @@ function tanzu_tools_cli_nuke() {
 
 }
 
+function tanzu_tools_cli_envs() {
+
+	local ENVIRONMENT="${TANZU_TOOLS_ENVIRONMENT_NAME:-default}"
+	local TANZU_CLI_HOME="${TANZU_CLI_HOME:-$HOME/.config/tanzu-envs/$ENVIRONMENT}"
+
+	# If this function has been called, we assume the user knows what they are doing.
+	writeLog "INFO" "Configuring Tanzu Tools environment folder symlink"
+
+	# 1. Take a backup of the existing Tanzu CLI folder if present, or this could get ugly fast.
+	if [[ -s "${HOME}/.config/tanzu" ]]; then
+
+		writeLog "DEBUG" "The Tanzu CLI directory is already a symlink, taking no action."
+
+	elif [[ -d "${HOME}/.config/tanzu" ]]; then
+
+		writeLog "INFO" "Taking a backup of the existing Tanzu CLI directory"
+
+		mv "${HOME}/.config/tanzu" "${HOME}/.config/tanzu.bak" || {
+
+			writeLog "ERROR" "Failed to take a backup of the Tanzu CLI directory, aborting"
+			return 1
+
+		}
+
+	fi
+
+	# 2. Make sure the specified home directory exists.
+	if [[ ! -d ${TANZU_CLI_HOME} ]]; then
+
+		mkdir -p "${TANZU_CLI_HOME}" || {
+
+			writeLog "ERROR" "Failed to create the Tanzu CLI home directory ${TANZU_CLI_HOME}"
+			return 1
+
+		}
+
+	fi
+
+	# 3. Create a symlink to the OG location.
+	ln --symbolic --force "${TANZU_CLI_HOME}" "${HOME}/.config/tanzu" || {
+
+		writeLog "ERROR" "Failed to create Tanzu CLI symlink from ${TANZU_CLI_HOME} to ${HOME}/.config/tanzu"
+		return 1
+
+	}
+
+	return 0
+
+}
+
 function tanzu_tools_multi_site() {
 
 	# Allows the user to select the site they are working with.
@@ -760,6 +810,17 @@ function tanzu_tools_launch() {
 	set -m
 
 	dialogProgress "Tanzu Tools: Launching..." "10"
+
+	# HACK: Multi-environments are tough, sometimes you need to
+	# 		use a seperate configuration for each.
+	if [[ ${TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED:-FALSE} == "TRUE" ]]; then
+		tanzu_tools_cli_envs || {
+			MESSAGE="Failed to configure Tanzu CLI environments"
+			writeLog "ERROR" "${MESSAGE}"
+			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
+			return 1
+		}
+	fi
 
 	# Some environments have proxy servers...
 	tanzu_tools_proxy || {

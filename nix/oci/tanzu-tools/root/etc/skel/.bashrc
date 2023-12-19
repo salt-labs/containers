@@ -216,18 +216,30 @@ writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
 # Tanzu
 #########################
 
-if [[ ${TANZU_TOOLS_LAUNCH} == "TRUE" ]]; then
+alias launch='tanzu_tools_launch'
 
-	writeLog "INFO" "Launching Tanzu Tools..."
+# For kubie users, we can get ourselves into an interesting loop here.
+# If we are inside a kubie shell, do not launch Tanzu Tools again.
+if [[ ${KUBIE_ACTIVE:-EMPTY} == "EMPTY" ]]; then
 
-	# Let the games begin...
-	tanzu_tools_launch || {
-		writeLog "ERROR" "Failed to launch Tanzu Tools"
-		exit_script 1
-	}
+	if [[ ${TANZU_TOOLS_LAUNCH} == "TRUE" ]]; then
+
+		writeLog "INFO" "Launching Tanzu Tools..."
+
+		# Let the games begin...
+		tanzu_tools_launch || {
+			writeLog "ERROR" "Failed to launch Tanzu Tools"
+			exit_script 1
+		}
+
+	else
+
+		writeLog "INFO" "Not launching Tanzu Tools as TANZU_TOOLS_LAUNCH is set to ${TANZU_TOOLS_LAUNCH}"
+
+	fi
 
 else
 
-	writeLog "INFO" "Not launching Tanzu Tools as TANZU_TOOLS_LAUNCH is set to ${TANZU_TOOLS_LAUNCH}"
+	writeLog "WARN" "Inside a Kubie shell, skipping Tanzu Tools launch. Run 'launch' manually if needed."
 
 fi

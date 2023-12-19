@@ -120,11 +120,12 @@ function tanzu_tools_cli_envs() {
 	fi
 
 	# 3. Create a symlink to the OG location.
-	ln --symbolic --force "${TANZU_CLI_HOME}" "${HOME}/.config/tanzu" || {
-
+	ln \
+		--symbolic \
+		--force \
+		"${TANZU_CLI_HOME}" "${HOME}/.config/tanzu" || {
 		writeLog "ERROR" "Failed to create Tanzu CLI symlink from ${TANZU_CLI_HOME} to ${HOME}/.config/tanzu"
 		return 1
-
 	}
 
 	return 0
@@ -643,7 +644,11 @@ function tanzu_tools_sync_ytt_lib() {
 		return 1
 	fi
 
-	rsync -av "${YTT_LIB}" "${YTT_LIB_TKG}" || {
+	rsync \
+		--archive \
+		--verbose \
+		"${YTT_LIB}" "${YTT_LIB_TKG}" \
+		1>>"${LOG_FILE}" 2>&1 || {
 		writeLog "ERROR" "Failed to sync ytt library from ${YTT_LIB} to ${YTT_LIB_TKG}"
 		return 1
 	}
@@ -812,7 +817,7 @@ function tanzu_tools_launch() {
 	dialogProgress "Tanzu Tools: Launching..." "10"
 
 	# HACK: Multi-environments are tough, sometimes you need to
-	# 		use a seperate configuration for each.
+	# 		use a separate configuration for each.
 	if [[ ${TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED:-FALSE} == "TRUE" ]]; then
 		tanzu_tools_cli_envs || {
 			MESSAGE="Failed to configure Tanzu CLI environments"

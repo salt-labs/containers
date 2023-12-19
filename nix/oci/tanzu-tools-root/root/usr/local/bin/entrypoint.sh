@@ -94,7 +94,13 @@ if [[ ! -f "/root/.profile" ]]; then
 
 	writeLog "DEBUG" "Copying root users profile"
 
-	rsync -a /etc/skel/ /root --copy-links || {
+	rsync \
+		--archive \
+		--verbose \
+		--copy-links \
+		--exclude .config/tanzu-envs/ \
+		/etc/skel/ /root \
+		1>>"${LOG_FILE}" 2>&1 || {
 		writeLog "ERROR" "Failed to rsync the root user's profile"
 		exit_script 1
 	}

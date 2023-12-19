@@ -817,7 +817,7 @@ function tanzu_tools_launch() {
 	dialogProgress "Tanzu Tools: Launching..." "10"
 
 	# HACK: Multi-environments are tough, sometimes you need to
-	# 		use a separate configuration for each.
+	# 		use an isolated and totally separate configuration for each.
 	if [[ ${TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED:-FALSE} == "TRUE" ]]; then
 		tanzu_tools_cli_envs || {
 			MESSAGE="Failed to configure Tanzu CLI environments"

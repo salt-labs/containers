@@ -317,6 +317,7 @@ in
         "WORKDIR=/workdir"
         #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
         "LOG_LEVEL=INFO"
+        "TANZU_TOOLS_CONTAINER_ENVIRONMENT=TRUE"
         "TANZU_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
         "TANZU_TOOLS_ENABLE_STARSHIP=FALSE"
         "TANZU_TOOLS_DIALOG_THEME=default"

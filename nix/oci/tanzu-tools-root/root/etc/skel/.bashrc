@@ -268,6 +268,7 @@ if [[ ${KUBIE_ACTIVE:-EMPTY} == "EMPTY" ]]; then
 
 		# Let the games begin...
 		tanzu_tools_launch || {
+
 			writeLog "ERROR" "Failed to launch Tanzu Tools"
 			exit_script 1
 		}
@@ -279,6 +280,12 @@ if [[ ${KUBIE_ACTIVE:-EMPTY} == "EMPTY" ]]; then
 	fi
 
 else
+
+	# Source the bash completions for all the associated tooling.
+	tanzu_tools_bash_completions || {
+		writeLog "ERROR" "Failed to source Tanzu Tools bash completions"
+		exit_script 1
+	}
 
 	writeLog "WARN" "Inside a Kubie shell, skipping Tanzu Tools launch. Run 'launch' manually if needed."
 

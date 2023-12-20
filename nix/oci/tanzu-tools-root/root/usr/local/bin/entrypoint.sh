@@ -99,6 +99,7 @@ if [[ ! -f "/root/.profile" ]]; then
 		--verbose \
 		--copy-links \
 		--exclude .config/tanzu-envs/ \
+		--exclude .config/bash/custom.sh \
 		/etc/skel/ /root \
 		1>>"${LOG_FILE}" 2>&1 || {
 		writeLog "ERROR" "Failed to rsync the root user's profile"

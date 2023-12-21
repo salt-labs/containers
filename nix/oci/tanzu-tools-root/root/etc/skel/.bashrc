@@ -286,9 +286,8 @@ else
 		writeLog "ERROR" "Failed to source Tanzu Tools bash completions"
 		exit_script 1
 	}
+	tput clear
 
 	writeLog "WARN" "Inside a Kubie shell, skipping Tanzu Tools launch. Run 'launch' manually if needed."
 
 fi
-
-tput clear

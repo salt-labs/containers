@@ -83,6 +83,7 @@ function tanzu_tools_cli_nuke() {
 
 function tanzu_tools_cli_envs() {
 
+	local TANZU_CLI_HOME_DEFAULT="${HOME}/.config/tanzu"
 	local ENVIRONMENT="${TANZU_TOOLS_ENVIRONMENT_NAME:-default}"
 	local TANZU_CLI_HOME="${TANZU_CLI_HOME:-$HOME/.config/tanzu-envs/$ENVIRONMENT}"
 
@@ -90,11 +91,11 @@ function tanzu_tools_cli_envs() {
 	writeLog "INFO" "Configuring Tanzu Tools environment folder symlink"
 
 	# 1. Take a backup of the existing Tanzu CLI folder if present, or this could get ugly fast.
-	if [[ -s "${HOME}/.config/tanzu" ]]; then
+	if [[ -s ${TANZU_CLI_HOME_DEFAULT} ]]; then
 
 		writeLog "DEBUG" "The Tanzu CLI directory is already a symlink, taking no action."
 
-	elif [[ -d "${HOME}/.config/tanzu" ]]; then
+	elif [[ -d ${TANZU_CLI_HOME_DEFAULT} ]]; then
 
 		writeLog "INFO" "Taking a backup of the existing Tanzu CLI directory"
 
@@ -110,6 +111,8 @@ function tanzu_tools_cli_envs() {
 	# 2. Make sure the specified home directory exists.
 	if [[ ! -d ${TANZU_CLI_HOME} ]]; then
 
+		writeLog "INFO" "Creating new Tanzu CLI home at location ${TANZU_CLI_HOME}"
+
 		mkdir -p "${TANZU_CLI_HOME}" || {
 
 			writeLog "ERROR" "Failed to create the Tanzu CLI home directory ${TANZU_CLI_HOME}"
@@ -120,11 +123,12 @@ function tanzu_tools_cli_envs() {
 	fi
 
 	# 3. Create a symlink to the OG location.
+	writeLog "INFO" "Creating a symlink from ${TANZU_CLI_HOME} to ${TANZU_CLI_HOME_DEFAULT}"
 	ln \
 		--symbolic \
 		--force \
-		"${TANZU_CLI_HOME}" "${HOME}/.config/tanzu" || {
-		writeLog "ERROR" "Failed to create Tanzu CLI symlink from ${TANZU_CLI_HOME} to ${HOME}/.config/tanzu"
+		"${TANZU_CLI_HOME}" "${TANZU_CLI_HOME_DEFAULT}" || {
+		writeLog "ERROR" "Failed to create Tanzu CLI symlink from ${TANZU_CLI_HOME} to ${TANZU_CLI_HOME_DEFAULT}"
 		return 1
 	}
 

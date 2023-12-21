@@ -84,7 +84,6 @@
     tini
     tree
     unzip
-    vim
     wget
     which
     xz
@@ -96,6 +95,9 @@
     # Nix
     direnv
     nil
+
+    # Vim
+    vim-full
 
     # VSCode
     #glibc

@@ -312,7 +312,7 @@ in
         "PAGER=less"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-        "TERM=xterm"
+        "TERM=xterm-256color"
         "TZ=UTC"
         "WORKDIR=/workdir"
         #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"

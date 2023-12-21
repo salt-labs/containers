@@ -127,6 +127,7 @@ function tanzu_tools_cli_envs() {
 	ln \
 		--symbolic \
 		--force \
+		--no-target-directory \
 		"${TANZU_CLI_HOME}" "${TANZU_CLI_HOME_DEFAULT}" || {
 		writeLog "ERROR" "Failed to create Tanzu CLI symlink from ${TANZU_CLI_HOME} to ${TANZU_CLI_HOME_DEFAULT}"
 		return 1

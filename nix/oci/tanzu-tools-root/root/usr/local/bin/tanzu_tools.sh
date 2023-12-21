@@ -83,8 +83,8 @@ function tanzu_tools_cli_nuke() {
 
 function tanzu_tools_cli_envs() {
 
-	local TANZU_CLI_HOME_DEFAULT="${HOME}/.config/tanzu"
 	local ENVIRONMENT="${TANZU_TOOLS_ENVIRONMENT_NAME:-default}"
+	local TANZU_CLI_HOME_DEFAULT="${HOME}/.config/tanzu"
 	local TANZU_CLI_HOME="${TANZU_CLI_HOME:-$HOME/.config/tanzu-envs/$ENVIRONMENT}"
 
 	# If this function has been called, we assume the user knows what they are doing.

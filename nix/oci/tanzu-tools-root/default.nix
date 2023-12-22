@@ -52,6 +52,7 @@
     bind
     bindfs
     bottom
+    btop
     cacert
     curlFull
     dialog

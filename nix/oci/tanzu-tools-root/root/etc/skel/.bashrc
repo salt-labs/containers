@@ -276,7 +276,7 @@ if [[ ${KUBIE_ACTIVE:-EMPTY} == "EMPTY" ]]; then
 	else
 
 		writeLog "INFO" "Not launching Tanzu Tools as TANZU_TOOLS_LAUNCH is set to ${TANZU_TOOLS_LAUNCH}"
-
+		tput clear
 	fi
 
 else

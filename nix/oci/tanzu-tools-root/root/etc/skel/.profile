@@ -27,3 +27,12 @@ fi
 if [ -d "$HOME/.local/bin" ]; then
 	PATH="$HOME/.local/bin:$PATH"
 fi
+
+#########################
+# NOTES: Tanzu Tools
+#
+# 		This file is used as a flag for the Tanzu Tools container image.
+# 		Should you wish to get the latest /etc/skel copied, delete this file
+#		and re-launch the container.
+#
+#########################

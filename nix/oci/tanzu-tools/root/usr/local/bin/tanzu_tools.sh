@@ -589,7 +589,11 @@ function tanzu_tools_sync_ytt_lib() {
 		return 1
 	fi
 
-	rsync -av "${YTT_LIB}" "${YTT_LIB_TKG}" || {
+	rsync \
+		--archive \
+		--verbose \
+		"${YTT_LIB}" "${YTT_LIB_TKG}" \
+		1>>"${LOG_FILE}" 2>&1 || {
 		writeLog "ERROR" "Failed to sync ytt library from ${YTT_LIB} to ${YTT_LIB_TKG}"
 		return 1
 	}

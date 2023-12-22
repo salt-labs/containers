@@ -1,4 +1,4 @@
-# .kube-tkg/pinniped
+# .pinniped
 
 This is the default folder where _kubeconfig_ files for _Pinniped_ are kept.
 

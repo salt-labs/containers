@@ -52,6 +52,7 @@
     bind
     bindfs
     bottom
+    btop
     cacert
     curlFull
     dialog
@@ -84,7 +85,6 @@
     tini
     tree
     unzip
-    vim
     wget
     which
     xz
@@ -96,6 +96,9 @@
     # Nix
     direnv
     nil
+
+    # Vim
+    vim-full
 
     # VSCode
     #glibc
@@ -312,11 +315,12 @@ in
         "PAGER=less"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-        "TERM=xterm"
+        "TERM=xterm-256color"
         "TZ=UTC"
         "WORKDIR=/workdir"
         #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
         "LOG_LEVEL=INFO"
+        "TANZU_TOOLS_CONTAINER_ENVIRONMENT=TRUE"
         "TANZU_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
         "TANZU_TOOLS_ENABLE_STARSHIP=FALSE"
         "TANZU_TOOLS_DIALOG_THEME=default"
@@ -324,6 +328,7 @@ in
         "TANZU_TOOLS_SYNC_VENDOR=FALSE"
         "TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG=latest"
         "TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG=latest"
+        "TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED=FALSE"
         "TANZU_TOOLS_SITES_ENABLED=FALSE"
       ];
       WorkingDir = "/workdir";

@@ -610,10 +610,18 @@ function tanzu_tools_cli_plugins() {
 	dialogProgress "Tanzu CLI: Downloading Plugins..." "25"
 
 	# Install all plugins recommended by the active contexts.
-	tanzu plugin sync 1>>"${LOG_FILE}" 2>&1 || {
-		writeLog "ERROR" "Failed to synchronise Tanzu CLI plugins"
-		return 1
-	}
+	if [[ ${TANZU_TOOLS_SYNC_PLUGINS:-FALSE} == "TRUE" ]]; then
+
+		tanzu plugin sync 1>>"${LOG_FILE}" 2>&1 || {
+			writeLog "ERROR" "Failed to synchronise Tanzu CLI plugins"
+			return 1
+		}
+
+	else
+
+		writeLog "INFO" "Tanzu Tools plugin sync is disabled as TANZU_TOOLS_CLI_SYNC_ENABLED variable is set to ${TANZU_TOOLS_SYNC_PLUGINS:-FALSE}"
+
+	fi
 
 	dialogProgress "Tanzu CLI: Downloading Plugins..." "50"
 
@@ -799,6 +807,16 @@ function tanzu_tools_bash_completions() {
 
 }
 
+function tanzu_tools_pinniped_session() {
+
+	# Checks to see if a Pinniped session has been started
+	# or otherwise attempts to create one.
+
+	writeLog "WARNING" "The pinniped function tanzu_tools_pinniped_session has not been finished."
+	return 1
+
+}
+
 # The main function.
 function tanzu_tools_launch() {
 
@@ -841,6 +859,16 @@ function tanzu_tools_launch() {
 	}
 
 	dialogProgress "Tanzu Tools: Launching..." "20"
+
+	# If this is a Pinniped enabled environment, make sure a valid session has been started.
+	if [[ ${TANZU_TOOLS_ENABLE_PINNIPED:-FALSE} == "TRUE" ]]; then
+		tanzu_tools_pinniped_session || {
+			MESSAGE="Failed to start Pinniped session"
+			writeLog "ERROR" "${MESSAGE}"
+			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
+			return 1
+		}
+	fi
 
 	# If this is the first time, an initialization process is required
 	# to accept the EULA and disable the Telemetry

@@ -619,7 +619,7 @@ function tanzu_tools_cli_plugins() {
 
 	else
 
-		writeLog "INFO" "Tanzu Tools plugin sync is disabled as TANZU_TOOLS_CLI_SYNC_ENABLED variable is set to ${TANZU_TOOLS_SYNC_PLUGINS:-FALSE}"
+		writeLog "INFO" "Tanzu Tools plugin sync is disabled as the TANZU_TOOLS_SYNC_PLUGINS variable is set to ${TANZU_TOOLS_SYNC_PLUGINS:-FALSE}"
 
 	fi
 
@@ -813,8 +813,11 @@ function tanzu_tools_pinniped_session() {
 	# or otherwise attempts to create one.
 
 	#local PINNIPED_CONFIG_DIR="${HOME}/.config/pinniped"
-	#local PINNIPED_HOME_DIR="${HOME}/.pinniped"
-	local PINNIPED_KUBECONFIG
+	local PINNIPED_HOME_DIR="${HOME}/.pinniped"
+	local PINNIPED_KUBECONFIGS=()
+	local PINNIPED_KUBECONFIG=""
+
+	local COUNT=0
 
 	# Is the Pinniped binary available?
 	checkBin pinniped || {
@@ -822,24 +825,91 @@ function tanzu_tools_pinniped_session() {
 		return 1
 	}
 
+	# Does the Pinniped home directoriy exist
+	if [[ ! -d ${PINNIPED_HOME_DIR} ]]; then
+		writeLog "ERROR" "The Pinniped home directory does not exist at ${PINNIPED_HOME_DIR}"
+		return 1
+	fi
+
 	# Is there any kubeconfigs in the Pinniped home directory?
+	while IFS=' ' read -r FILE; do
+
+		((COUNT++))
+		PINNIPED_KUBECONFIGS+=("$FILE")
+		writeLog "DEBUG" "Added Pinniped kubeconfig to list $FILE"
+
+	done < <(find "${PINNIPED_HOME_DIR}" -mindepth 1 -maxdepth 1 -type f -name "*.yaml" -exec basename {} \;)
+	writeLog "DEBUG" "Loaded ${COUNT} Pinniped kubeconfigs into list"
+
+	# Add an additional menu option to allow the user to cancel.
+	PINNIPED_KUBECONFIGS+=("Skip")
 
 	# Ask the user which kubeconfig to use
+	if [[ ${COUNT} -gt 0 ]]; then
 
-	# If they select none, abort without error.
-	if [[ ${PINNIPED_KUBECONFIG:-EMPTY} == "NONE" ]]; then
+		tput clear
 
-		writeLog "INFO" "Skipping Pinniped session login as user selected no Pinniped kubeconfig"
-		return 0
+		showHeader "Pinniped session"
+
+		PS3="Select the Pinniped Kubeconfig to authenticate with: "
+
+		COLUMNS=10
+		select KUBECONFIG in "${PINNIPED_KUBECONFIGS[@]}"; do
+
+			KUBECONFIG=${KUBECONFIG:=NONE}
+			REPLY=${REPLY:=0}
+
+			writeLog "INFO" "Pinniped menu selection: ${REPLY}"
+			writeLog "INFO" "Pinniped menu kubeconfig: ${KUBECONFIG}"
+
+			# If they select none, abort without error.
+			if [[ ${KUBECONFIG:-EMPTY} == "Skip" ]]; then
+
+				writeLog "INFO" "Skipping Pinniped session login as user selected no Pinniped kubeconfig"
+				return 0
+
+			elif [[ ${KUBECONFIG:-EMPTY} == "NONE" ]]; then
+
+				writeLog "ERROR" "Invalid selection, please try again"
+
+			else
+
+				break
+
+			fi
+
+		done
+		unset COLUMNS
+
+		PINNIPED_KUBECONFIG="${PINNIPED_HOME_DIR}/${KUBECONFIG}"
+		writeLog "INFO" "Pinniped kubeconfig set to ${PINNIPED_KUBECONFIG}"
+
+	else
+
+		writeLog "ERROR" "No Pinniped kubeconfigs (ending with .yaml) were found in ${PINNIPED_HOME_DIR}"
+		return 1
 
 	fi
 
-	# Start a new sessions using the selected kubeconfig
-	tput clear
-	pinniped whoami --kubeconfig "${PINNIPED_KUBECONFIG}" || {
-		writeLog "ERROR" "Failed to start a Pinniped session"
+	# Start a new session using the selected kubeconfig
+	if [[ ! -f ${PINNIPED_KUBECONFIG} ]]; then
+
+		writeLog "ERROR" "Invalid Pinniped kubeconfig file ${PINNIPED_KUBECONFIG}"
 		return 1
-	}
+
+	fi
+
+	tput clear
+
+	showHeader "Pinniped session"
+
+	pinniped whoami \
+		--timeout 300s \
+		--kubeconfig "${PINNIPED_KUBECONFIG}" ||
+		{
+			writeLog "ERROR" "Failed to start a Pinniped session"
+			return 1
+		}
 
 	return 0
 

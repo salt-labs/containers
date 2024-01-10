@@ -264,6 +264,20 @@ function writeLog() {
 
 }
 
+function showHeader() {
+
+	local MESSAGE="${1}"
+
+	echo -e "\n"
+	echo -e "#########################"
+	echo -e "${MESSAGE:-EMPTY}"
+	echo -e "#########################"
+	echo -e "\n"
+
+	return 0
+
+}
+
 function checkBin() {
 
 	# Checks the binary name is available in the path

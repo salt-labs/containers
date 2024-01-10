@@ -20,6 +20,9 @@ inputs.devenv.lib.mkShell {
         cachix
         nil
 
+        hunspell
+        hunspellDicts.en_AU
+
         sops
         #sops-init-gpg-key
         #sops-import-keys-hook
@@ -121,8 +124,8 @@ inputs.devenv.lib.mkShell {
           staticcheck.enable = false;
 
           # Spelling
-          hunspell.enable = false;
-          typos.enable = true;
+          hunspell.enable = true;
+          typos.enable = false;
 
           # Git commit messages
           commitizen.enable = true;

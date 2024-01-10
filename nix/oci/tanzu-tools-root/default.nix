@@ -131,7 +131,7 @@
     sops
 
     # TKG Tools
-    pinniped
+    #pinniped
     sonobuoy
     velero
 
@@ -141,6 +141,8 @@
   ];
 
   unstablePkgs = with pkgsUnstable; [
+    # Pinniped v0.28 has the --timeout parameter
+    pinniped
   ];
 in
   #pkgs.dockerTools.buildLayeredImage {

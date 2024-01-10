@@ -812,8 +812,36 @@ function tanzu_tools_pinniped_session() {
 	# Checks to see if a Pinniped session has been started
 	# or otherwise attempts to create one.
 
-	writeLog "WARNING" "The pinniped function tanzu_tools_pinniped_session has not been finished."
-	return 1
+	#local PINNIPED_CONFIG_DIR="${HOME}/.config/pinniped"
+	#local PINNIPED_HOME_DIR="${HOME}/.pinniped"
+	local PINNIPED_KUBECONFIG
+
+	# Is the Pinniped binary available?
+	checkBin pinniped || {
+		writeLog "ERROR" "The Pinniped CLI is not available in the PATH"
+		return 1
+	}
+
+	# Is there any kubeconfigs in the Pinniped home directory?
+
+	# Ask the user which kubeconfig to use
+
+	# If they select none, abort without error.
+	if [[ ${PINNIPED_KUBECONFIG:-EMPTY} == "NONE" ]]; then
+
+		writeLog "INFO" "Skipping Pinniped session login as user selected no Pinniped kubeconfig"
+		return 0
+
+	fi
+
+	# Start a new sessions using the selected kubeconfig
+	tput clear
+	pinniped whoami --kubeconfig "${PINNIPED_KUBECONFIG}" || {
+		writeLog "ERROR" "Failed to start a Pinniped session"
+		return 1
+	}
+
+	return 0
 
 }
 

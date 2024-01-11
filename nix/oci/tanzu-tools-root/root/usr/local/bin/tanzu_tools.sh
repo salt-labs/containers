@@ -179,9 +179,18 @@ function tanzu_tools_multi_site() {
 		writeLog "INFO" "Added site ${SITE} into array slot ${NUM}"
 
 	done < <(printf "%s\n" "${TANZU_TOOLS_SITES}")
+	unset NUM
 
+	writeLog "DEBUG" "Loaded ${#SITES_ARRAY[@]} sites into array"
 	writeLog "DEBUG" "Sites: ${SITES_ARRAY[*]}"
 	writeLog "DEBUG" "Options: ${OPTIONS[*]}"
+
+	if [[ ! ${#OPTIONS[@]} -gt 0 ]]; then
+
+		writeLog "ERROR" "No sites were specified, aborting"
+		return 1
+
+	fi
 
 	dialogMenu "Sites" "Please select your site for Administration:"
 
@@ -501,20 +510,20 @@ function tanzu_tools_cli_custom() {
 function tanzu_tools_cli_init() {
 
 	# Initialize the Tanzu CLI for first time users.
-	TANZU_TOOLS_IS_READY=FALSE
+	TANZU_TOOLS_CLI_READY=FALSE
 
 	# We use a fake lock file to determine if the CLI has been "initialized".
 	TANZU_TOOLS_INIT_LOCK="${HOME}/.config/tanzu/.tanzu-init.lock"
 	if [[ -f ${TANZU_TOOLS_INIT_LOCK} ]]; then
 
 		writeLog "INFO" "The Tanzu CLI has already been initialized"
-		TANZU_TOOLS_IS_READY=TRUE
+		TANZU_TOOLS_CLI_READY=TRUE
 		return 0
 
 	fi
 
 	# Make sure that the interactive parts are not run in a VSCode remote env.
-	if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
+	if [[ ${ENVIRONMENT_VSCODE:-EMPTY} == "CONTAINER" ]]; then
 
 		writeLog "INFO" "Devcontainer is running, skipping Tanzu init."
 		return 0
@@ -562,7 +571,7 @@ function tanzu_tools_cli_init() {
 			EOF
 
 			dialogProgress "Tanzu CLI: Initializing..." "100"
-			TANZU_TOOLS_IS_READY=TRUE
+			TANZU_TOOLS_CLI_READY=TRUE
 
 			break
 
@@ -609,17 +618,24 @@ function tanzu_tools_cli_plugins() {
 
 	dialogProgress "Tanzu CLI: Downloading Plugins..." "25"
 
-	# Install all plugins recommended by the active contexts.
-	if [[ ${TANZU_TOOLS_SYNC_PLUGINS:-FALSE} == "TRUE" ]]; then
+	# Install all plugins recommended by the active contexts
+	# only if the global flag is enabled and the local check.
+	if [[ ${TANZU_TOOLS_SYNC_PLUGINS:-FALSE} != "TRUE" ]]; then
+
+		writeLog "WARN" "Tanzu Tools plugin sync is disabled as the TANZU_TOOLS_SYNC_PLUGINS variable is set to ${TANZU_TOOLS_SYNC_PLUGINS:-FALSE}"
+
+	elif [[ ${TANZU_TOOLS_CLI_PLUGIN_SYNC:-FALSE} != "TRUE" ]]; then
+
+		writeLog "WARN" "Tanzu Tools plugin sync is skipped as the TANZU_TOOLS_CLI_PLUGIN_SYNC variable is set to ${TANZU_TOOLS_CLI_PLUGIN_SYNC:-FALSE}"
+
+	else
+
+		writeLog "INFO" "Installing Tanzu CLI plugins from the active context"
 
 		tanzu plugin sync 1>>"${LOG_FILE}" 2>&1 || {
 			writeLog "ERROR" "Failed to synchronise Tanzu CLI plugins"
 			return 1
 		}
-
-	else
-
-		writeLog "INFO" "Tanzu Tools plugin sync is disabled as the TANZU_TOOLS_SYNC_PLUGINS variable is set to ${TANZU_TOOLS_SYNC_PLUGINS:-FALSE}"
 
 	fi
 
@@ -807,6 +823,159 @@ function tanzu_tools_bash_completions() {
 
 }
 
+function tanzu_tools_cli_context() {
+
+	# If this is enabled, 'tanzu plugin sync' will be executed.
+	TANZU_TOOLS_CLI_PLUGIN_SYNC=TRUE
+
+	local -A CLI_CONTEXTS=()
+	local CLI_CONTEXT
+	local CLI_CONTEXT_SELECTED
+	local VALUE
+	local RETURN_CODE
+	local PINNIPED_KUBECONFIG
+	local OPTIONS=()
+	local COUNT=0
+
+	# Capture all available contexts into a dialog menu.
+	while IFS=' ' read -r CLI_CONTEXT || [ -n "$CLI_CONTEXT" ]; do
+
+		# Strip any whitespace
+		CLI_CONTEXT=$(echo "${CLI_CONTEXT}" | xargs echo -n)
+
+		# Increment the counter
+		((COUNT++))
+
+		# Add the CLI context into the associative array
+		CLI_CONTEXTS[$COUNT]="$CLI_CONTEXT"
+
+		# Add the CLI context into the menu options.
+		OPTIONS+=(
+			"${COUNT}" "${CLI_CONTEXTS[$COUNT]}"
+		)
+
+		writeLog "INFO" "Added Tanzu CLI context ${CLI_CONTEXT} into menu option ${COUNT}"
+
+	done < <(tanzu context list -o yaml | yq .[].name)
+	unset COUNT
+
+	writeLog "DEBUG" "Loaded ${#CLI_CONTEXTS[@]} Tanzu CLI contexts into associative array"
+	writeLog "DEBUG" "Contexts: ${CLI_CONTEXTS[*]}"
+	writeLog "DEBUG" "Options: ${OPTIONS[*]}"
+
+	if [[ ! ${#OPTIONS[@]} -gt 0 ]]; then
+
+		writeLog "INFO" "No Tanzu CLI contexts found, skipping."
+		TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+		return 0
+
+	fi
+
+	# Present the user with a menu to select their context.
+	dialogMenu "Tanzu CLI context" "Select the Tanzu CLI context to authenticate against:"
+
+	#  0 = Yes
+	#  1 = No
+	#  2 = Help
+	#  3 = Extra
+	# -1 = Error
+
+	VALUE=$("${CMD[@]}" "${BOX_OPTIONS[@]}" "${OPTIONS[@]}" 2>&1 >/dev/tty)
+	RETURN_CODE=$?
+
+	writeLog "DEBUG" "Dialog value: ${VALUE:-EMPTY}"
+	writeLog "DEBUG" "Dialog return: ${RETURN_CODE:-EMPTY}"
+
+	writeLog "DEBUG" "${CLI_CONTEXTS[@]}"
+
+	case "${RETURN_CODE}" in
+
+	0)
+
+		CLI_CONTEXT_SELECTED="${CLI_CONTEXTS[$VALUE]}"
+		writeLog "INFO" "The user selected the option ${VALUE} on the Tanzu CLI context menu which is $CLI_CONTEXT_SELECTED"
+
+		;;
+
+	1)
+
+		writeLog "WARN" "The user selected NO on the Tanzu CLI context menu, aborting"
+		TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+		return 0
+
+		;;
+
+	2)
+
+		# TODO: Do we need to implement help?
+		writeLog "WARN" "The user selected HELP on the Tanzu CLI context menu, aborting"
+		TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+		return 0
+
+		;;
+
+	3)
+
+		writeLog "WARN" "Unhandled selection 'extra' on the Tanzu CLI context menu, aborting with error"
+		TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+		return 0
+
+		;;
+
+	-1)
+
+		writeLog "ERROR" "Error processing user selection on the Tanzu CLI context menu, aborting with error"
+		TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+		return 1
+
+		;;
+
+	255)
+
+		writeLog "WARN" "Timeout waiting for user selection on the Tanzu CLI context menu, aborting"
+		TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+		return 0
+
+		;;
+
+	*)
+
+		writeLog "ERROR" "Unhandled return code ${RETURN_CODE} while processing user selection on the Tanzu CLI context menu, aborting with error"
+		TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+		return 1
+
+		;;
+
+	esac
+
+	# If the context pinniped, start a new session.
+	if grep -s pinniped <<<"${CLI_CONTEXT_SELECTED}" 1>/dev/null 2>&1; then
+
+		# Obtain the kubeconfig path for the selected context.
+		export CLI_CONTEXT_SELECTED
+		PINNIPED_KUBECONFIG=$(tanzu context list -o yaml | yq --expression '.[] | select(.name == env(CLI_CONTEXT_SELECTED)).kubeconfigpath')
+
+		writeLog "INFO" "A Pinniped context was selection, starting Authentication session with kubeconfig ${PINNIPED_KUBECONFIG}"
+
+		tanzu_tools_pinniped_session "${PINNIPED_KUBECONFIG}" || {
+			writeLog "ERROR" "Failed to start Pinniped session!"
+			TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+			return 1
+		}
+
+	fi
+
+	# Now, finally use the given context.
+	tanzu context use "${CLI_CONTEXT_SELECTED}" 1>>"${LOG_FILE}" 2>&1 || {
+		writeLog "ERROR" "Failed to use Tanzu CLI context ${CLI_CONTEXT_SELECTED}"
+		TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
+		return 1
+	}
+
+	return 0
+
+}
+
 function tanzu_tools_pinniped_session() {
 
 	# Checks to see if a Pinniped session has been started
@@ -814,10 +983,15 @@ function tanzu_tools_pinniped_session() {
 
 	#local PINNIPED_CONFIG_DIR="${HOME}/.config/pinniped"
 	local PINNIPED_HOME_DIR="${HOME}/.pinniped"
-	local PINNIPED_KUBECONFIGS=()
-	local PINNIPED_KUBECONFIG=""
+	local PINNIPED_KUBECONFIG="${1}"
 
-	local COUNT=0
+	# Check if the global feature flag is enabled first or skip this code path.
+	if [[ ${TANZU_TOOLS_ENABLE_PINNIPED:-FALSE} != "TRUE" ]]; then
+
+		writeLog "WARN" "Pinniped session has been disable due to global variable TANZU_TOOLS_ENABLE_PINNIPED being set to ${TANZU_TOOLS_ENABLE_PINNIPED:-FALSE}"
+		return 0
+
+	fi
 
 	# Is the Pinniped binary available?
 	checkBin pinniped || {
@@ -825,80 +999,19 @@ function tanzu_tools_pinniped_session() {
 		return 1
 	}
 
-	# Does the Pinniped home directoriy exist
+	# Does the Pinniped home directory exist
 	if [[ ! -d ${PINNIPED_HOME_DIR} ]]; then
 		writeLog "ERROR" "The Pinniped home directory does not exist at ${PINNIPED_HOME_DIR}"
 		return 1
 	fi
 
-	# Is there any kubeconfigs in the Pinniped home directory?
-	while IFS=' ' read -r FILE; do
-
-		((COUNT++))
-		PINNIPED_KUBECONFIGS+=("$FILE")
-		writeLog "DEBUG" "Added Pinniped kubeconfig to list $FILE"
-
-	done < <(find "${PINNIPED_HOME_DIR}" -mindepth 1 -maxdepth 1 -type f -name "*.yaml" -exec basename {} \;)
-	writeLog "DEBUG" "Loaded ${COUNT} Pinniped kubeconfigs into list"
-
-	# Add an additional menu option to allow the user to cancel.
-	PINNIPED_KUBECONFIGS+=("Skip")
-
-	# Ask the user which kubeconfig to use
-	if [[ ${COUNT} -gt 0 ]]; then
-
-		tput clear
-
-		showHeader "Pinniped session"
-
-		PS3="Select the Pinniped Kubeconfig to authenticate with: "
-
-		COLUMNS=10
-		select KUBECONFIG in "${PINNIPED_KUBECONFIGS[@]}"; do
-
-			KUBECONFIG=${KUBECONFIG:=NONE}
-			REPLY=${REPLY:=0}
-
-			writeLog "INFO" "Pinniped menu selection: ${REPLY}"
-			writeLog "INFO" "Pinniped menu kubeconfig: ${KUBECONFIG}"
-
-			# If they select none, abort without error.
-			if [[ ${KUBECONFIG:-EMPTY} == "Skip" ]]; then
-
-				writeLog "INFO" "Skipping Pinniped session login as user selected no Pinniped kubeconfig"
-				return 0
-
-			elif [[ ${KUBECONFIG:-EMPTY} == "NONE" ]]; then
-
-				writeLog "ERROR" "Invalid selection, please try again"
-
-			else
-
-				break
-
-			fi
-
-		done
-		unset COLUMNS
-
-		PINNIPED_KUBECONFIG="${PINNIPED_HOME_DIR}/${KUBECONFIG}"
-		writeLog "INFO" "Pinniped kubeconfig set to ${PINNIPED_KUBECONFIG}"
-
-	else
-
-		writeLog "ERROR" "No Pinniped kubeconfigs (ending with .yaml) were found in ${PINNIPED_HOME_DIR}"
-		return 1
-
-	fi
-
-	# Start a new session using the selected kubeconfig
+	# Does the provided kubeconfig file exist
 	if [[ ! -f ${PINNIPED_KUBECONFIG} ]]; then
-
-		writeLog "ERROR" "Invalid Pinniped kubeconfig file ${PINNIPED_KUBECONFIG}"
+		writeLog "ERROR" "The provided Pinniped kubeconfig file does not exist. Please check the file ${PINNIPED_KUBECONFIG}"
 		return 1
-
 	fi
 
+	# Start a Pinniped session using the provided kubeconfig
 	tput clear
 
 	showHeader "Pinniped session"
@@ -910,6 +1023,8 @@ function tanzu_tools_pinniped_session() {
 			writeLog "ERROR" "Failed to start a Pinniped session"
 			return 1
 		}
+
+	tput clear
 
 	return 0
 
@@ -928,8 +1043,9 @@ function tanzu_tools_launch() {
 	export TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG="${TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG:-latest}"
 
 	writeLog "DEBUG" "Resetting variables"
-	unset TANZU_TOOLS_IS_READY
+	unset TANZU_TOOLS_CLI_READY
 	unset TANZU_TOOLS_CLI_OCI_URL
+	unset TANZU_TOOLS_CLI_PLUGIN_SYNC
 	unset TKG_CUSTOM_IMAGE_REPOSITORY
 
 	# Make sure job control is on
@@ -958,16 +1074,6 @@ function tanzu_tools_launch() {
 
 	dialogProgress "Tanzu Tools: Launching..." "20"
 
-	# If this is a Pinniped enabled environment, make sure a valid session has been started.
-	if [[ ${TANZU_TOOLS_ENABLE_PINNIPED:-FALSE} == "TRUE" ]]; then
-		tanzu_tools_pinniped_session || {
-			MESSAGE="Failed to start Pinniped session"
-			writeLog "ERROR" "${MESSAGE}"
-			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
-			return 1
-		}
-	fi
-
 	# If this is the first time, an initialization process is required
 	# to accept the EULA and disable the Telemetry
 	tanzu_tools_cli_init || {
@@ -977,7 +1083,7 @@ function tanzu_tools_launch() {
 		return 1
 	}
 
-	if [[ ${TANZU_TOOLS_IS_READY:-FALSE} == "TRUE" ]]; then
+	if [[ ${TANZU_TOOLS_CLI_READY:-FALSE} == "TRUE" ]]; then
 
 		dialogProgress "Tanzu Tools: Launching..." "30"
 
@@ -987,6 +1093,16 @@ function tanzu_tools_launch() {
 			MESSAGE="Failed to set the Tanzu CLI user customisations"
 			writeLog "ERROR" "${MESSAGE}"
 			return 1
+		}
+
+		dialogProgress "Tanzu Tools: Launching..." "40"
+
+		# Ask the user to select the Tanzu CLI context work in and authenticate against.
+		# If this fails, the process can continue but we cannot sync the plugins without auth.
+		tanzu_tools_cli_context || {
+			MESSAGE="Failed to enter the selected Tanzu CLI context, skipping plugin sync if enabled."
+			writeLog "WARNING" "${MESSAGE}"
+			TANZU_TOOLS_CLI_PLUGIN_SYNC=FALSE
 		}
 
 		dialogProgress "Tanzu Tools: Launching..." "50"

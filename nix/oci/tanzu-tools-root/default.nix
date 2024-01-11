@@ -131,7 +131,7 @@
     sops
 
     # TKG Tools
-    pinniped
+    #pinniped
     sonobuoy
     velero
 
@@ -141,6 +141,8 @@
   ];
 
   unstablePkgs = with pkgsUnstable; [
+    # Pinniped v0.28 has the --timeout parameter
+    pinniped
   ];
 in
   #pkgs.dockerTools.buildLayeredImage {
@@ -326,10 +328,12 @@ in
         "TANZU_TOOLS_DIALOG_THEME=default"
         "TANZU_TOOLS_SYNC_YTT_LIB=FALSE"
         "TANZU_TOOLS_SYNC_VENDOR=FALSE"
+        "TANZU_TOOLS_SYNC_PLUGINS=FALSE"
+        "TANZU_TOOLS_SITES_ENABLED=FALSE"
         "TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG=latest"
         "TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG=latest"
         "TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED=FALSE"
-        "TANZU_TOOLS_SITES_ENABLED=FALSE"
+        "TANZU_TOOLS_ENABLE_PINNIPED=FALSE"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";

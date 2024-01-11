@@ -10,12 +10,11 @@ on:
     branches:
       - "trunk"
     paths:
-      - .github/workflows/**
+      - .github/workflows/devenv.yaml
       - devenv.nix
       - flake.lock
       - flake.nix
-      - nix/**
-      - scripts/*
+      - nix/devshells/**
 
 permissions:
   contents: read
@@ -24,6 +23,8 @@ permissions:
   statuses: read
 
 env:
+  NIXPKGS_ALLOW_UNFREE: 1
+
   PROJECT: ${{ github.repository }}
 
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}

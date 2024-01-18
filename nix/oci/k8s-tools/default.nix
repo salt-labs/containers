@@ -329,7 +329,7 @@ in
         "K8S_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
         "K8S_TOOLS_ENABLE_STARSHIP=FALSE"
         "K8S_TOOLS_DIALOG_THEME=default"
-        "K8S_TOOLS_DISTRO=tanzu"
+        "K8S_TOOLS_DISTRO=vanilla"
         # Tanzu
         "TANZU_CLI_PLUGIN_INVENTORY_TAG=latest"
         "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"

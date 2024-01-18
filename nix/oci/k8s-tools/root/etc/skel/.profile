@@ -29,9 +29,9 @@ if [ -d "$HOME/.local/bin" ]; then
 fi
 
 #########################
-# NOTES: Tanzu Tools
+# NOTES: ${TANZU_TOOLS_TITLE}
 #
-# 		This file is used as a flag for the Tanzu Tools container image.
+# 		This file is used as a flag for the ${TANZU_TOOLS_TITLE} container image.
 # 		Should you wish to get the latest /etc/skel copied, delete this file
 #		and re-launch the container.
 #

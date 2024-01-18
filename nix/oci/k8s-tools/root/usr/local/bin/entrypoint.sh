@@ -13,10 +13,11 @@ set -o pipefail
 #########################
 
 # The name of the script used in logs.
-export SCRIPT="tanzu-tools"
+export SCRIPT="${K8S_TOOLS_NAME:-k8s-tools}"
 
-# No phoning home is allowed.
-export TANZU_CLI_CEIP_OPT_IN_PROMPT_ANSWER="no"
+# Dialog boxes
+export K8S_TOOLS_NAME="${K8S_TOOLS_NAME:-k8s-tools}"
+export K8S_TOOLS_TITLE="${K8S_TOOLS_TITLE:-Kubernetes Tools}"
 
 # Write all logs to file.
 export LOG_DESTINATION="${LOG_DESTINATION:-file}"
@@ -24,10 +25,10 @@ export LOG_FILE="${LOG_FILE:-/tmp/$SCRIPT.log}"
 export LOG_LEVEL="${LOG_LEVEL:-INFO}"
 
 # Interactive loop
-export TANZU_TOOLS_RUN=FALSE
+export K8S_TOOLS_RUN=FALSE
 
 # Dialog theme
-export DIALOGRC="${HOME}/.dialogrc/${TANZU_TOOLS_DIALOG_THEME:-default}"
+export DIALOGRC="${HOME}/.dialogrc/${K8S_TOOLS_DIALOG_THEME:-default}"
 
 # Preload libnss for uid > 65535
 #export LD_PRELOAD=/lib/lib-sssd/libnss_sss.so.2
@@ -70,26 +71,10 @@ if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
 fi
 
 #########################
-# Functions
-#########################
-
-function start_shell() {
-
-	writeLog "INFO" "Dropping into a root user shell"
-
-	bash --login -i || {
-		writeLog "ERROR" "Failed to start shell for user 'root'"
-		return 1
-	}
-
-	return 0
-
-}
-
-#########################
 # Setup
 #########################
 
+# In-case a user is bringing their own bind volume.
 if [[ ! -f "/root/.profile" ]]; then
 
 	writeLog "DEBUG" "Copying root users profile"
@@ -122,7 +107,7 @@ chown -R root:root /root || {
 #########################
 
 # Start a new login shell with any modified UID or GIDs applied.
-dialogProgress "Tanzu Tools: Starting Shell..." "100"
+dialogProgress "${K8S_TOOLS_TITLE}: Starting Shell..." "100"
 
 if start_shell "$@"; then
 	SHELL_EXIT_CODE=$?
@@ -139,7 +124,7 @@ while true; do
 		read -r -p "Press any key to continue."
 	fi
 
-	dialogYesNo "Tanzu Tools: Session Ended" "Would you like to start a new session?"
+	dialogYesNo "${K8S_TOOLS_TITLE}: Session Ended" "Would you like to start a new session?"
 
 	#  0 = Yes
 	#  1 = No
@@ -158,7 +143,7 @@ while true; do
 
 		writeLog "DEBUG" "Return code was ${RETURN_CODE}, user selected YES to starting new shell session"
 
-		dialogProgress "Tanzu Tools: Starting Shell..." "100"
+		dialogProgress "${K8S_TOOLS_TITLE}: Starting Shell..." "100"
 
 		if start_shell "$@"; then
 			SHELL_EXIT_CODE=$?
@@ -174,7 +159,7 @@ while true; do
 
 		writeLog "DEBUG" "Return code was ${RETURN_CODE}, the user selected NO to starting new shell session."
 
-		dialogProgress "Tanzu Tools: Exiting Shell..." "100"
+		dialogProgress "${K8S_TOOLS_TITLE}: Exiting Shell..." "100"
 		sleep 0.5
 
 		break
@@ -185,7 +170,7 @@ while true; do
 
 		writeLog "WARN" "Return code was ${RETURN_CODE}, the user either hit escape or there was an unhandled error starting new shell session"
 
-		dialogProgress "Tanzu Tools: Only YES or NO are valid answers." "0"
+		dialogProgress "${K8S_TOOLS_TITLE}: Only YES or NO are valid answers." "0"
 		sleep 3
 
 		;;

@@ -8,4 +8,4 @@ if [ "$SHLVL" = 1 ]; then
 	[ -x /usr/bin/clear_console ] && /usr/bin/clear_console -q
 fi
 
-writeLog "INFO" "Logging out of Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
+writeLog "INFO" "Logging out of ${K8S_TOOLS_TITLE} environment: ${ENVIRONMENT_VSCODE}"

@@ -335,7 +335,7 @@ function show_logs() {
 
 		if [[ -f ${LOG_FILE} ]]; then
 
-			echo -e "Tanzu Tools has exited with an error. Displaying a copy of the session log."
+			echo -e "${TANZU_TOOLS_TITLE} has exited with an error. Displaying a copy of the session log."
 
 			echo -e "\nSTART: Show session logs...\n"
 
@@ -371,6 +371,19 @@ function exit_script() {
 
 }
 
+function start_shell() {
+
+	writeLog "INFO" "Dropping into a root user shell"
+
+	bash --login -i || {
+		writeLog "ERROR" "Failed to start shell for user 'root'"
+		return 1
+	}
+
+	return 0
+
+}
+
 export -f checkLog checkLogLevel writeLog
 export -f checkBin checkVarEmpty checkResult
-export -f show_logs exit_script
+export -f show_logs exit_script start_shell

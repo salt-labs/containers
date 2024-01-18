@@ -11,7 +11,7 @@ For additional info, see the [GitHub issue #620](https://github.com/vmware-tanzu
 1. Enable the feature flag by passing the following environment variable into the container.
 
     ```bash
-    TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED=TRUE
+    TANZU_CLI_SYMLINK_ENABLED=TRUE
     ```
 
 1. In your bind directory, create a folder with your environment name
@@ -23,7 +23,7 @@ For additional info, see the [GitHub issue #620](https://github.com/vmware-tanzu
 1. Set the environment variable name to match the folder and launch the container
 
     ```bash
-    TANZU_TOOLS_ENVIRONMENT=MY_ENVIRONMENT
+    K8S_TOOLS_ENVIRONMENT=MY_ENVIRONMENT
     ```
 
     **NOTE:** _If no variable is set, an environment name of "default" is assumed._

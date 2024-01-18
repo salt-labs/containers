@@ -147,7 +147,7 @@
 in
   #pkgs.dockerTools.buildLayeredImage {
   pkgs.dockerTools.buildImage {
-    name = "tanzu-tools-root";
+    name = "k8s-tools";
     tag = "latest";
     created = creationDate;
 
@@ -290,7 +290,7 @@ in
     config = {
       User = "root";
       Labels = {
-        "org.opencontainers.image.description" = "tanzu-tools";
+        "org.opencontainers.image.description" = "k8s-tools";
       };
       Entrypoint = [
         "tini"
@@ -312,7 +312,7 @@ in
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
         "LOG_DESTINATION=file"
-        "LOG_FILE=/tmp/tanzu-tools.log"
+        "LOG_FILE=/tmp/k8s-tools.log"
         "NIX_PAGER=less"
         "PAGER=less"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
@@ -321,19 +321,23 @@ in
         "TZ=UTC"
         "WORKDIR=/workdir"
         #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
+        # Kubernetes Tools
         "LOG_LEVEL=INFO"
-        "TANZU_TOOLS_CONTAINER_ENVIRONMENT=TRUE"
-        "TANZU_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
-        "TANZU_TOOLS_ENABLE_STARSHIP=FALSE"
-        "TANZU_TOOLS_DIALOG_THEME=default"
-        "TANZU_TOOLS_SYNC_YTT_LIB=FALSE"
-        "TANZU_TOOLS_SYNC_VENDOR=FALSE"
-        "TANZU_TOOLS_SYNC_PLUGINS=FALSE"
-        "TANZU_TOOLS_SITES_ENABLED=FALSE"
-        "TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG=latest"
-        "TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG=latest"
-        "TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED=FALSE"
-        "TANZU_TOOLS_ENABLE_PINNIPED=FALSE"
+        "K8S_TOOLS_NAME=k8s-tools"
+        "K8S_TOOLS_TITLE=Kubernetes Tools"
+        "K8S_TOOLS_CONTAINER_ENVIRONMENT=TRUE"
+        "K8S_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
+        "K8S_TOOLS_ENABLE_STARSHIP=FALSE"
+        "K8S_TOOLS_DIALOG_THEME=default"
+        "K8S_TOOLS_DISTRO=tanzu"
+        # Tanzu
+        "TANZU_CLI_PLUGIN_INVENTORY_TAG=latest"
+        "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
+        "TANZU_CLI_SYMLINK_ENABLED=FALSE"
+        "TANZU_ENABLE_PINNIPED=FALSE"
+        "TANZU_SITES_ENABLED=FALSE"
+        "TANZU_SYNC_PLUGINS=FALSE"
+        "TANZU_SYNC_VENDOR=FALSE"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";

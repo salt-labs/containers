@@ -66,13 +66,6 @@ jobs:
         name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v25
 
-      ######
-      - id: WTF1
-        name: Where is cachix
-        run: |
-          which cachix || echo "NOPE 1"
-          which devenv || echo "NOPE 2"
-      #####
       - id: cachix
         name: "Enable Cachix ❄️"
         uses: cachix/cachix-action@v14
@@ -80,13 +73,6 @@ jobs:
           name: salt-labs
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      ######
-      - id: WTF2
-        name: Where is cachix
-        run: |
-          which cachix || echo "NOPE 1"
-          which devenv || echo "NOPE 2"
-      #####
       - id: configure_nix
         name: Configure Nix
         env:
@@ -102,31 +88,12 @@ jobs:
         run: |
           nix profile install tarball+https://install.devenv.sh/latest
 
-      ######
-      - id: WTF4
-        name: Where is cachix
-        run: |
-          which cachix || echo "NOPE 1"
-          which devenv || echo "NOPE 2"
-      #####
       - id: devenv_ci
         name: Devenv CI
         run: |
           devenv ci
 
-      ######
-      - id: WTF5
-        name: Where is cachix
-        run: which cachix || echo "NOPE"
-      #####
-
       - id: devenv_shell
         name: Devenv Shell
         run: |
           devenv shell echo "Development environment OK!"
-
-      ######
-      - id: WTF6
-        name: Where is cachix
-        run: which cachix || echo "NOPE"
-      #####

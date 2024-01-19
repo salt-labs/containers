@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ ${ENABLE_DEBUG:-FALSE} == "TRUE" ]]; then
+if [[ ${DEBUG_ENABLED:-FALSE} == "TRUE" ]]; then
 	set -x
 fi
 
@@ -55,12 +55,12 @@ source dialog.sh || {
 
 # Make sure that the interactive parts are not run in a a VSCode container env.
 # VSCode handles it's own userID mapping and mounts.
-if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
+if [[ ${K8S_TOOLS_ENVIRONMENT^^} == "VSCODE" ]]; then
 
 	while true; do
 
 		writeLog "INFO "INFO: Devcontainer environment is running...
-		sleep 300
+		sleep 60
 
 	done
 

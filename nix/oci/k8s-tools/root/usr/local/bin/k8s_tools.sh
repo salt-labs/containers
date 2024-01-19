@@ -35,7 +35,7 @@ function k8s_tools_proxy() {
 
 	else
 
-		writeLog "INFO" "Proxy script is disabled, assuming direct internet access for now."
+		writeLog "INFO" "Proxy script is disabled, assuming direct internet access or isolated environment."
 
 	fi
 

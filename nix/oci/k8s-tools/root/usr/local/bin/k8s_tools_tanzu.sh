@@ -8,7 +8,7 @@
 # No phoning home from the Tanzu CLI is allowed.
 export TANZU_CLI_CEIP_OPT_IN_PROMPT_ANSWER="no"
 
-# ${TANZU_TOOLS_TITLE} variables
+# ${K8S_TOOLS_TITLE} variables
 export YTT_LIB="/usr/lib/ytt/"
 
 # These variables are passed in as Docker arguments or defaults are set here if missing.
@@ -27,7 +27,7 @@ function k8s_tools_distro_launch() {
 	# Make sure job control is on
 	set -m
 
-	dialogProgress "${TANZU_TITLE}: Launching..." "10"
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "10"
 
 	# HACK: Multi-environments are tough, sometimes you need to
 	# 		use an isolated and totally separate configuration for each.
@@ -42,7 +42,7 @@ function k8s_tools_distro_launch() {
 
 	fi
 
-	dialogProgress "${TANZU_TITLE}: Launching..." "20"
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "20"
 
 	# If this is the first time, an initialization process is required
 	# to accept the EULA and disable the Telemetry
@@ -67,7 +67,7 @@ function k8s_tools_distro_launch() {
 			return 1
 		}
 
-		dialogProgress "${TANZU_TITLE}: Launching..." "40"
+		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "40"
 
 		# Ask the user to select the Tanzu CLI context work in and authenticate against.
 		# If this fails, the process can continue but we cannot sync the plugins without auth.
@@ -77,7 +77,7 @@ function k8s_tools_distro_launch() {
 			TANZU_CLI_PLUGIN_SYNC=FALSE
 		}
 
-		dialogProgress "${TANZU_TITLE}: Launching..." "50"
+		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "50"
 
 		# Download the Tanzu CLI plugins.
 		tanzu_cli_plugins || {
@@ -87,12 +87,12 @@ function k8s_tools_distro_launch() {
 			return 1
 		}
 
-		dialogProgress "${TANZU_TITLE}: Launching..." "75"
+		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "75"
 
 		# Use vendir to sync vendored dependencies
-		if [[ ${TANZU_TANZU_SYNC_VENDOR:-FALSE} == "TRUE" ]]; then
+		if [[ ${TANZU_VENDOR_ENABLED:-FALSE} == "TRUE" ]]; then
 
-			tanzu_sync_vendor || {
+			tanzu_vendor_sync || {
 				MESSAGE="Failed to sync vendored dependencies with vendir"
 				writeLog "ERROR" "${MESSAGE}"
 				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
@@ -109,7 +109,7 @@ function k8s_tools_distro_launch() {
 
 		else
 
-			writeLog "INFO" "${TANZU_TOOLS_TITLE} is not enabled to sync vendored depencendies, skipping."
+			writeLog "INFO" "${K8S_TOOLS_TITLE} is not enabled to sync vendored depencendies, skipping."
 
 		fi
 
@@ -119,10 +119,10 @@ function k8s_tools_distro_launch() {
 
 	fi
 
-	dialogProgress "${TANZU_TITLE}: Launching..." "100"
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "100"
 
 	tput clear
-	figlet "${TANZU_TITLE}"
+	figlet "${K8S_TOOLS_TITLE}"
 
 }
 
@@ -170,12 +170,12 @@ function tanzu_cli_nuke() {
 
 function tanzu_cli_envs() {
 
-	local ENVIRONMENT="${TANZU_ENVIRONMENT_NAME:-default}"
+	local ENVIRONMENT="${TANZU_CLI_ENVIRONMENT:-default}"
 	local TANZU_CLI_HOME_DEFAULT="${HOME}/.config/tanzu"
 	local TANZU_CLI_HOME="${TANZU_CLI_HOME:-$HOME/.config/tanzu-envs/$ENVIRONMENT}"
 
 	# If this function has been called, we assume the user knows what they are doing.
-	writeLog "INFO" "Configuring ${TANZU_TOOLS_TITLE} environment folder symlink"
+	writeLog "INFO" "Configuring ${K8S_TOOLS_TITLE} environment folder symlink"
 
 	# 1. Take a backup of the existing Tanzu CLI folder if present, or this could get ugly fast.
 	if [[ -s ${TANZU_CLI_HOME_DEFAULT} ]]; then
@@ -252,7 +252,7 @@ function tanzu_cli_custom() {
 	TANZU_CLI_OCI_URL="${TANZU_CLI_DEFAULT_URL%:*}"
 
 	# Add the user provided image tag.
-	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_TANZU_CLI_PLUGIN_INVENTORY_TAG}"
+	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_CLI_PLUGIN_INVENTORY_TAG}"
 
 	export TANZU_CLI_OCI_URL
 
@@ -268,7 +268,7 @@ function tanzu_cli_custom() {
 
 		tanzu_multi_site || {
 
-			MESSAGE="Failed to configure ${TANZU_TITLE} for multi-site!"
+			MESSAGE="Failed to configure ${K8S_TOOLS_TITLE} for multi-site!"
 			writeLog "ERROR" "${MESSAGE}"
 			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 			return 1
@@ -283,7 +283,7 @@ function tanzu_cli_custom() {
 
 		tanzu_registry_custom || {
 
-			MESSAGE="Failed to configure ${TANZU_TITLE} with a custom registry"
+			MESSAGE="Failed to configure ${K8S_TOOLS_TITLE} with a custom registry"
 			writeLog "ERROR" "${MESSAGE}"
 			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 			return 1
@@ -298,7 +298,7 @@ function tanzu_cli_custom() {
 
 		tanzu_registry_cache || {
 
-			MESSAGE="Failed to configure ${TANZU_TITLE} with a pull-through registry cache"
+			MESSAGE="Failed to configure ${K8S_TOOLS_TITLE} with a pull-through registry cache"
 			writeLog "ERROR" "${MESSAGE}"
 			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 			return 1
@@ -352,7 +352,7 @@ function tanzu_cli_init() {
 	fi
 
 	# Make sure that the interactive parts are not run in a VSCode remote env.
-	if [[ ${ENVIRONMENT_VSCODE:-EMPTY} == "CONTAINER" ]]; then
+	if [[ ${K8S_TOOLS_ENVIRONMENT:-EMPTY} == "CONTAINER" ]]; then
 
 		writeLog "INFO" "Devcontainer is running, skipping Tanzu init."
 		return 0
@@ -449,13 +449,13 @@ function tanzu_cli_plugins() {
 
 	# Install all plugins recommended by the active contexts
 	# only if the global flag is enabled and the local check.
-	if [[ ${TANZU_TANZU_CLI_SYNC_PLUGINS:-FALSE} != "TRUE" ]]; then
+	if [[ ${TANZU_CLI_SYNC_PLUGINS:-FALSE} != "TRUE" ]]; then
 
-		writeLog "WARN" "${TANZU_TOOLS_TITLE} plugin sync is disabled as the TANZU_TANZU_CLI_SYNC_PLUGINS variable is set to ${TANZU_TANZU_CLI_SYNC_PLUGINS:-FALSE}"
+		writeLog "WARN" "${K8S_TOOLS_TITLE} plugin sync is disabled as the TANZU_CLI_SYNC_PLUGINS variable is set to ${TANZU_CLI_SYNC_PLUGINS:-FALSE}"
 
 	elif [[ ${TANZU_CLI_PLUGIN_SYNC:-FALSE} != "TRUE" ]]; then
 
-		writeLog "WARN" "${TANZU_TOOLS_TITLE} plugin sync is skipped as the TANZU_CLI_PLUGIN_SYNC variable is set to ${TANZU_CLI_PLUGIN_SYNC:-FALSE}"
+		writeLog "WARN" "${K8S_TOOLS_TITLE} plugin sync is skipped as the TANZU_CLI_PLUGIN_SYNC variable is set to ${TANZU_CLI_PLUGIN_SYNC:-FALSE}"
 
 	else
 
@@ -471,8 +471,8 @@ function tanzu_cli_plugins() {
 	dialogProgress "Tanzu CLI: Downloading Plugins..." "50"
 
 	# Add the VMWare TKG group of plugins at the configured version to match the CLI.
-	tanzu plugin install --group "vmware-tkg/default:${TANZU_TANZU_CLI_PLUGIN_GROUP_TKG_TAG}" 1>>"${LOG_FILE}" 2>&1 || {
-		writeLog "ERROR" "Failed to install the Tanzu plugin group vmware-tkg/default:${TANZU_TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
+	tanzu plugin install --group "vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}" 1>>"${LOG_FILE}" 2>&1 || {
+		writeLog "ERROR" "Failed to install the Tanzu plugin group vmware-tkg/default:${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
 		return 1
 	}
 
@@ -616,7 +616,7 @@ function tanzu_cli_context() {
 
 		writeLog "INFO" "A Pinniped context was selection, starting Authentication session with kubeconfig ${PINNIPED_KUBECONFIG}"
 
-		TANZU_pinniped_session "${PINNIPED_KUBECONFIG}" || {
+		tanzu_pinniped_session "${PINNIPED_KUBECONFIG}" || {
 			writeLog "ERROR" "Failed to start Pinniped session!"
 			TANZU_CLI_PLUGIN_SYNC=FALSE
 			return 1
@@ -708,35 +708,51 @@ function tanzu_multi_site() {
 	writeLog "DEBUG" "Dialog value: ${VALUE:-EMPTY}"
 	writeLog "DEBUG" "Dialog return: ${RETURN_CODE:-EMPTY}"
 
-	# TODO: Handle edge cases.
-	if [[ ${RETURN_CODE:-0} -eq 1 ]]; then
+	# TODO: Handle additional edge cases.
+	case "${RETURN_CODE}" in
+
+	"1")
 
 		writeLog "WARN" "The user selected NO on the multi-site configuration adialog. Aborting configuration."
 		dialogMsgBox "WARNING" "Unable to continue as the cancel button was selected. Aborting configuration."
 		exit 0
 
-	elif [[ ${RETURN_CODE:-0} -eq 255 ]]; then
+		;;
+
+	"255")
 
 		writeLog "WARN" "Timeout during site selection dialog. Aborting configuration"
 		dialogMsgBox "WARNING" "Timeout during site selection dialog. Aborting configuration"
 		exit 0
 
-	elif [[ ${VALUE:-EMPTY} == "EMPTY" ]]; then
+		;;
 
-		writeLog "ERROR" "Error during site selection dialog. The value for the site was empty"
-		return 1
+	"0")
 
-	elif [[ ${RETURN_CODE:-0} -ne 0 ]]; then
+		if [[ ${VALUE:-EMPTY} == "EMPTY" ]]; then
+
+			writeLog "ERROR" "Error during site selection dialog. The value for the site was empty"
+			return 1
+
+		fi
+
+		# OK
+
+		;;
+
+	*)
 
 		writeLog "ERROR" "Unhandled error during site selection dialog"
 		return 1
 
-	fi
+		;;
+
+	esac
 
 	writeLog "DEBUG" "Checking variables for site ${SITES_ARRAY[$VALUE]}"
 
 	# Export a variable into the environment with the site name.
-	# This is used by downstream scripts.
+	# This can be used by downstream scripts.
 	export TANZU_SITE_NAME="${SITES_ARRAY[$VALUE]}"
 
 	# Build the variable name as a string
@@ -804,7 +820,7 @@ function tanzu_multi_site() {
 			return 1
 		else
 			writeLog "INFO" "The site ${SITES_ARRAY[$VALUE]} has a Tanzu CLI Inventory tag value of ${CLI_PLUGIN_INVENTORY_TAG}"
-			export TANZU_TANZU_CLI_PLUGIN_INVENTORY_TAG="${CLI_PLUGIN_INVENTORY_TAG}"
+			export TANZU_CLI_PLUGIN_INVENTORY_TAG="${CLI_PLUGIN_INVENTORY_TAG}"
 		fi
 
 	fi
@@ -825,7 +841,7 @@ function tanzu_multi_site() {
 			return 1
 		else
 			writeLog "INFO" "The site ${SITES_ARRAY[$VALUE]} has a Tanzu CLI TKG version tag value of ${CLI_PLUGIN_GROUP_TKG_TAG}"
-			export TANZU_TANZU_CLI_PLUGIN_GROUP_TKG_TAG="${CLI_PLUGIN_GROUP_TKG_TAG}"
+			export TANZU_CLI_PLUGIN_GROUP_TKG_TAG="${CLI_PLUGIN_GROUP_TKG_TAG}"
 		fi
 
 	fi
@@ -846,16 +862,13 @@ function tanzu_multi_site() {
 	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL%:*}"
 
 	# Add the user provided image tag.
-	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_TANZU_CLI_PLUGIN_INVENTORY_TAG}"
-
-	# Use both names for legacy.
-	TANZU_TOOLS_CLI_OCI_URL="${TANZU_CLI_OCI_URL}"
+	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_CLI_PLUGIN_INVENTORY_TAG}"
 
 	# Add the multi-site registry OCI URL to the TKG URL
 	TKG_CUSTOM_IMAGE_REPOSITORY="${REGISTRY}/tkg"
 
 	# Export the final results
-	export TANZU_CLI_OCI_URL TANZU_TOOLS_CLI_OCI_URL TKG_CUSTOM_IMAGE_REPOSITORY
+	export TANZU_CLI_OCI_URL TKG_CUSTOM_IMAGE_REPOSITORY
 
 	writeLog "INFO" "The site registry URL for Tanzu CLI has been set to ${TANZU_CLI_OCI_URL}"
 
@@ -880,11 +893,8 @@ function tanzu_registry_custom() {
 	# Add the custom registry OCI URL to the TKG URL
 	TKG_CUSTOM_IMAGE_REPOSITORY="${TANZU_CUSTOM_REGISTRY}/tkg"
 
-	# Use both names for legacy.
-	TANZU_TOOLS_CLI_OCI_URL="${TANZU_CLI_OCI_URL}"
-
 	# Export the final results
-	export TANZU_CLI_OCI_URL TANZU_TOOLS_CLI_OCI_URL TKG_CUSTOM_IMAGE_REPOSITORY
+	export TANZU_CLI_OCI_URL TKG_CUSTOM_IMAGE_REPOSITORY
 
 	writeLog "INFO" "The custom registry URL for Tanzu CLI has been set to ${TANZU_CLI_OCI_URL}"
 
@@ -903,14 +913,11 @@ function tanzu_registry_cache() {
 	# Add the pull-through prefix to the Tanzu CLI URL
 	TANZU_CLI_OCI_URL="${TANZU_PULL_THROUGH_CACHE}/${TANZU_CLI_OCI_URL}"
 
-	# Use both names for legacy.
-	TANZU_TOOLS_CLI_OCI_URL="${TANZU_CLI_OCI_URL}"
-
 	# Add the pull-through prefix to the TKG URL
 	TKG_CUSTOM_IMAGE_REPOSITORY="${TANZU_PULL_THROUGH_CACHE}/projects.registry.vmware.com/tkg"
 
 	# Export the final results
-	export TANZU_CLI_OCI_URL TANZU_TOOLS_CLI_OCI_URL TKG_CUSTOM_IMAGE_REPOSITORY
+	export TANZU_CLI_OCI_URL TKG_CUSTOM_IMAGE_REPOSITORY
 
 	writeLog "INFO" "The pull-through cache URL for Tanzu CLI has been set to ${TANZU_CLI_OCI_URL}"
 
@@ -920,13 +927,13 @@ function tanzu_registry_cache() {
 
 }
 
-function tanzu_sync_vendor() {
+function tanzu_vendor_sync() {
 
 	# This is the location to push into.
-	local VENDOR_DIR="${TANZU_TANZU_SYNC_VENDOR_DIR:-vendor}"
+	local VENDOR_DIR="${TANZU_VENDOR_DIR:-vendor}"
 
 	# These files are relative to the location of the vendor directory.
-	local VENDIR_FILE_CONFIG="${TANZU_TANZU_SYNC_VENDOR_CONFIG:-vendir.yml}"
+	local VENDIR_FILE_CONFIG="${TANZU_VENDOR_CONFIG:-vendir.yml}"
 
 	# The lock file will share the same name with modified extension.
 	local VENDIR_FILE_LOCK="${VENDIR_FILE_CONFIG/.yml/.lock.yml}"
@@ -935,7 +942,7 @@ function tanzu_sync_vendor() {
 	local VENDIR_FILE_LOCK="${VENDIR_FILE_LOCK/.yaml/.lock.yaml}"
 
 	# Are the vendored dependencies pined
-	local VENDIR_LOCKED="${TANZU_TANZU_SYNC_VENDOR_LOCKED:-FALSE}"
+	local VENDIR_LOCKED="${TANZU_VENDOR_LOCKED:-FALSE}"
 
 	# There will likely be more args in the future.
 	local VENDIR_ARGS=()
@@ -981,7 +988,7 @@ function tanzu_sync_vendor() {
 function tanzu_path_vendor() {
 
 	# This is the location to start from.
-	local VENDOR_DIR="${TANZU_TANZU_SYNC_VENDOR_DIR:-.}"
+	local VENDOR_DIR="${TANZU_VENDOR_DIR:-.}"
 
 	# The vendir configuration will place all files into 'vendor'
 	local VENDOR_DIR="${VENDOR_DIR}/vendor"
@@ -995,7 +1002,7 @@ function tanzu_path_vendor() {
 		return 0
 	fi
 
-	# It's opinionated, but lets look for scripts in 'scripts'
+	# Let's look for scripts in the scripts home directory.
 	if [[ ! -d ${SCRIPTS_HOME} ]]; then
 		writeLog "DEBUG" "No scripts directory ${SCRIPTS_HOME}, skipping add to PATH"
 		return 0
@@ -1026,9 +1033,9 @@ function tanzu_pinniped_session() {
 	local PINNIPED_KUBECONFIG="${1}"
 
 	# Check if the global feature flag is enabled first or skip this code path.
-	if [[ ${TANZU_ENABLE_PINNIPED:-FALSE} != "TRUE" ]]; then
+	if [[ ${TANZU_PINNIPED_ENABLED:-FALSE} != "TRUE" ]]; then
 
-		writeLog "WARN" "Pinniped session has been disable due to global variable TANZU_ENABLE_PINNIPED being set to ${TANZU_ENABLE_PINNIPED:-FALSE}"
+		writeLog "WARN" "Pinniped session has been disabled due to global variable TANZU_PINNIPED_ENABLED being set to ${TANZU_PINNIPED_ENABLED:-FALSE}"
 		return 0
 
 	fi
@@ -1054,7 +1061,7 @@ function tanzu_pinniped_session() {
 	# Start a Pinniped session using the provided kubeconfig
 	tput clear
 
-	showHeader "Pinniped session"
+	figlet "Pinniped"
 
 	pinniped whoami \
 		--timeout 300s \

@@ -20,10 +20,12 @@ For additional info, see the [GitHub issue #620](https://github.com/vmware-tanzu
     mkdir -p tanzu-cli/home/.config/tanzu-env/MY_ENVIRONMENT
     ```
 
-1. Set the environment variable name to match the folder and launch the container
+1. Set the environment variable name and pass to the container to match the folder and launch the container
 
     ```bash
-    K8S_TOOLS_ENVIRONMENT=MY_ENVIRONMENT
+    TANZU_CLI_ENVIRONMENT=MY_ENVIRONMENT
+
+    docker run <other flags> --env "TANZU_CLI_ENVIRONMENT=${TANZU_CLI_ENVIRONMENT}"
     ```
 
     **NOTE:** _If no variable is set, an environment name of "default" is assumed._

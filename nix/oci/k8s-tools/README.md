@@ -7,8 +7,9 @@
   - [Overview](#overview)
   - [Variable](#variable)
     - [Common](#common)
-    - [Tanzu](#tanzu)
-    - [Sites](#sites)
+    - [Tanzu CLI](#tanzu-cli)
+    - [Tanzu Hacks](#tanzu-hacks)
+    - [Tanzu Sites](#tanzu-sites)
   - [Registry Configuration](#registry-configuration)
     - [1. Proxy server](#1-proxy-server)
     - [2. Multi-Site](#2-multi-site)
@@ -28,19 +29,20 @@ _This version runs the container as `root` and is expected to be used from Docke
 
 Kubernetes Tools variables.
 
-| Variable                      | Description                                         | Default | Example                                                                 |
-| :---------------------------- | :-------------------------------------------------- | :-----: | :---------------------------------------------------------------------- |
-| LOG_LEVEL                     | The log level                                       |  INFO   | DEBUG, INFO, WARN, ERR                                                  |
-| K8S_TOOLS_LAUNCH              | Enable to launch the dialog menu on start           |  TRUE   | TRUE, FALSE                                                             |
-| K8S_TOOLS_ENABLE_PROXY_SCRIPT | Enable to run a user-provided `scripts/proxy.sh`    |  FALSE  | TRUE, FALSE                                                             |
-| K8S_TOOLS_ENABLE_STARSHIP     | Enable the Starship prompt                          |  FALSE  | TRUE, FALSE                                                             |
-| K8S_TOOLS_ENABLE_PINNIPED     | Enable in Pinniped environments to login on startup |  FALSE  | TRUE, FALSE                                                             |
-| K8S_TOOLS_DIALOG_THEME        | Select the theme for dialog menus                   | default | See the [.dialogrc](nix/oci/tanzu-tools/root/etc/skel/.dialogrc) folder |
-| K8S_TOOLS_DISTRO              | Define for distro specific customisations.          | vanilla | vanilla, tanzu                                                          |
+| Variable                      | Description                                      |     Default      | Example                                                                 |
+| :---------------------------- | :----------------------------------------------- | :--------------: | :---------------------------------------------------------------------- |
+| LOG_LEVEL                     | The log level                                    |       INFO       | DEBUG, INFO, WARN, ERR                                                  |
+| K8S_TOOLS_LAUNCH              | Enable to launch the dialog menu on start        |       TRUE       | TRUE, FALSE                                                             |
+| K8S_TOOLS_ENABLE_PROXY_SCRIPT | Enable to run a user-provided `scripts/proxy.sh` |      FALSE       | TRUE, FALSE                                                             |
+| K8S_TOOLS_ENABLE_STARSHIP     | Enable the Starship prompt                       |      FALSE       | TRUE, FALSE                                                             |
+| K8S_TOOLS_DIALOG_THEME        | Select the theme for dialog menus                |     default      | See the [.dialogrc](nix/oci/tanzu-tools/root/etc/skel/.dialogrc) folder |
+| K8S_TOOLS_DISTRO              | Define for distro specific customisations.       |     vanilla      | vanilla, tanzu                                                          |
+| K8S_TOOLS_NAME                | A custom name.                                   |    k8s-tools     | k8s-tools, tanzu-tools, carvel-tools                                    |
+| K8S_TOOLS_TITLE               | A custom title.                                  | Kubernetes Tools | Tanzu Tools                                                             |
 
-### Tanzu
+### Tanzu CLI
 
-Tanzu specific variables.
+Tanzu CLI specific variables.
 
 | Variable                       | Description                                 | Default | Example                       |
 | :----------------------------- | :------------------------------------------ | :-----: | :---------------------------- |
@@ -48,9 +50,20 @@ Tanzu specific variables.
 | TANZU_CLI_PLUGIN_GROUP_TKG_TAG | The tag for the TKG Carvel Packages         | latest  | latest, v2.20, v2.3.0, v2.3.1 |
 | TANZU_CLI_SYMLINK_ENABLED      | Enable to use a multi-env symlink hack.     |  FALSE  | TRUE, FALSE                   |
 | TANZU_CLI_SYNC_PLUGINS         | Enable to run 'tanzu plugin sync' on launch |  FALSE  | TRUE, FALSE                   |
-| TANZU_SYNC_VENDOR              | Enable to run 'vendir sync' on launch       |  FALSE  | TRUE, FALSE                   |
 
-### Sites
+### Tanzu Hacks
+
+Tanzu _hack_ specific variables.
+
+| Variable               | Description                                         |  Default   | Example             |
+| :--------------------- | :-------------------------------------------------- | :--------: | :------------------ |
+| TANZU_PINNIPED_ENABLED | Enable in Pinniped environments to login on startup |   FALSE    | TRUE, FALSE         |
+| TANZU_VENDOR_ENABLED   | Enable to run 'vendir sync' on launch               |   FALSE    | TRUE, FALSE         |
+| TANZU_VENDOR_DIR       | The location where the vendor folder is created.    |   vendor   | /workdir            |
+| TANZU_VENDOR_CONFIG    | The config file for the vendir CLI                  | vendir.yml | .vendir/config.yaml |
+| TANZU_VENDOR_LOCKED    | A boolean to enable locked vendored dependencies    |   FALSE    | TRUE, FALSE         |
+
+### Tanzu Sites
 
 Multi-Site specific variables for _Tanzu_
 

@@ -605,10 +605,10 @@ function tanzu_tools_sync_ytt_lib() {
 function tanzu_tools_sync_vendor() {
 
 	# This is the location to push into.
-	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-vendor}"
+	local VENDOR_DIR="${TANZU_VENDOR_DIR:-vendor}"
 
 	# These files are relative to the location of the vendor directory.
-	local VENDIR_FILE_CONFIG="${TANZU_TOOLS_SYNC_VENDOR_CONFIG:-vendir.yml}"
+	local VENDIR_FILE_CONFIG="${TANZU_VENDOR_CONFIG:-vendir.yml}"
 
 	# The lock file will share the same name with modified extension.
 	local VENDIR_FILE_LOCK="${VENDIR_FILE_CONFIG/.yml/.lock.yml}"
@@ -617,7 +617,7 @@ function tanzu_tools_sync_vendor() {
 	local VENDIR_FILE_LOCK="${VENDIR_FILE_LOCK/.yaml/.lock.yaml}"
 
 	# Are the vendored dependencies pined
-	local VENDIR_LOCKED="${TANZU_TOOLS_SYNC_VENDOR_LOCKED:-FALSE}"
+	local VENDIR_LOCKED="${TANZU_VENDOR_LOCKED:-FALSE}"
 
 	# There will likely be more args in the future.
 	local VENDIR_ARGS=()
@@ -663,7 +663,7 @@ function tanzu_tools_sync_vendor() {
 function tanzu_tools_path_vendor() {
 
 	# This is the location to start from.
-	local VENDOR_DIR="${TANZU_TOOLS_SYNC_VENDOR_DIR:-vendor}"
+	local VENDOR_DIR="${TANZU_VENDOR_DIR:-vendor}"
 
 	# If the directory does not exist, no point continuing.
 	if [[ ! -d ${VENDOR_DIR} ]]; then
@@ -812,7 +812,7 @@ function tanzu_tools_launch() {
 		fi
 
 		# Use vendir to sync vendored dependencies
-		if [[ ${TANZU_TOOLS_SYNC_VENDOR:-FALSE} == "TRUE" ]]; then
+		if [[ ${TANZU_VENDOR_ENABLED:-FALSE} == "TRUE" ]]; then
 
 			tanzu_tools_sync_vendor || {
 				MESSAGE="Failed to sync vendored dependencies with vendir"

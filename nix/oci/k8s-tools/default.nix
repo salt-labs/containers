@@ -306,9 +306,9 @@ in
         #"2376/tcp" = {};
       };
       Env = [
+        # Common
         "CHARSET=UTF-8"
         "ENABLE_DEBUG=FALSE"
-        "ENVIRONMENT_VSCODE=none"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
         "LOG_DESTINATION=file"
@@ -323,21 +323,25 @@ in
         #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
         # Kubernetes Tools
         "LOG_LEVEL=INFO"
-        "K8S_TOOLS_NAME=k8s-tools"
-        "K8S_TOOLS_TITLE=Kubernetes Tools"
-        "K8S_TOOLS_CONTAINER_ENVIRONMENT=TRUE"
-        "K8S_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
-        "K8S_TOOLS_ENABLE_STARSHIP=FALSE"
+        "DEBUG_ENABLED=FALSE"
+        "K8S_TOOLS_ENVIRONMENT=container"
         "K8S_TOOLS_DIALOG_THEME=default"
         "K8S_TOOLS_DISTRO=vanilla"
-        # Tanzu
+        "K8S_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
+        "K8S_TOOLS_ENABLE_STARSHIP=FALSE"
+        "K8S_TOOLS_LAUNCH=TRUE"
+        "K8S_TOOLS_NAME=k8s-tools"
+        "K8S_TOOLS_TITLE=Kubernetes Tools"
+        # Tanzu CLI
         "TANZU_CLI_PLUGIN_INVENTORY_TAG=latest"
         "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
         "TANZU_CLI_SYMLINK_ENABLED=FALSE"
-        "TANZU_ENABLE_PINNIPED=FALSE"
+        "TANZU_CLI_SYNC_PLUGINS=FALSE"
+        # Tanzu Hacks
+        "TANZU_PINNIPED_ENABLED=FALSE"
+        "TANZU_VENDOR_ENABLED=FALSE"
+        # Tanzu Sites
         "TANZU_SITES_ENABLED=FALSE"
-        "TANZU_SYNC_PLUGINS=FALSE"
-        "TANZU_SYNC_VENDOR=FALSE"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";

@@ -335,7 +335,7 @@ function show_logs() {
 
 		if [[ -f ${LOG_FILE} ]]; then
 
-			echo -e "${TANZU_TOOLS_TITLE} has exited with an error. Displaying a copy of the session log."
+			echo -e "${K8S_TOOLS_TITLE} has exited with an error. Displaying a copy of the session log."
 
 			echo -e "\nSTART: Show session logs...\n"
 

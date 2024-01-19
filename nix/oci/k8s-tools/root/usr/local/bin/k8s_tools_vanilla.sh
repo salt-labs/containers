@@ -10,13 +10,13 @@ function k8s_tools_distro_launch() {
 	# Make sure job control is on
 	set -m
 
-	dialogProgress "${TANZU_TITLE}: Launching..." "10"
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "10"
 
 	# TODO: Do Kubernetes stuff here...
 
-	dialogProgress "${TANZU_TITLE}: Launching..." "100"
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "100"
 
 	tput clear
-	figlet "${TANZU_TITLE}"
+	figlet "${K8S_TOOLS_TITLE}"
 
 }

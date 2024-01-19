@@ -228,7 +228,7 @@ fi
 #########################
 
 # Make sure that the interactive parts are not run in a a VSCode remote env.
-if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
+if [[ ${K8S_TOOLS_ENVIRONMENT^^} == "VSCODE" ]]; then
 
 	writeLog "INFO" "Devcontainer running, skipping interactive config"
 
@@ -250,7 +250,7 @@ else
 
 fi
 
-writeLog "INFO" "Logging into ${TANZU_TOOLS_TITLE} environment: ${ENVIRONMENT_VSCODE}"
+writeLog "INFO" "Logging into ${K8S_TOOLS_TITLE} environment: ${K8S_TOOLS_ENVIRONMENT}"
 
 #########################
 # Kubernetes Tools
@@ -259,23 +259,23 @@ writeLog "INFO" "Logging into ${TANZU_TOOLS_TITLE} environment: ${ENVIRONMENT_VS
 alias launch='k8s_tools_launch'
 
 # For kubie users, we can get ourselves into an interesting loop here.
-# If we are inside a kubie shell, do not launch ${TANZU_TOOLS_TITLE} again.
+# If we are inside a kubie shell, do not launch ${K8S_TOOLS_TITLE} again.
 if [[ ${KUBIE_ACTIVE:-EMPTY} == "EMPTY" ]]; then
 
 	if [[ ${K8S_TOOLS_LAUNCH} == "TRUE" ]]; then
 
-		writeLog "INFO" "Launching ${TANZU_TOOLS_TITLE}..."
+		writeLog "INFO" "Launching ${K8S_TOOLS_TITLE}..."
 
 		# Let the games begin...
 		k8s_tools_launch || {
 
-			writeLog "ERROR" "Failed to launch ${TANZU_TOOLS_TITLE}"
+			writeLog "ERROR" "Failed to launch ${K8S_TOOLS_TITLE}"
 			exit_script 1
 		}
 
 	else
 
-		writeLog "INFO" "Not launching ${TANZU_TOOLS_TITLE} as K8S_TOOLS_LAUNCH is set to ${K8S_TOOLS_LAUNCH}"
+		writeLog "INFO" "Not launching ${K8S_TOOLS_TITLE} as K8S_TOOLS_LAUNCH is set to ${K8S_TOOLS_LAUNCH}"
 		tput clear
 
 	fi
@@ -284,7 +284,7 @@ fi
 
 # Source the bash completions for all the associated tooling.
 k8s_tools_bash_completions || {
-	writeLog "ERROR" "Failed to source ${TANZU_TOOLS_TITLE} bash completions"
+	writeLog "ERROR" "Failed to source ${K8S_TOOLS_TITLE} bash completions"
 	exit_script 1
 }
 tput clear

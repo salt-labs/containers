@@ -29,9 +29,9 @@ if [ -d "$HOME/.local/bin" ]; then
 fi
 
 #########################
-# NOTES: ${TANZU_TOOLS_TITLE}
+# NOTES: Kubernetes Tools
 #
-# 		This file is used as a flag for the ${TANZU_TOOLS_TITLE} container image.
+# 		This file is used as a flag for the Kubernetes Tools container image.
 # 		Should you wish to get the latest /etc/skel copied, delete this file
 #		and re-launch the container.
 #

@@ -188,7 +188,8 @@ inputs.devenv.lib.mkShell {
           };
 
           prettier = {
-            #output = "check";
+            check = true;
+            list-different = true;
             write = true;
           };
 

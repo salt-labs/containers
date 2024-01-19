@@ -188,7 +188,7 @@ inputs.devenv.lib.mkShell {
           };
 
           prettier = {
-            output = "check";
+            #output = "check";
             write = true;
           };
 

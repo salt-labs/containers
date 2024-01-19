@@ -23,7 +23,7 @@ permissions:
   statuses: read
 
 env:
-  NIXPKGS_ALLOW_UNFREE: 1
+  #NIXPKGS_ALLOW_UNFREE: 1
 
   PROJECT: ${{ github.repository }}
 

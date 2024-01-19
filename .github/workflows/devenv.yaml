@@ -90,12 +90,12 @@ jobs:
         run: |
           nix profile install tarball+https://install.devenv.sh/latest
 
-      #- id: devenv_ci
-      #  name: Devenv CI
-      #  run: |
-      #    devenv ci
+      - id: devenv_ci
+        name: Devenv CI
+        run: |
+          devenv ci
 
-      #- id: devenv_shell
-      #  name: Devenv Shell
-      #  run: |
-      #    devenv shell echo "Development environment OK!"
+      - id: devenv_shell
+        name: Devenv Shell
+        run: |
+          devenv shell echo "Development environment OK!"

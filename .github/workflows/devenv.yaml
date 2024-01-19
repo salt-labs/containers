@@ -73,6 +73,7 @@ jobs:
           name: salt-labs
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           useDaemon: false
+          skipPush: false
 
       - id: configure_nix
         name: Configure Nix
@@ -84,10 +85,10 @@ jobs:
           access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
           EOF
 
-      #- id: install_devenv
-      #  name: Install devenv
-      #  run: |
-      #    nix profile install tarball+https://install.devenv.sh/latest
+      - id: install_devenv
+        name: Install devenv
+        run: |
+          nix profile install tarball+https://install.devenv.sh/latest
 
       #- id: devenv_ci
       #  name: Devenv CI

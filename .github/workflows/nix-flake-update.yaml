@@ -30,7 +30,7 @@ jobs:
 
       - id: cachix
         name: "Enable Cachix ❄️"
-        uses: cachix/cachix-action@v14
+        uses: cachix/cachix-action@v13
         with:
           name: salt-labs
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}

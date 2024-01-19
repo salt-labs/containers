@@ -69,9 +69,10 @@ jobs:
       ######
       - id: WTF1
         name: Where is cachix
-        run: which cachix || echo "NOPE"
+        run: |
+          which cachix || echo "NOPE 1"
+          which devenv || echo "NOPE 2"
       #####
-
       - id: cachix
         name: "Enable Cachix ❄️"
         uses: cachix/cachix-action@v14
@@ -82,9 +83,10 @@ jobs:
       ######
       - id: WTF2
         name: Where is cachix
-        run: which cachix || echo "NOPE"
+        run: |
+          which cachix || echo "NOPE 1"
+          which devenv || echo "NOPE 2"
       #####
-
       - id: configure_nix
         name: Configure Nix
         env:
@@ -95,23 +97,18 @@ jobs:
           access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
           EOF
 
-      ######
-      - id: WTF3
-        name: Where is cachix
-        run: which cachix || echo "NOPE"
-      #####
-
       - id: install_devenv
         name: Install devenv
         run: |
-          nix profile install github:cachix/devenv/latest
+          nix profile install tarball+https://install.devenv.sh/latest
 
       ######
       - id: WTF4
         name: Where is cachix
-        run: which cachix || echo "NOPE"
+        run: |
+          which cachix || echo "NOPE 1"
+          which devenv || echo "NOPE 2"
       #####
-
       - id: devenv_ci
         name: Devenv CI
         run: |

@@ -8,12 +8,15 @@
 # No phoning home from the Tanzu CLI is allowed.
 export TANZU_CLI_CEIP_OPT_IN_PROMPT_ANSWER="no"
 
-# ${K8S_TOOLS_TITLE} variables
+# ytt library location
 export YTT_LIB="/usr/lib/ytt/"
 
 # These variables are passed in as Docker arguments or defaults are set here if missing.
 export TANZU_CLI_PLUGIN_INVENTORY_TAG="${TANZU_CLI_PLUGIN_INVENTORY_TAG:-latest}"
 export TANZU_CLI_PLUGIN_GROUP_TKG_TAG="${TANZU_CLI_PLUGIN_GROUP_TKG_TAG:-latest}"
+
+# Downstream scripts need the TKG_VERSION
+export TKG_VERSION="${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
 
 function k8s_tools_distro_launch() {
 
@@ -752,8 +755,7 @@ function tanzu_multi_site() {
 	writeLog "DEBUG" "Checking variables for site ${SITES_ARRAY[$VALUE]}"
 
 	# Export a variable into the environment with the site name.
-	# This can be used by downstream scripts.
-	export TANZU_SITE_NAME="${SITES_ARRAY[$VALUE]}"
+	TANZU_SITE_NAME="${SITES_ARRAY[$VALUE]}"
 
 	# Build the variable name as a string
 	VAR_REGISTRY="TANZU_SITE_${SITES_ARRAY[$VALUE]}_REGISTRY"
@@ -820,7 +822,7 @@ function tanzu_multi_site() {
 			return 1
 		else
 			writeLog "INFO" "The site ${SITES_ARRAY[$VALUE]} has a Tanzu CLI Inventory tag value of ${CLI_PLUGIN_INVENTORY_TAG}"
-			export TANZU_CLI_PLUGIN_INVENTORY_TAG="${CLI_PLUGIN_INVENTORY_TAG}"
+			TANZU_CLI_PLUGIN_INVENTORY_TAG="${CLI_PLUGIN_INVENTORY_TAG}"
 		fi
 
 	fi
@@ -841,7 +843,7 @@ function tanzu_multi_site() {
 			return 1
 		else
 			writeLog "INFO" "The site ${SITES_ARRAY[$VALUE]} has a Tanzu CLI TKG version tag value of ${CLI_PLUGIN_GROUP_TKG_TAG}"
-			export TANZU_CLI_PLUGIN_GROUP_TKG_TAG="${CLI_PLUGIN_GROUP_TKG_TAG}"
+			TANZU_CLI_PLUGIN_GROUP_TKG_TAG="${CLI_PLUGIN_GROUP_TKG_TAG}"
 		fi
 
 	fi
@@ -851,6 +853,7 @@ function tanzu_multi_site() {
 	##########
 
 	# Export the correct registry variables for the selected site.
+	TKG_VERSION="${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
 
 	# Strip the VMware registry prefix.
 	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL#*projects.registry.vmware.com}"
@@ -868,6 +871,8 @@ function tanzu_multi_site() {
 	TKG_CUSTOM_IMAGE_REPOSITORY="${REGISTRY}/tkg"
 
 	# Export the final results
+	export TANZU_SITE_NAME
+	export TKG_VERSION TANZU_CLI_PLUGIN_GROUP_TKG_TAG TANZU_CLI_PLUGIN_INVENTORY_TAG
 	export TANZU_CLI_OCI_URL TKG_CUSTOM_IMAGE_REPOSITORY
 
 	writeLog "INFO" "The site registry URL for Tanzu CLI has been set to ${TANZU_CLI_OCI_URL}"

@@ -7,18 +7,20 @@
   ...
 }: let
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  #creationDate = builtins.substring 0 8 modifiedDate;
-  creationDate = "now";
+  creationDate = builtins.substring 0 8 modifiedDate;
 
-  # This container runs as the root user however it's intended
-  # to be run from Docker rootless.
-  containerUser = "root";
-  containerUID = "0";
-  containerGID = "0";
+  # A non-root user that will be used inside the image.
+  containerUser = "tanzu";
+  containerUID = "1000";
+  containerGID = "1000";
 
   tanzu = pkgs.callPackage ./derivations/tanzu {
     inherit pkgs;
     inherit crossPkgs;
+  };
+
+  super_custom = pkgs.callPackage ./derivations/super {
+    inherit pkgs;
   };
 
   carvel = pkgs.callPackage ../carvel/carvel.nix {
@@ -36,32 +38,32 @@
     usrBinEnv
     binSh
     caCertificates
+    #fakeNss
     shadowSetup
   ];
 
   stablePkgs = with pkgs; [
     # Coreutils
-    uutils-coreutils-noprefix
+    #busybox
+    coreutils-full
+    #toybox
+    #uutils-coreutils
 
-    # User tools
+    # Common
+    bash-completion
     bashInteractive
-    #bash-completion
-    nix-bash-completions
-    complete-alias
     bat
+    bottom
     bind
     bindfs
-    bottom
-    btop
     cacert
     curlFull
     dialog
     diffutils
     figlet
+    fortune
     file
     fuse3
-    fzf
-    fzf-obc
     gawk
     git
     gnugrep
@@ -73,8 +75,10 @@
     htop
     iputils
     jq
+    kmod
     less
     ncurses
+    nettools
     openssh
     openssl
     procps
@@ -85,41 +89,49 @@
     tini
     tree
     unzip
+    vim
     wget
     which
     xz
     yq-go
+
+    # User tools
     shadow
     getent
+    su
+    sudo
     libcap
+    #super # Removed in 23.11
+
+    # UID > 65535
+    sssd
+    #nsncd
 
     # Nix
     direnv
     nil
 
-    # Vim
-    vim-full
-
     # VSCode
-    #glibc
     findutils
     iproute
 
     # Docker Tools
     dive
+    #docker
+    #docker-client
     docker-buildx
-    docker-client
     docker-gc
     docker-ls
-    docker-proxy
     docker-slim
+    docker-proxy
+    runc
 
     # Kubernetes Tools
     clusterctl
     k9s
     kail
     kapp
-    kind
+    #kind
     krew
     kube-bench
     kube-linter
@@ -131,49 +143,53 @@
     sops
 
     # TKG Tools
-    #pinniped
+    pinniped
     sonobuoy
     velero
 
     # Custom derivations
     carvel
     tanzu
+    super_custom # Added for 23.11
   ];
 
   unstablePkgs = with pkgsUnstable; [
-    # Pinniped v0.28 has the --timeout parameter
-    pinniped
+    # TODO: Check when docker-client is up to v24+
+    docker_24
+    kind
+    glibc
   ];
 in
-  #pkgs.dockerTools.buildLayeredImage {
-  pkgs.dockerTools.buildImage {
-    name = "tanzu-tools-root";
+  pkgs.dockerTools.buildLayeredImage {
+    name = "tanzu-tools";
     tag = "latest";
     created = creationDate;
 
     architecture = "amd64";
 
-    copyToRoot = pkgs.buildEnv {
+    maxLayers = 100;
+
+    contents = pkgs.buildEnv {
       name = "image-root";
 
-      paths =
-        stablePkgs
-        ++ unstablePkgs
-        ++ environmentHelpers
-        ++ [root_files];
-
       pathsToLink = [
+        "/"
         "/bin"
         "/etc"
         "/etc/default"
         "/etc/skel"
+        "/etc/sudoers.d"
+        "/etc/pam.d"
         "/home"
         "/lib"
         "/lib64"
+        "/nix"
         "/run"
+        #"/run/wrappers"
+        #"/run/wrappers/bin"
         "/share"
         "/sbin"
-        "/sys"
+        #"/sys"
         "/usr"
         "/usr/lib"
         "/usr/lib64"
@@ -187,10 +203,19 @@ in
         "/var/lib"
         "/var/lib/docker"
       ];
+
+      paths =
+        stablePkgs
+        ++ unstablePkgs
+        ++ environmentHelpers
+        ++ [root_files];
     };
 
-    # NOTE: This requires /dev/kvm
-    runAsRoot = ''
+    # Enable fakeRootCommands in a fake chroot environment.
+    enableFakechroot = true;
+
+    # Run these commands in the fake chroot environment.
+    fakeRootCommands = ''
       #!${pkgs.runtimeShell}
 
       # Setup shadow and pam for root
@@ -198,6 +223,101 @@ in
 
       # Make sure shadow bins are in the PATH
       PATH=${pkgs.shadow}/bin/:$PATH
+
+      # Add required groups
+      groupadd docker \
+        --gid 998 || {
+        echo "Failed to add group docker"
+        exit 1
+      }
+
+      # Create a wrappers dir for SUID binaries
+      mkdir --parents --mode 0755 /run/wrappers/bin || {
+        echo "Failed to create wrappers directory"
+        exit 1
+      }
+      declare -A BINS_SUID
+      #BINS_SUID[sudo]=""
+      #BINS_SUID[ping]="cap_net_raw+ep"
+      #BINS_SUID[setuid]=""
+      #BINS_SUID[su]=""
+      #BINS_SUID[newuidmap]=""
+      #BINS_SUID[newgidmap]=""
+
+      for BIN in "''${!BINS_SUID[@]}" ;
+      do
+
+        BIN_NAME="''${BIN}"
+        BIN_CAPS="''${BINS_SUID[''$BIN]}"
+
+        echo "Creating wrapper for ''${BIN}"
+
+        if [[ -f /bin/''${BIN} ]];
+        then
+
+          cp --dereference /bin/''${BIN} /run/wrappers/bin/''${BIN} || {
+            echo "Failed to copy ''${BIN} from /bin to /run/wrappers/bin/"
+            exit -1
+          }
+
+        elif [[ -f /sbin/''${BIN} ]];
+        then
+
+          cp --dereference /sbin/''${BIN} /run/wrappers/bin/''${BIN} || {
+            echo "Failed to copy ''${BIN} from /sbin to /run/wrappers/bin/"
+            exit -1
+          }
+
+        fi
+
+        chmod 0000 /run/wrappers/bin/''${BIN} || {
+          echo "Failed to reset permissions on ''${BIN}"
+          exit -1
+        }
+
+        chown root:root /run/wrappers/bin/''${BIN} || {
+          echo "Failed to reset owner and group on ''${BIN}"
+           exit -1
+        }
+
+        chmod "u+rx,g+rx,o+rx" /run/wrappers/bin/''${BIN_NAME} || {
+          echo "Failed to set permissions on ''${BIN_NAME}"
+          exit -1
+        }
+
+        chmod "+s" /run/wrappers/bin/''${BIN_NAME} || {
+          echo "Failed to set SUID on ''${BIN_NAME}"
+          exit -1
+        }
+
+        if [[ ! "''${BIN_CAPS:-EMPTY}" == "EMPTY" ]];
+        then
+          ${pkgs.libcap.out}/bin/setcap "cap_setpcap,''${BIN_CAPS}" /run/wrappers/bin/''${BIN} || {
+            echo "Failed to add capabilities ''${BIN_CAPS} to ''${BIN_NAME}"
+            echo "cap_setpcap''${BIN_CAPS:+,$BIN_CAPS} /run/wrappers/bin/''${BIN}"
+            exit -1
+          }
+        else
+          echo "No additional capabilities being added for ''${BIN}"
+        fi
+
+        echo "Finished creating wrapper for ''${BIN}"
+
+      done
+
+      # Setup sudo
+      chown root:root /etc/sudo.conf /etc/sudoers || {
+        echo "Failed to chown sudo files to root"
+        exit 1
+      }
+      mkdir --parents --mode 0755 /etc/sudoers.d || {
+        echo "Failed to create sudoers.d directory"
+        exit 1
+      }
+      echo "${containerUser}    ALL=(ALL)    NOPASSWD:    ALL" >> "/etc/sudoers.d/${containerUser}" || {
+        echo "Failed to write to sudoers file"
+        exit 1
+      }
 
       # VSCode includes a bundled nodejs binary which is
       # dynamically linked and hardcoded to look in /lib
@@ -230,6 +350,13 @@ in
         exit 1
       }
 
+      # Systems with sssd will have user and group ids > 65535
+      # For those systems you need libnss loaded.
+      ln -s ${pkgs.sssd}/lib /lib/lib-sssd  || {
+        echo "Failed to create /lib/lib-sssd symlink"
+        exit 1
+      }
+
       # Setup root user profile
       cp --recursive --dereference /etc/skel /root
       chown -R root:root /root || {
@@ -250,37 +377,39 @@ in
       mkdir --parents --mode 1777 /workdir || exit 1
       mkdir --parents --mode 1777 /workspaces || exit 1
 
-      echo "Updating useradd defaults"
+      # Update login defaults.
+      sed \
+        --in-place \
+        --regexp-extended \
+        --expression "s/^UID_MAX.*$/UID_MAX                 2000000000/" \
+        /etc/login.defs || {
+          echo "Failed to update UID_MAX"
+          exit 1
+        }
+      sed \
+        --in-place \
+        --regexp-extended \
+        --expression "s/^SUB_UID_MIN.*$/SUB_UID_MIN             3000000000/" \
+        /etc/login.defs || {
+          echo "Failed to update SUB_UID_MIN"
+          exit 1
+        }
+      sed \
+        --in-place \
+        --regexp-extended \
+        --expression "s/^SUB_UID_MAX.*$/SUB_UID_MAX             4000000000/" \
+        /etc/login.defs || {
+          echo "Failed to update SUB_UID_MAX"
+          exit 1
+        }
+
+      # Update user add defaults
       cat << EOF > /etc/default/useradd
       SHELL=/bin/bash
       HOME=/home
       SKEL=/etc/skel
       CREATE_MAIL_SPOOL=no
       EOF
-
-      echo "Linking bash completion profile script"
-      ln -s ${pkgs.bash-completion}/etc/profile.d/bash_completion.sh /etc/profile.d/bash_completion.sh || {
-        echo "Failed to symlink bash completion profile script."
-        exit 1
-      }
-
-      echo "Linking bash completions"
-      ln -s ${pkgs.bash-completion}/share/bash-completion/completions /usr/share/bash-completion/completions || {
-        echo "Failed to symlink bash completions."
-        exit 1
-      }
-
-      echo "Linking bash completions (uutils)"
-      ln -s ${pkgs.uutils-coreutils-noprefix}/share/bash-completion/completions /usr/share/bash-completion/completions-uutils || {
-        echo "Failed to symlink bash completions (uutils)."
-        exit 1
-      }
-
-      echo "Linking bash completions (nix)"
-      ln -s ${pkgs.nix-bash-completions}/share/bash-completion/completions /usr/share/bash-completion/completions-nix || {
-        echo "Failed to symlink bash completions (nix)."
-        exit 1
-      }
     '';
 
     # Runs in the final layer, on top of other layers.
@@ -290,7 +419,7 @@ in
     config = {
       User = "root";
       Labels = {
-        "org.opencontainers.image.description" = "tanzu-tools";
+        "org.opencontainers.image.description" = "tanzu";
       };
       Entrypoint = [
         "tini"
@@ -315,30 +444,26 @@ in
         "LOG_FILE=/tmp/tanzu-tools.log"
         "NIX_PAGER=less"
         "PAGER=less"
+        "RUN_AS_ROOT=FALSE"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-        "TERM=xterm-256color"
+        "TERM=xterm"
         "TZ=UTC"
         "WORKDIR=/workdir"
         #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
         "LOG_LEVEL=INFO"
-        "TANZU_TOOLS_CONTAINER_ENVIRONMENT=TRUE"
         "TANZU_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
         "TANZU_TOOLS_ENABLE_STARSHIP=FALSE"
         "TANZU_TOOLS_DIALOG_THEME=default"
         "TANZU_TOOLS_SYNC_YTT_LIB=FALSE"
-        "TANZU_TOOLS_SYNC_VENDOR=FALSE"
-        "TANZU_TOOLS_SYNC_PLUGINS=FALSE"
-        "TANZU_TOOLS_SITES_ENABLED=FALSE"
+        "TANZU_VENDOR_ENABLED=FALSE"
         "TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG=latest"
         "TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG=latest"
-        "TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED=FALSE"
-        "TANZU_TOOLS_ENABLE_PINNIPED=FALSE"
+        "TANZU_TOOLS_SITES_ENABLED=FALSE"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";
       Volumes = {
-        "/root" = {};
         "/home/${containerUser}" = {};
         "/tmp" = {};
         "/usr/lib/ytt" = {};

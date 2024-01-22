@@ -614,7 +614,7 @@ function tanzu_cli_context() {
 		export CLI_CONTEXT_SELECTED
 		PINNIPED_KUBECONFIG=$(tanzu context list -o yaml | yq --expression '.[] | select(.name == env(CLI_CONTEXT_SELECTED)).kubeconfigpath')
 
-		writeLog "INFO" "A Pinniped context was selection, starting Authentication session with kubeconfig ${PINNIPED_KUBECONFIG}"
+		writeLog "INFO" "A Pinniped context was selected, starting Authentication session with kubeconfig ${PINNIPED_KUBECONFIG}"
 
 		tanzu_pinniped_session "${PINNIPED_KUBECONFIG}" || {
 			writeLog "ERROR" "Failed to start Pinniped session!"

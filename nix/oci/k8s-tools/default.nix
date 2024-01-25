@@ -55,6 +55,7 @@
     btop
     cacert
     curlFull
+    dbus
     dialog
     diffutils
     figlet
@@ -77,6 +78,8 @@
     ncurses
     openssh
     openssl
+    pass
+    pinentry
     procps
     ripgrep
     rsync
@@ -109,6 +112,7 @@
     dive
     docker-buildx
     docker-client
+    docker-credential-helpers
     docker-gc
     docker-ls
     docker-proxy

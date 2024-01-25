@@ -109,6 +109,7 @@
     dive
     docker-buildx
     docker-client
+    docker-credential-helpers
     docker-gc
     docker-ls
     docker-proxy

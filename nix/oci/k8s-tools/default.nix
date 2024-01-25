@@ -79,6 +79,7 @@
     openssh
     openssl
     pass
+    pinentry
     procps
     ripgrep
     rsync

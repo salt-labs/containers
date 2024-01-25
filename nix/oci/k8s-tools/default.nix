@@ -55,6 +55,7 @@
     btop
     cacert
     curlFull
+    dbus
     dialog
     diffutils
     figlet
@@ -77,6 +78,8 @@
     ncurses
     openssh
     openssl
+    pass
+    pinentry
     procps
     ripgrep
     rsync
@@ -109,6 +112,7 @@
     dive
     docker-buildx
     docker-client
+    docker-credential-helpers
     docker-gc
     docker-ls
     docker-proxy
@@ -147,7 +151,7 @@
 in
   #pkgs.dockerTools.buildLayeredImage {
   pkgs.dockerTools.buildImage {
-    name = "tanzu-tools-root";
+    name = "k8s-tools";
     tag = "latest";
     created = creationDate;
 
@@ -290,7 +294,7 @@ in
     config = {
       User = "root";
       Labels = {
-        "org.opencontainers.image.description" = "tanzu-tools";
+        "org.opencontainers.image.description" = "k8s-tools";
       };
       Entrypoint = [
         "tini"
@@ -306,13 +310,13 @@ in
         #"2376/tcp" = {};
       };
       Env = [
+        # Common
         "CHARSET=UTF-8"
         "ENABLE_DEBUG=FALSE"
-        "ENVIRONMENT_VSCODE=none"
         "LANG=C.UTF-8"
         "LC_COLLATE=C"
         "LOG_DESTINATION=file"
-        "LOG_FILE=/tmp/tanzu-tools.log"
+        "LOG_FILE=/tmp/k8s-tools.log"
         "NIX_PAGER=less"
         "PAGER=less"
         "SHELL=${pkgs.bashInteractive}/bin/bash"
@@ -321,19 +325,27 @@ in
         "TZ=UTC"
         "WORKDIR=/workdir"
         #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
+        # Kubernetes Tools
         "LOG_LEVEL=INFO"
-        "TANZU_TOOLS_CONTAINER_ENVIRONMENT=TRUE"
-        "TANZU_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
-        "TANZU_TOOLS_ENABLE_STARSHIP=FALSE"
-        "TANZU_TOOLS_DIALOG_THEME=default"
-        "TANZU_TOOLS_SYNC_YTT_LIB=FALSE"
-        "TANZU_TOOLS_SYNC_VENDOR=FALSE"
-        "TANZU_TOOLS_SYNC_PLUGINS=FALSE"
-        "TANZU_TOOLS_SITES_ENABLED=FALSE"
-        "TANZU_TOOLS_CLI_PLUGIN_INVENTORY_TAG=latest"
-        "TANZU_TOOLS_CLI_PLUGIN_GROUP_TKG_TAG=latest"
-        "TANZU_TOOLS_CLI_HACK_SYMLINK_ENABLED=FALSE"
-        "TANZU_TOOLS_ENABLE_PINNIPED=FALSE"
+        "DEBUG_ENABLED=FALSE"
+        "K8S_TOOLS_ENVIRONMENT=container"
+        "K8S_TOOLS_DIALOG_THEME=default"
+        "K8S_TOOLS_DISTRO=vanilla"
+        "K8S_TOOLS_ENABLE_PROXY_SCRIPT=FALSE"
+        "K8S_TOOLS_ENABLE_STARSHIP=FALSE"
+        "K8S_TOOLS_LAUNCH=TRUE"
+        "K8S_TOOLS_NAME=k8s-tools"
+        "K8S_TOOLS_TITLE=Kubernetes Tools"
+        # Tanzu CLI
+        "TANZU_CLI_PLUGIN_INVENTORY_TAG=latest"
+        "TANZU_CLI_PLUGIN_GROUP_TKG_TAG=latest"
+        "TANZU_CLI_SYMLINK_ENABLED=FALSE"
+        "TANZU_CLI_SYNC_PLUGINS=FALSE"
+        # Tanzu Hacks
+        "TANZU_PINNIPED_ENABLED=FALSE"
+        "TANZU_VENDOR_ENABLED=FALSE"
+        # Tanzu Sites
+        "TANZU_SITES_ENABLED=FALSE"
       ];
       WorkingDir = "/workdir";
       WorkDir = "/workdir";

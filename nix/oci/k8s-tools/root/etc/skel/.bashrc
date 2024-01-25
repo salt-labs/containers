@@ -155,13 +155,13 @@ unset DIR
 #########################
 
 # Dialog theme
-export DIALOGRC="${HOME}/.dialogrc/${TANZU_TOOLS_DIALOG_THEME}"
+export DIALOGRC="${HOME}/.dialogrc/${K8S_TOOLS_DIALOG_THEME}"
 
 # Make sure there is a user environment variable set as we need it.
 export USER="${USER:-$(whoami)}"
 
-# We need a way to disable Tanzu Tools cleanly for debugging.
-export TANZU_TOOLS_LAUNCH="${TANZU_TOOLS_LAUNCH:-TRUE}"
+# We need a way to disable Kubernetes Tools cleanly for debugging.
+export K8S_TOOLS_LAUNCH="${K8S_TOOLS_LAUNCH:-TRUE}"
 
 # shellcheck disable=SC1091
 source functions.sh || {
@@ -176,7 +176,7 @@ source dialog.sh || {
 }
 
 # shellcheck disable=SC1091
-source tanzu_tools.sh || {
+source k8s_tools.sh || {
 	writeLog "ERROR" "Failed to import required tanzu-tools functions!"
 	exit_script 1
 }
@@ -228,14 +228,14 @@ fi
 #########################
 
 # Make sure that the interactive parts are not run in a a VSCode remote env.
-if [[ ${ENVIRONMENT_VSCODE^^} == "CONTAINER" ]]; then
+if [[ ${K8S_TOOLS_ENVIRONMENT^^} == "VSCODE" ]]; then
 
 	writeLog "INFO" "Devcontainer running, skipping interactive config"
 
 else
 
 	# Starship
-	if [[ ${TANZU_TOOLS_ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
+	if [[ ${K8S_TOOLS_ENABLE_STARSHIP:-FALSE} == "TRUE" ]]; then
 
 		writeLog "INFO" "Launching Starship"
 
@@ -250,44 +250,41 @@ else
 
 fi
 
-writeLog "INFO" "Logging into Tanzu Tools environment: ${ENVIRONMENT_VSCODE}"
+writeLog "INFO" "Logging into ${K8S_TOOLS_TITLE} environment: ${K8S_TOOLS_ENVIRONMENT}"
 
 #########################
-# Tanzu Tools
+# Kubernetes Tools
 #########################
 
-alias launch='tanzu_tools_launch'
+alias launch='k8s_tools_launch'
 
 # For kubie users, we can get ourselves into an interesting loop here.
-# If we are inside a kubie shell, do not launch Tanzu Tools again.
+# If we are inside a kubie shell, do not launch ${K8S_TOOLS_TITLE} again.
 if [[ ${KUBIE_ACTIVE:-EMPTY} == "EMPTY" ]]; then
 
-	if [[ ${TANZU_TOOLS_LAUNCH} == "TRUE" ]]; then
+	if [[ ${K8S_TOOLS_LAUNCH} == "TRUE" ]]; then
 
-		writeLog "INFO" "Launching Tanzu Tools..."
+		writeLog "INFO" "Launching ${K8S_TOOLS_TITLE}..."
 
 		# Let the games begin...
-		tanzu_tools_launch || {
+		k8s_tools_launch || {
 
-			writeLog "ERROR" "Failed to launch Tanzu Tools"
+			writeLog "ERROR" "Failed to launch ${K8S_TOOLS_TITLE}"
 			exit_script 1
 		}
 
 	else
 
-		writeLog "INFO" "Not launching Tanzu Tools as TANZU_TOOLS_LAUNCH is set to ${TANZU_TOOLS_LAUNCH}"
+		writeLog "INFO" "Not launching ${K8S_TOOLS_TITLE} as K8S_TOOLS_LAUNCH is set to ${K8S_TOOLS_LAUNCH}"
 		tput clear
+
 	fi
 
-else
-
-	# Source the bash completions for all the associated tooling.
-	tanzu_tools_bash_completions || {
-		writeLog "ERROR" "Failed to source Tanzu Tools bash completions"
-		exit_script 1
-	}
-	tput clear
-
-	writeLog "WARN" "Inside a Kubie shell, skipping Tanzu Tools launch. Run 'launch' manually if needed."
-
 fi
+
+# Source the bash completions for all the associated tooling.
+k8s_tools_bash_completions || {
+	writeLog "ERROR" "Failed to source ${K8S_TOOLS_TITLE} bash completions"
+	exit_script 1
+}
+tput clear

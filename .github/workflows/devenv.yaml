@@ -64,14 +64,16 @@ jobs:
 
       - id: install_nix
         name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v24
+        uses: cachix/install-nix-action@v25
 
       - id: cachix
         name: "Enable Cachix ❄️"
-        uses: cachix/cachix-action@v13
+        uses: cachix/cachix-action@v14
         with:
-          name: salt-labs
+          name: ${{ secrets.CACHIX_CACHE_NAME }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          useDaemon: false
+          skipPush: false
 
       - id: configure_nix
         name: Configure Nix
@@ -86,7 +88,7 @@ jobs:
       - id: install_devenv
         name: Install devenv
         run: |
-          nix profile install github:cachix/devenv/latest
+          nix profile install --accept-flake-config tarball+https://install.devenv.sh/latest
 
       - id: devenv_ci
         name: Devenv CI

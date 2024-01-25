@@ -78,6 +78,7 @@
     ncurses
     openssh
     openssl
+    pass
     procps
     ripgrep
     rsync

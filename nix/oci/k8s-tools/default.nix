@@ -55,6 +55,7 @@
     btop
     cacert
     curlFull
+    dbus
     dialog
     diffutils
     figlet
@@ -77,6 +78,8 @@
     ncurses
     openssh
     openssl
+    pass
+    pinentry
     procps
     ripgrep
     rsync

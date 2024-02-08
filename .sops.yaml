@@ -1,0 +1,7 @@
+---
+creation_rules:
+  - filename_regex: \.sops\.yaml$
+    key_groups:
+      - age:
+          - "age1ppl24fzhxnp3uvsnxhpcj6t75y93vfn03jlv3raxaw0f36carcnq8xf8gp"
+          - "age1vf7rtfe62e9hcmzq9m3t5qdtwds6qqj66chvynatpsg5c5u0959swhs3le"

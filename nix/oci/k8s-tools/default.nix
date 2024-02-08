@@ -100,6 +100,12 @@
     direnv
     nil
 
+    # Secrets
+    age
+    sops
+    ssh-to-age
+    ssh-to-pgp
+
     # Vim
     vim-full
 

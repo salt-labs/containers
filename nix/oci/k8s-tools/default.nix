@@ -119,6 +119,7 @@
     docker-slim
 
     # Kubernetes Tools
+    age
     clusterctl
     k9s
     kail

@@ -349,7 +349,7 @@ in
         "TANZU_CLI_SYNC_PLUGINS=FALSE"
         # Tanzu Hacks
         "TANZU_PINNIPED_ENABLED=FALSE"
-        "TANZU_VENDOR_ENABLED=FALSE"
+        "VENDOR_ENABLED=FALSE"
         # Tanzu Sites
         "TANZU_SITES_ENABLED=FALSE"
       ];

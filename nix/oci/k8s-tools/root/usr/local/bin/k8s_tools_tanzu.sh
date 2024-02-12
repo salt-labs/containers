@@ -47,6 +47,32 @@ function k8s_tools_distro_launch() {
 
 	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "20"
 
+	# Use vendir to sync vendored dependencies
+	if [[ ${VENDOR_ENABLED:-FALSE} == "TRUE" ]]; then
+
+		vendor_sync || {
+			MESSAGE="Failed to sync vendored dependencies with vendir"
+			writeLog "ERROR" "${MESSAGE}"
+			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
+			return 1
+		}
+
+		# If there is vendored scripts, add them to the path.
+		vendor_path || {
+			MESSAGE="Failed to update the PATH variable for vendored dependencies"
+			writeLog "ERROR" "${MESSAGE}"
+			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
+			return 1
+		}
+
+	else
+
+		writeLog "INFO" "${K8S_TOOLS_TITLE} is not enabled to sync vendored depencendies, skipping."
+
+	fi
+
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "30"
+
 	# If this is the first time, an initialization process is required
 	# to accept the EULA and disable the Telemetry
 	tanzu_cli_init || {
@@ -60,7 +86,7 @@ function k8s_tools_distro_launch() {
 
 	if [[ ${TANZU_CLI_READY:-FALSE} == "TRUE" ]]; then
 
-		dialogProgress "Tanzu CLI: Launching..." "30"
+		dialogProgress "Tanzu CLI: Launching..." "40"
 
 		# Apply user customizations based on provided variables.
 		# The user customizations function displays it's own dialog boxes.
@@ -70,7 +96,7 @@ function k8s_tools_distro_launch() {
 			return 1
 		}
 
-		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "40"
+		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "50"
 
 		# Ask the user to select the Tanzu CLI context work in and authenticate against.
 		# If this fails, the process can continue but we cannot sync the plugins without auth.
@@ -80,7 +106,7 @@ function k8s_tools_distro_launch() {
 			TANZU_CLI_PLUGIN_SYNC=FALSE
 		}
 
-		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "50"
+		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "60"
 
 		# Download the Tanzu CLI plugins.
 		tanzu_cli_plugins || {
@@ -91,30 +117,6 @@ function k8s_tools_distro_launch() {
 		}
 
 		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "75"
-
-		# Use vendir to sync vendored dependencies
-		if [[ ${TANZU_VENDOR_ENABLED:-FALSE} == "TRUE" ]]; then
-
-			tanzu_vendor_sync || {
-				MESSAGE="Failed to sync vendored dependencies with vendir"
-				writeLog "ERROR" "${MESSAGE}"
-				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
-				return 1
-			}
-
-			# If there is vendored scripts, add them to the path.
-			tanzu_path_vendor || {
-				MESSAGE="Failed to update the PATH variable for vendored dependencies"
-				writeLog "ERROR" "${MESSAGE}"
-				dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
-				return 1
-			}
-
-		else
-
-			writeLog "INFO" "${K8S_TOOLS_TITLE} is not enabled to sync vendored depencendies, skipping."
-
-		fi
 
 	else
 
@@ -716,7 +718,7 @@ function tanzu_multi_site() {
 
 	"1")
 
-		writeLog "WARN" "The user selected NO on the multi-site configuration adialog. Aborting configuration."
+		writeLog "WARN" "The user selected NO on the multi-site configuration dialog. Aborting configuration."
 		dialogMsgBox "WARNING" "Unable to continue as the cancel button was selected. Aborting configuration."
 		exit 0
 
@@ -927,102 +929,6 @@ function tanzu_registry_cache() {
 	writeLog "INFO" "The pull-through cache URL for Tanzu CLI has been set to ${TANZU_CLI_OCI_URL}"
 
 	writeLog "INFO" "The pull-through cache URL for TKG has been set to ${TKG_CUSTOM_IMAGE_REPOSITORY}"
-
-	return 0
-
-}
-
-function tanzu_vendor_sync() {
-
-	# This is the location to push into.
-	local VENDOR_DIR="${TANZU_VENDOR_DIR:-vendor}"
-
-	# These files are relative to the location of the vendor directory.
-	local VENDIR_FILE_CONFIG="${TANZU_VENDOR_CONFIG:-vendir.yml}"
-
-	# The lock file will share the same name with modified extension.
-	local VENDIR_FILE_LOCK="${VENDIR_FILE_CONFIG/.yml/.lock.yml}"
-
-	# And just in case YAML != YML
-	local VENDIR_FILE_LOCK="${VENDIR_FILE_LOCK/.yaml/.lock.yaml}"
-
-	# Are the vendored dependencies pined
-	local VENDIR_LOCKED="${TANZU_VENDOR_LOCKED:-FALSE}"
-
-	# There will likely be more args in the future.
-	local VENDIR_ARGS=()
-
-	# Confirm the vendor directory already exists.
-	if [[ ! -d ${VENDOR_DIR} ]]; then
-		writeLog "ERROR" "The vendor directory ${VENDOR_DIR} does not exist"
-		return 1
-	fi
-
-	# Confirm the vendir file already exists.
-	if [[ ! -f ${VENDIR_FILE_CONFIG} ]]; then
-		writeLog "ERROR" "The vendir config file ${VENDIR_FILE_CONFIG} does not exist"
-		return 1
-	fi
-
-	# Confirm the vendir lock-file already exists.
-	if [[ ! -f ${VENDIR_FILE_LOCK} ]]; then
-		writeLog "ERROR" "The vendir lock file ${VENDIR_FILE_LOCK} does not exist"
-		return 1
-	fi
-
-	# To lock or not to lock, that is the question.
-	if [[ ${VENDIR_LOCKED^^} == "TRUE" ]]; then
-		VENDIR_ARGS+=("--locked")
-	fi
-
-	# shellcheck disable=SC2068
-	vendir sync \
-		--chdir "${VENDOR_DIR}" \
-		--file "${VENDIR_FILE_CONFIG}" \
-		--lock-file "${VENDIR_FILE_LOCK}" \
-		${VENDIR_ARGS[@]:-} \
-		--yes 1>>"${LOG_FILE}" 2>&1 || {
-		writeLog "ERROR" "Failed to run vendir sync"
-		return 1
-	}
-
-	return 0
-
-}
-
-function tanzu_path_vendor() {
-
-	# This is the location to start from.
-	local VENDOR_DIR="${TANZU_VENDOR_DIR:-.}"
-
-	# The vendir configuration will place all files into 'vendor'
-	local VENDOR_DIR="${VENDOR_DIR}/vendor"
-
-	# It's opinionated, but lets look for scripts in 'scripts'
-	local SCRIPTS_HOME="${VENDOR_DIR}/scripts"
-
-	# If the directory does not exist, no point continuing.
-	if [[ ! -d ${VENDOR_DIR} ]]; then
-		writeLog "DEBUG" "No vendor directory ${VENDOR_DIR}, skipping add to PATH"
-		return 0
-	fi
-
-	# Let's look for scripts in the scripts home directory.
-	if [[ ! -d ${SCRIPTS_HOME} ]]; then
-		writeLog "DEBUG" "No scripts directory ${SCRIPTS_HOME}, skipping add to PATH"
-		return 0
-	else
-		writeLog "DEBUG" "Adding folder ${SCRIPTS_HOME} to PATH"
-		export PATH="${SCRIPTS_HOME}:${PATH}"
-	fi
-
-	while IFS= read -r -d '' FOLDER; do
-
-		writeLog "DEBUG" "Adding folder ${FOLDER} to the PATH"
-		export PATH="${FOLDER}:${PATH}"
-
-	done < <(find "${SCRIPTS_HOME}" -mindepth 1 -maxdepth 1 -type d -print0)
-	# TODO: How deep should scripts be allowed to be nested?
 
 	return 0
 

@@ -384,6 +384,102 @@ function start_shell() {
 
 }
 
+function vendor_sync() {
+
+	# This is the location to push into.
+	local VENDOR_DIR="${VENDOR_DIR:-vendor}"
+
+	# These files are relative to the location of the vendor directory.
+	local VENDIR_FILE_CONFIG="${VENDOR_CONFIG:-vendir.yml}"
+
+	# The lock file will share the same name with modified extension.
+	local VENDIR_FILE_LOCK="${VENDIR_FILE_CONFIG/.yml/.lock.yml}"
+
+	# And just in case YAML != YML
+	local VENDIR_FILE_LOCK="${VENDIR_FILE_LOCK/.yaml/.lock.yaml}"
+
+	# Are the vendored dependencies pined
+	local VENDIR_LOCKED="${VENDOR_LOCKED:-FALSE}"
+
+	# There will likely be more args in the future.
+	local VENDIR_ARGS=()
+
+	# Confirm the vendor directory already exists.
+	if [[ ! -d ${VENDOR_DIR} ]]; then
+		writeLog "ERROR" "The vendor directory ${VENDOR_DIR} does not exist"
+		return 1
+	fi
+
+	# Confirm the vendir file already exists.
+	if [[ ! -f ${VENDIR_FILE_CONFIG} ]]; then
+		writeLog "ERROR" "The vendir config file ${VENDIR_FILE_CONFIG} does not exist"
+		return 1
+	fi
+
+	# Confirm the vendir lock-file already exists.
+	if [[ ! -f ${VENDIR_FILE_LOCK} ]]; then
+		writeLog "ERROR" "The vendir lock file ${VENDIR_FILE_LOCK} does not exist"
+		return 1
+	fi
+
+	# To lock or not to lock, that is the question.
+	if [[ ${VENDIR_LOCKED^^} == "TRUE" ]]; then
+		VENDIR_ARGS+=("--locked")
+	fi
+
+	# shellcheck disable=SC2068
+	vendir sync \
+		--chdir "${VENDOR_DIR}" \
+		--file "${VENDIR_FILE_CONFIG}" \
+		--lock-file "${VENDIR_FILE_LOCK}" \
+		${VENDIR_ARGS[@]:-} \
+		--yes 1>>"${LOG_FILE}" 2>&1 || {
+		writeLog "ERROR" "Failed to run vendir sync"
+		return 1
+	}
+
+	return 0
+
+}
+
+function vendor_path() {
+
+	# This is the location to start from.
+	local VENDOR_DIR="${VENDOR_DIR:-.}"
+
+	# The vendir configuration will place all files into 'vendor'
+	local VENDOR_DIR="${VENDOR_DIR}/vendor"
+
+	# It's opinionated, but lets look for scripts in 'scripts'
+	local SCRIPTS_HOME="${VENDOR_DIR}/scripts"
+
+	# If the directory does not exist, no point continuing.
+	if [[ ! -d ${VENDOR_DIR} ]]; then
+		writeLog "DEBUG" "No vendor directory ${VENDOR_DIR}, skipping add to PATH"
+		return 0
+	fi
+
+	# Let's look for scripts in the scripts home directory.
+	if [[ ! -d ${SCRIPTS_HOME} ]]; then
+		writeLog "DEBUG" "No scripts directory ${SCRIPTS_HOME}, skipping add to PATH"
+		return 0
+	else
+		writeLog "DEBUG" "Adding folder ${SCRIPTS_HOME} to PATH"
+		export PATH="${SCRIPTS_HOME}:${PATH}"
+	fi
+
+	while IFS= read -r -d '' FOLDER; do
+
+		writeLog "DEBUG" "Adding folder ${FOLDER} to the PATH"
+		export PATH="${FOLDER}:${PATH}"
+
+	done < <(find "${SCRIPTS_HOME}" -mindepth 1 -maxdepth 2 -type d -print0)
+	# TODO: How deep should scripts be allowed to be nested?
+
+	return 0
+
+}
+
 export -f checkLog checkLogLevel writeLog
 export -f checkBin checkVarEmpty checkResult
 export -f show_logs exit_script start_shell

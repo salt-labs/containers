@@ -181,6 +181,6 @@ done
 
 tput clear
 
-figlet -f slant "Goodbye!"
+figlet -c -f slant "Goodbye!"
 
 exit 0

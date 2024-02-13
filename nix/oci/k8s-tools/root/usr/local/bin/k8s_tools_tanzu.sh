@@ -127,7 +127,6 @@ function k8s_tools_distro_launch() {
 	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "100"
 
 	tput clear
-	figlet -f "${FIGLET_FONT:-standard}" "${K8S_TOOLS_TITLE} v${K8S_TOOLS_VERSION:-}"
 
 }
 

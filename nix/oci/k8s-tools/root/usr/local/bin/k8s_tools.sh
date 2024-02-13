@@ -92,14 +92,22 @@ function k8s_tools_setup_gpg_and_pass() {
 	local GPG_TEMP
 
 	# Ensure that keyboxd is disabled as this is currently buggy.
-	if [[ -f "${GNUPGHOME}/common.conf" ]]; then
+	if [[ ! -d ${GNUPGHOME} ]]; then
+
+		writeLog "DEBUG" "Creating new gpg home $GNUPGHOME"
+		mkdir -p "${GNUPGHOME}" || {
+			writeLog "ERROR" "Failed to create gpg home $GNUPGHOME"
+			return 1
+		}
+
+	elif [[ -f "${GNUPGHOME}/common.conf" ]]; then
 
 		writeLog "WARN" "Disabling gpg keyboxd"
 		sed -i "s/^use-keyboxd/#use-keyboxd/g" "${GNUPGHOME}/common.conf" || true
 
 	fi
 
-	# Reload the gpg-agent
+	# Reload the gpg-agent (requires gpg home dir to pre-exist.)
 	gpg-connect-agent --verbose reloadagent /bye 1>>"${LOG_FILE}" 2>&1 || {
 
 		writeLog "ERROR" "Failed to start the gpg agent"

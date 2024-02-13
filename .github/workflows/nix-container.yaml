@@ -169,22 +169,8 @@ jobs:
           HOST_SYSTEM: ${{ matrix.nix_host_system }}
           IMAGE_TAG: "${{ steps.calver.outputs.package_version }}"
 
-      - id: publish_container_latest
-        name: "Publish container image ${{ matrix.container }}:latest"
-        if: env.BRANCH_NAME_CURRENT != env.BRANCH_NAME_DEFAULT
-        run: ./scripts/oci.sh
-        env:
-          REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"
-          IMAGE_NAME: ${{ matrix.container }}
-          BUILD_SYSTEM: ${{ matrix.nix_build_system }}
-          HOST_SYSTEM: ${{ matrix.nix_host_system }}
-          IMAGE_TAG: "latest"
-          IMAGE_TAG_EXTRA: "${{ steps.calver.outputs.package_version }}"
-
-      - id: publish_container_release
-        # yaml-lint disable-line rule:line-length
+      - id: publish_container
         name: "Publish container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
-        if: env.BRANCH_NAME_CURRENT == env.BRANCH_NAME_DEFAULT
         run: ./scripts/oci.sh
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"
@@ -192,6 +178,7 @@ jobs:
           BUILD_SYSTEM: ${{ matrix.nix_build_system }}
           HOST_SYSTEM: ${{ matrix.nix_host_system }}
           IMAGE_TAG: "${{ steps.calver.outputs.package_version }}"
+          IMAGE_TAG_EXTRA: "latest"
 
   ##################################################
   # Giphy thumbs up or down

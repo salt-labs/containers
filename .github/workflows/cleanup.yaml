@@ -88,5 +88,5 @@ jobs:
           keep-younger-than: 30
           keep-last: 3
           prune-tags-regexes: |
-            ^2023.*
+            ^202*.*
           dry-run: false

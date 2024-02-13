@@ -127,7 +127,6 @@ function k8s_tools_distro_launch() {
 	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "100"
 
 	tput clear
-	figlet "${K8S_TOOLS_TITLE}"
 
 }
 
@@ -972,7 +971,7 @@ function tanzu_pinniped_session() {
 	# Start a Pinniped session using the provided kubeconfig
 	tput clear
 
-	figlet "Pinniped"
+	figlet -f "${FIGLET_FONT:-standard}" "Pinniped"
 
 	pinniped whoami \
 		--timeout 300s \
@@ -981,6 +980,8 @@ function tanzu_pinniped_session() {
 			writeLog "ERROR" "Failed to start a Pinniped session"
 			return 1
 		}
+
+	export KUBECONFIG="${PINNIPED_KUBECONFIG}"
 
 	tput clear
 

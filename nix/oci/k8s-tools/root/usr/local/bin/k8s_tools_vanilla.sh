@@ -41,6 +41,5 @@ function k8s_tools_distro_launch() {
 	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "100"
 
 	tput clear
-	figlet "${K8S_TOOLS_TITLE}"
 
 }

@@ -91,7 +91,15 @@ function k8s_tools_setup_gpg_and_pass() {
 	local GPG_USER="Container User"
 	local GPG_TEMP
 
-	# Start the gpg-agent
+	# Ensure that keyboxd is disabled as this is currently buggy.
+	if [[ -f "${GNUPGHOME}/common.conf" ]]; then
+
+		writeLog "WARN" "Disabling gpg keyboxd"
+		sed -i "s/^use-keyboxd/#use-keyboxd/g" "${GNUPGHOME}/common.conf" || true
+
+	fi
+
+	# Reload the gpg-agent
 	gpg-connect-agent --verbose reloadagent /bye 1>>"${LOG_FILE}" 2>&1 || {
 
 		writeLog "ERROR" "Failed to start the gpg agent"

@@ -137,11 +137,15 @@ jobs:
 
       - id: calver
         name: Set Calver Version
-        uses: Nelyx/action-calver@v1.1.0
-        with:
-          default_branch: "refs/heads/trunk"
-          format: "YYYY.MM.DD"
-          version_prefix: ""
+        run: |
+          if [[ "${BRANCH_NAME_CURRENT}" == "${BRANCH_NAME_DEFAULT}" ]];
+          then
+            echo "Set CalVer for default branch"
+            echo "package_version=$(date '+%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+          else
+            echo "Set CalVer for non-default branch"
+            echo "package_version=$(date '+%Y-%m-%d')-$(date -d "1970-01-01 UTC $(date +%T)" +%s)" >> "$GITHUB_OUTPUT"
+          fi
 
       - id: debug
         name: Display debug info
@@ -157,6 +161,7 @@ jobs:
           echo "CONTAINER_PUBLISH: $CONTAINER_PUBLISH"
           echo "Nix conf:"
           cat "${HOME}/.config/nix/nix.conf"
+          echo "CalVer: ${{ steps.calver.outputs.package_version }}"
           echo "##################################################"
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"

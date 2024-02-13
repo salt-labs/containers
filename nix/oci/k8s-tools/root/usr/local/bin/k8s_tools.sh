@@ -95,7 +95,8 @@ function k8s_tools_setup_gpg_and_pass() {
 	if [[ ! -d ${GNUPGHOME} ]]; then
 
 		writeLog "DEBUG" "Creating new gpg home $GNUPGHOME"
-		mkdir -p "${GNUPGHOME}" || {
+		# shellcheck disable=SC2174
+		mkdir -p -m 0600 "${GNUPGHOME}" || {
 			writeLog "ERROR" "Failed to create gpg home $GNUPGHOME"
 			return 1
 		}

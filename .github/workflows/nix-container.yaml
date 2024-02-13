@@ -161,7 +161,6 @@ jobs:
           echo "CONTAINER_PUBLISH: $CONTAINER_PUBLISH"
           echo "Nix conf:"
           cat "${HOME}/.config/nix/nix.conf"
-          echo "CalVer: ${{ steps.calver.outputs.package_version }}"
           echo "##################################################"
         env:
           REGISTRY_PATH: "${{ env.REGISTRY }}/${{ env.PROJECT }}"
@@ -180,6 +179,7 @@ jobs:
           BUILD_SYSTEM: ${{ matrix.nix_build_system }}
           HOST_SYSTEM: ${{ matrix.nix_host_system }}
           IMAGE_TAG: "latest"
+          IMAGE_TAG_EXTRA: "${{ steps.calver.outputs.package_version }}"
 
       - id: publish_container_release
         # yaml-lint disable-line rule:line-length

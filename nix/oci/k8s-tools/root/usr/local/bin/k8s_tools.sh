@@ -91,11 +91,19 @@ function k8s_tools_setup_gpg_and_pass() {
 	local GPG_USER="Container User"
 	local GPG_TEMP
 
+	# Start the gpg-agent
+	gpg-connect-agent --verbose reloadagent /bye 1>>"${LOG_FILE}" 2>&1 || {
+
+		writeLog "ERROR" "Failed to start the gpg agent"
+		return 1
+
+	}
+
 	# NOTE: If you need to clear the pass store.
 	# 		pass rm -r docker-credential-helpers
 
 	# If gpg is already setup, skip this function.
-	if gpg --list-keys "$GPG_USER"; then
+	if gpg --list-keys "$GPG_USER" >/dev/null 2>&1; then
 
 		writeLog "INFO" "Existing gpg key found for $GPG_USER"
 		return 0
@@ -133,9 +141,12 @@ function k8s_tools_setup_gpg_and_pass() {
 
 		writeLog "ERROR" "Failed to generate gpg key"
 		return 1
+
 	}
 
-	gpg2 --list-keys || {
+	writeLog "INFO" "Listing gpg keys"
+
+	gpg --list-keys 1>>"${LOG_FILE}" 2>&1 || {
 
 		writeLog "ERROR" "Failed to show gpg keys"
 		return 1

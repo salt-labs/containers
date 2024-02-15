@@ -7,7 +7,7 @@
   ...
 }: let
   # Need a way to differentiate inside the container.
-  containerVersion = "1.0.0";
+  containerVersion = "1.0.1";
 
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   #creationDate = builtins.substring 0 8 modifiedDate;

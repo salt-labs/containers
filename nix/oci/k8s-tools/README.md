@@ -7,6 +7,7 @@
   - [Overview](#overview)
   - [Variable](#variable)
     - [Common](#common)
+    - [Dependencies](#dependencies)
     - [Tanzu CLI](#tanzu-cli)
     - [Tanzu Hacks](#tanzu-hacks)
     - [Tanzu Sites](#tanzu-sites)
@@ -40,6 +41,15 @@ Kubernetes Tools variables.
 | K8S_TOOLS_NAME                | A custom name.                                   |    k8s-tools     | k8s-tools, tanzu-tools, carvel-tools                                    |
 | K8S_TOOLS_TITLE               | A custom title.                                  | Kubernetes Tools | Tanzu Tools                                                             |
 
+### Dependencies
+
+You can use `vendir` to automatically pull your vendored dependencies during launch.
+
+| VENDOR_ENABLED   | Enable to run 'vendir sync' on launch               |   FALSE    | TRUE, FALSE         |
+| VENDOR_DIR       | The location where the vendor folder is created.    |   vendor   | /workdir            |
+| VENDOR_CONFIG    | The config file for the vendir CLI                  | vendir.yml | .vendir/config.yaml |
+| VENDOR_LOCKED    | A boolean to enable locked vendored dependencies    |   FALSE    | TRUE, FALSE         |
+
 ### Tanzu CLI
 
 Tanzu CLI specific variables.
@@ -58,10 +68,6 @@ Tanzu _hack_ specific variables.
 | Variable               | Description                                         |  Default   | Example             |
 | :--------------------- | :-------------------------------------------------- | :--------: | :------------------ |
 | TANZU_PINNIPED_ENABLED | Enable in Pinniped environments to login on startup |   FALSE    | TRUE, FALSE         |
-| TANZU_VENDOR_ENABLED   | Enable to run 'vendir sync' on launch               |   FALSE    | TRUE, FALSE         |
-| TANZU_VENDOR_DIR       | The location where the vendor folder is created.    |   vendor   | /workdir            |
-| TANZU_VENDOR_CONFIG    | The config file for the vendir CLI                  | vendir.yml | .vendir/config.yaml |
-| TANZU_VENDOR_LOCKED    | A boolean to enable locked vendored dependencies    |   FALSE    | TRUE, FALSE         |
 
 ### Tanzu Sites
 

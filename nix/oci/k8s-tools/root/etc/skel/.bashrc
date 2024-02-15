@@ -288,3 +288,6 @@ k8s_tools_bash_completions || {
 	exit_script 1
 }
 tput clear
+
+# Start interactive session.
+figlet -f "${FIGLET_FONT:-standard}" "${K8S_TOOLS_TITLE} v${K8S_TOOLS_VERSION:-}"

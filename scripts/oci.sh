@@ -136,6 +136,27 @@ if [[ ${CONTAINER_BUILD^^} == "TRUE" ]]; then
 			exit 1
 		}
 
+		if [[ ${IMAGE_TAG_EXTRA:-EMPTY} == "EMPTY" ]]; then
+
+			writeLog "INFO" "No extra image tags provided, skipping."
+
+		else
+
+			writeLog "INFO" "Publishing extra tags ${IMAGE_TAG_EXTRA}"
+
+			for EXTRA_TAG in ${IMAGE_TAG_EXTRA}; do
+
+				IFS=$','
+
+				publish_container "result" "${IMAGE_NAME}" "${EXTRA_TAG}" || {
+					echo "Failed to publish container image ${IMAGE_NAME}:${EXTRA_TAG}"
+					exit 1
+				}
+
+			done
+
+		fi
+
 	else
 
 		writeLog "INFO" "Skipping publishing container $CONTAINER"

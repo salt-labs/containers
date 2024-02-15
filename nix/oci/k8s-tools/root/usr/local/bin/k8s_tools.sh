@@ -104,7 +104,7 @@ function k8s_tools_setup_gpg_and_pass() {
 	elif [[ -f "${GNUPGHOME}/common.conf" ]]; then
 
 		writeLog "WARN" "Disabling gpg keyboxd"
-		sed -i "s/^use-keyboxd/#use-keyboxd/g" "${GNUPGHOME}/common.conf" || true
+		sed -i "s/^use-keyboxd/#use-keyboxd/g" "${GNUPGHOME}/common.conf" 1>>"${LOG_FILE}" 2>&1 || true
 
 	fi
 
@@ -154,7 +154,7 @@ function k8s_tools_setup_gpg_and_pass() {
 
 	writeLog "INFO" "Generating gpg key"
 
-	gpg2 --verbose --batch --generate-key "${GPG_TEMP}/gpg_key.conf" || {
+	gpg2 --verbose --batch --generate-key "${GPG_TEMP}/gpg_key.conf" 1>>"${LOG_FILE}" 2>&1 || {
 
 		writeLog "ERROR" "Failed to generate gpg key"
 		return 1
@@ -172,7 +172,7 @@ function k8s_tools_setup_gpg_and_pass() {
 
 	writeLog "INFO" "Initializing the pass CLI"
 
-	pass init "${GPG_USER}" || {
+	pass init "${GPG_USER}" 1>>"${LOG_FILE}" 2>&1 || {
 
 		writeLog "ERROR" "Failed to initialize the pass CLI for user ${GPG_USER}"
 		return 1

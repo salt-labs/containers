@@ -6,12 +6,19 @@
   self,
   ...
 }: let
-  # Need a way to differentiate inside the container.
-  containerVersion = "1.0.1";
+  # Get the current date in YYYY-MM-DD
+  currentDate = pkgs.lib.readFile "${
+    pkgs.runCommand "current-time" {
+      env.UNIXTIME = builtins.currentTime;
+    } "echo -n `date -d @$UNIXTIME +%Y-%m-%d` > $out"
+  }";
+
+  # Use the current date for calver.
+  containerVersion = currentDate;
 
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  #creationDate = builtins.substring 0 8 modifiedDate;
-  creationDate = "now";
+  creationDate = builtins.substring 0 8 modifiedDate;
+  #creationDate = "now";
 
   # This container runs as the root user however it's intended
   # to be run from Docker rootless.
@@ -162,7 +169,7 @@ in
   pkgs.dockerTools.buildImage {
     name = "k8s-tools";
     tag = "latest";
-    created = creationDate;
+    #created = creationDate;
 
     architecture = "amd64";
 

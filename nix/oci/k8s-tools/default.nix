@@ -6,6 +6,9 @@
   self,
   ...
 }: let
+  # Need a way to differentiate inside the container.
+  containerVersion = "1.0.0";
+
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   #creationDate = builtins.substring 0 8 modifiedDate;
   creationDate = "now";
@@ -99,6 +102,12 @@
     # Nix
     direnv
     nil
+
+    # Secrets
+    age
+    sops
+    ssh-to-age
+    ssh-to-pgp
 
     # Vim
     vim-full
@@ -310,6 +319,8 @@ in
         #"2376/tcp" = {};
       };
       Env = [
+        # Fixed
+        "K8S_TOOLS_VERSION=${containerVersion}"
         # Common
         "CHARSET=UTF-8"
         "ENABLE_DEBUG=FALSE"
@@ -324,6 +335,7 @@ in
         "TERM=xterm-256color"
         "TZ=UTC"
         "WORKDIR=/workdir"
+        "FIGLET_FONT=standard"
         #"LD_LIBRARY_PATH=/lib;/lib/stdenv;/lib/glibc;/lib/lib-sssd;/lib64;/lib64/stdenv;/lib64/glibc"
         # Kubernetes Tools
         "LOG_LEVEL=INFO"
@@ -343,7 +355,7 @@ in
         "TANZU_CLI_SYNC_PLUGINS=FALSE"
         # Tanzu Hacks
         "TANZU_PINNIPED_ENABLED=FALSE"
-        "TANZU_VENDOR_ENABLED=FALSE"
+        "VENDOR_ENABLED=FALSE"
         # Tanzu Sites
         "TANZU_SITES_ENABLED=FALSE"
       ];

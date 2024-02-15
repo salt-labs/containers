@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Prune all untagged images
-        uses: vlaurin/action-ghcr-prune@v0.5.0
+        uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           organization: salt-labs
@@ -80,7 +80,7 @@ jobs:
           dry-run: false
 
       - name: Prune old tagged images
-        uses: vlaurin/action-ghcr-prune@v0.5.0
+        uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.PAT_PACKAGES }}
           organization: salt-labs
@@ -88,5 +88,5 @@ jobs:
           keep-younger-than: 30
           keep-last: 3
           prune-tags-regexes: |
-            ^2023.*
+            ^202*.*
           dry-run: false

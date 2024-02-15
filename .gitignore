@@ -24,3 +24,7 @@ TODO/
 
 # Ignore the pre-commit hook config
 .pre-commit-config.yaml
+
+# Ignore SOPS secrets
+secrets/
+

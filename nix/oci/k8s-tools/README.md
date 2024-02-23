@@ -87,7 +87,7 @@ There are 5 supported configuration modes in order of precedence. Each mode requ
 
 ### 1. Proxy server
 
-If you need to configure a proxy server, perform this configuration.
+If you need to configure a proxy server to access the internet, perform this configuration.
 
 - Create a script `scripts/.proxy.sh` that has a function `proxy_on`
 
@@ -122,15 +122,21 @@ TANZU_SITES_ENABLED=TRUE
 
 ```bash
 # NOTE: This example has dashes in the names...
-K8S_TOOLS_SITES=site-1,site-2
+TANZU_SITES=site-1,site-2
 ```
 
 - Then, for each site set the variable for the registry like so.
 
 ```bash
 # NOTE: The variable names must be all in uppercase and any dashes '-' converted to an underscore.
-K8S_TOOLS_SITE_SITE_1_NAME_REGISTRY=harbor.site-1.mydomain
-K8S_TOOLS_SITE_SITE_2_NAME_REGISTRY=harbor.site-2.mydomain
+
+# If you use a pull-through cache
+TANZU_SITE_SITE_1_NAME_PULL_THROUGH_CACHE=harbor.site-1.mydomain
+TANZU_SITE_SITE_2_NAME_PULL_THROUGH_CACHE=harbor.site-2.mydomain
+
+# Or, if you use isolated cluster mode
+TANZU_SITE_SITE_1_NAME_REGISTRY=harbor.site-1.mydomain
+TANZU_SITE_SITE_2_NAME_REGISTRY=harbor.site-2.mydomain
 ```
 
 - When launching the container, you will be asked in a dialog screen which site you are going to administer.
@@ -144,19 +150,19 @@ _When enabled, this configuration overrides all those below it._
 - Provide your custom Container Registry
 
 ```bash
-K8S_TOOLS_CUSTOM_REGISTRY=harbor.mydomain
+TANZU_CUSTOM_REGISTRY=harbor.mydomain
 ```
 
 ### 4. Pull-through Cache
 
-If you have internet connectivity in the environment and use a pull-through cache, use this configuration.
+If you have internet connectivity in the environment and use a global pull-through cache, use this configuration.
 
 _When enabled, this configuration overrides all those below it._
 
 - Provide your pull-through cache which is prefixed to all OCI URLs.
 
 ```bash
-K8S_TOOLS_PULL_THROUGH_CACHE=harbor.dmz.mydomain
+TANZU_PULL_THROUGH_CACHE=harbor.dmz.mydomain
 ```
 
 ### 5. Direct internet

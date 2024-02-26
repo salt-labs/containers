@@ -537,7 +537,7 @@ function tanzu_cli_context() {
 	fi
 
 	# Present the user with a menu to select their context.
-	dialogMenu "Tanzu CLI context" "Select the Tanzu CLI context to authenticate against:"
+	dialogMenu "Tanzu CLI context" "Select the existing Tanzu CLI context to authenticate against or cancel if you are deploying a new Cluster."
 
 	#  0 = Yes
 	#  1 = No

@@ -497,10 +497,10 @@
     }));
 
     # Set the default devshell to the one for the current system.
-    devShell = builtins.listToAttrs (map (system: {
-        name = system;
-        value = self.devShells."${system}.${system}".devenv;
-      })
-      supportedSystems);
+    #devShell = builtins.listToAttrs (map (system: {
+    #    name = system;
+    #    value = self.devShells."${system}.${system}".devenv;
+    #  })
+    #  supportedSystems);
   };
 }

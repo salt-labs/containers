@@ -232,12 +232,14 @@ function tanzu_cli_custom() {
 
 	# Runs the correct functions based on user provided variables.
 
-	# There are 4 supported options for the Tanzu CLI OCI Registry that we need to deal with.
+	# There are 5 supported options for the Tanzu CLI OCI Registry that we need to deal with.
 	# In order of preference they are:
-	#	1. If multi-site is active, go through that nonsense.
-	# 	2. If a custom registry is provided, use it.
-	# 	3. If a pull-through cache is provided, use it.
-	# 	4. If no pull-through or custom registry is provided, pull direct from the internet.
+	#
+	#	1. If multi-site is active, go through that nonsense first.
+	# 	2. If a custom registry is provided, use it as fall back option 1.
+	# 	3. If a pull-through cache is provided, use it as fall back option 2.
+	# 	4. If no pull-through or custom registry is provided, and a Proxy is needed, create `scripts/proxy.sh` as per the docs.
+	# 	5. If no pull-through or custom registry is provided, pull direct from the internet as last resort.
 
 	local TANZU_CLI_DEFAULT_URL
 
@@ -535,7 +537,7 @@ function tanzu_cli_context() {
 	fi
 
 	# Present the user with a menu to select their context.
-	dialogMenu "Tanzu CLI context" "Select the Tanzu CLI context to authenticate against:"
+	dialogMenu "Tanzu CLI context" "Select the existing Tanzu CLI context to authenticate against or cancel if you are deploying a new Cluster."
 
 	#  0 = Yes
 	#  1 = No
@@ -654,6 +656,7 @@ function tanzu_multi_site() {
 	local OPTIONS=()
 	local NUM=0
 
+	# There are two modes of operation; pull-through-cache or isolated-cluster.
 	local ENABLE_ISOLATED_CLUSTER_MODE=FALSE
 	local ENABLE_PULL_THROUGH_CACHE=FALSE
 
@@ -786,14 +789,14 @@ function tanzu_multi_site() {
 	VAR_CLI_PLUGIN_GROUP_TKG_TAG=${VAR_CLI_PLUGIN_GROUP_TKG_TAG// /_}
 
 	##########
-	# Pull-through cache or Registry
+	# Pull-through cache or Isolated Cluster?
 	##########
 
-	# You can only use either a pull-through cache or registry in isolated-cluster mode.
+	# You can only use either a pull-through cache registry or use isolated-cluster mode.
 
 	if checkVarEmpty "${VAR_PULL_THROUGH_CACHE}" "Pull-through cache for site ${SITES_ARRAY[$VALUE]}"; then
 
-		writeLog "WARN" "Pull-through cache is missing for site, checking registry."
+		writeLog "WARN" "Pull-through cache is missing for site, checking for registry variable"
 
 		if checkVarEmpty "${VAR_REGISTRY}" "Container registry for site ${SITES_ARRAY[$VALUE]}"; then
 

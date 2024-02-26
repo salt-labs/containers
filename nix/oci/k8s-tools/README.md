@@ -121,7 +121,7 @@ TANZU_SITES_ENABLED=TRUE
 - Next, define the list of sites in a comma-separated docker environment variable.
 
 ```bash
-# NOTE: This example has dashes in the names...
+# NOTE: This example has dashes in the names.
 TANZU_SITES=site-1,site-2
 ```
 
@@ -131,15 +131,15 @@ TANZU_SITES=site-1,site-2
 # NOTE: The variable names must be all in uppercase and any dashes '-' converted to an underscore.
 
 # If you use a pull-through cache
-TANZU_SITE_SITE_1_NAME_PULL_THROUGH_CACHE=harbor.site-1.mydomain
-TANZU_SITE_SITE_2_NAME_PULL_THROUGH_CACHE=harbor.site-2.mydomain
+TANZU_SITE_SITE_1_PULL_THROUGH_CACHE=harbor.site-1.mydomain
+TANZU_SITE_SITE_2_PULL_THROUGH_CACHE=harbor.site-2.mydomain
 
 # Or, if you use isolated cluster mode
-TANZU_SITE_SITE_1_NAME_REGISTRY=harbor.site-1.mydomain
-TANZU_SITE_SITE_2_NAME_REGISTRY=harbor.site-2.mydomain
+TANZU_SITE_SITE_1_REGISTRY=harbor.site-1.mydomain
+TANZU_SITE_SITE_2_REGISTRY=harbor.site-2.mydomain
 ```
 
-- When launching the container, you will be asked in a dialog screen which site you are going to administer.
+- When launching the container, you will be asked in a dialog screen which site you are going to administer and the variables set for that site accordingly.
 
 ### 3. Custom Registry
 

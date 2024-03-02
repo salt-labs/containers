@@ -39,7 +39,7 @@ jobs:
 
       - id: update_nix_flake
         name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@v20
+        uses: DeterminateSystems/update-flake-lock@v21
         with:
           sign-commits: false
           gpg-fingerprint: ${{ secrets.GPG_FINGERPRINT }}

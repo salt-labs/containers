@@ -232,12 +232,14 @@ function tanzu_cli_custom() {
 
 	# Runs the correct functions based on user provided variables.
 
-	# There are 4 supported options for the Tanzu CLI OCI Registry that we need to deal with.
+	# There are 5 supported options for the Tanzu CLI OCI Registry that we need to deal with.
 	# In order of preference they are:
-	#	1. If multi-site is active, go through that nonsense.
-	# 	2. If a custom registry is provided, use it.
-	# 	3. If a pull-through cache is provided, use it.
-	# 	4. If no pull-through or custom registry is provided, pull direct from the internet.
+	#
+	#	1. If multi-site is active, go through that nonsense first.
+	# 	2. If a custom registry is provided, use it as fall back option 1.
+	# 	3. If a pull-through cache is provided, use it as fall back option 2.
+	# 	4. If no pull-through or custom registry is provided, and a Proxy is needed, create `scripts/proxy.sh` as per the docs.
+	# 	5. If no pull-through or custom registry is provided, pull direct from the internet as last resort.
 
 	local TANZU_CLI_DEFAULT_URL
 
@@ -535,7 +537,7 @@ function tanzu_cli_context() {
 	fi
 
 	# Present the user with a menu to select their context.
-	dialogMenu "Tanzu CLI context" "Select the Tanzu CLI context to authenticate against:"
+	dialogMenu "Tanzu CLI context" "Select the existing Tanzu CLI context to authenticate against or cancel if you are deploying a new Cluster."
 
 	#  0 = Yes
 	#  1 = No
@@ -654,6 +656,10 @@ function tanzu_multi_site() {
 	local OPTIONS=()
 	local NUM=0
 
+	# There are two modes of operation; pull-through-cache or isolated-cluster.
+	local ENABLE_ISOLATED_CLUSTER_MODE=FALSE
+	local ENABLE_PULL_THROUGH_CACHE=FALSE
+
 	# Docker env doesn't support arrays. The users needs to provide a CSV variable.
 	# If the user has provided a list of sites.
 	if [[ ${TANZU_SITES:-EMPTY} == "EMPTY" ]]; then
@@ -759,46 +765,78 @@ function tanzu_multi_site() {
 	TANZU_SITE_NAME="${SITES_ARRAY[$VALUE]}"
 
 	# Build the variable name as a string
+	VAR_PULL_THROUGH_CACHE="TANZU_SITE_${SITES_ARRAY[$VALUE]}_PULL_THROUGH_CACHE"
 	VAR_REGISTRY="TANZU_SITE_${SITES_ARRAY[$VALUE]}_REGISTRY"
 	VAR_CLI_PLUGIN_INVENTORY_TAG="TANZU_SITE_${SITES_ARRAY[$VALUE]}_CLI_PLUGIN_INVENTORY_TAG"
 	VAR_CLI_PLUGIN_GROUP_TKG_TAG="TANZU_SITE_${SITES_ARRAY[$VALUE]}_CLI_PLUGIN_GROUP_TKG_TAG"
 
 	# Convert string to uppercase
 	VAR_REGISTRY=${VAR_REGISTRY^^}
+	VAR_PULL_THROUGH_CACHE=${VAR_PULL_THROUGH_CACHE^^}
 	VAR_CLI_PLUGIN_INVENTORY_TAG=${VAR_CLI_PLUGIN_INVENTORY_TAG^^}
 	VAR_CLI_PLUGIN_GROUP_TKG_TAG=${VAR_CLI_PLUGIN_GROUP_TKG_TAG^^}
 
 	# Replace any dashes with underscores
 	VAR_REGISTRY=${VAR_REGISTRY//-/_}
+	VAR_PULL_THROUGH_CACHE=${VAR_PULL_THROUGH_CACHE//-/_}
 	VAR_CLI_PLUGIN_INVENTORY_TAG=${VAR_CLI_PLUGIN_INVENTORY_TAG//-/_}
 	VAR_CLI_PLUGIN_GROUP_TKG_TAG=${VAR_CLI_PLUGIN_GROUP_TKG_TAG//-/_}
 
 	# Replace any spaces with underscores
 	VAR_REGISTRY=${VAR_REGISTRY// /_}
+	VAR_PULL_THROUGH_CACHE=${VAR_PULL_THROUGH_CACHE// /_}
 	VAR_CLI_PLUGIN_INVENTORY_TAG=${VAR_CLI_PLUGIN_INVENTORY_TAG// /_}
 	VAR_CLI_PLUGIN_GROUP_TKG_TAG=${VAR_CLI_PLUGIN_GROUP_TKG_TAG// /_}
 
 	##########
-	# Registry
+	# Pull-through cache or Isolated Cluster?
 	##########
 
-	# The Registry variable is not optional when using multi-site.
+	# You can only use either a pull-through cache registry or use isolated-cluster mode.
 
-	# Check whether the variable is empty or not.
-	if checkVarEmpty "${VAR_REGISTRY}" "Container registry for site ${SITES_ARRAY[$VALUE]}"; then
-		dialogMsgBox "ERROR" "The required site variable is missing. Please set the variable named ${VAR_REGISTRY}"
-		return 1
-	fi
+	if checkVarEmpty "${VAR_PULL_THROUGH_CACHE}" "Pull-through cache for site ${SITES_ARRAY[$VALUE]}"; then
 
-	# Obtain the current contents of the variable
-	REGISTRY="${!VAR_REGISTRY:-EMPTY}"
+		writeLog "WARN" "Pull-through cache is missing for site, checking for registry variable"
 
-	# Double check our work.
-	if [[ ${REGISTRY} == "EMPTY" ]]; then
-		writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_REGISTRY}"
-		return 1
+		if checkVarEmpty "${VAR_REGISTRY}" "Container registry for site ${SITES_ARRAY[$VALUE]}"; then
+
+			dialogMsgBox "ERROR" "A required site variable is missing. Please set either the variable named ${VAR_PULL_THROUGH_CACHE} or ${VAR_REGISTRY}"
+			return 1
+
+		else
+
+			# Were using isolated cluster mode.
+			ENABLE_ISOLATED_CLUSTER_MODE=TRUE
+
+			# Obtain the current contents of the variable
+			REGISTRY="${!VAR_REGISTRY:-EMPTY}"
+
+			# Double check our work.
+			if [[ ${REGISTRY} == "EMPTY" ]]; then
+				writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_REGISTRY}"
+				return 1
+			else
+				writeLog "DEBUG" "The site ${SITES_ARRAY[$VALUE]} has a registry value of ${REGISTRY}"
+			fi
+
+		fi
+
 	else
-		writeLog "DEBUG" "The site ${SITES_ARRAY[$VALUE]} has a registry value of ${REGISTRY}"
+
+		# Were using a pull-through cache
+		ENABLE_PULL_THROUGH_CACHE=TRUE
+
+		# Obtain the current contents of the variable
+		PULL_THROUGH_CACHE="${!VAR_PULL_THROUGH_CACHE:-EMPTY}"
+
+		# Double check our work.
+		if [[ ${PULL_THROUGH_CACHE} == "EMPTY" ]]; then
+			writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_PULL_THROUGH_CACHE}"
+			return 1
+		else
+			writeLog "DEBUG" "The site ${SITES_ARRAY[$VALUE]} has a pull-through cache value of ${PULL_THROUGH_CACHE}"
+		fi
+
 	fi
 
 	##########
@@ -853,23 +891,47 @@ function tanzu_multi_site() {
 	# Export variables
 	##########
 
+	# If were using a pull-through cache
+	if [[ ${ENABLE_PULL_THROUGH_CACHE} == "TRUE" ]]; then
+
+		writeLog "INFO" "Exporting variables for pull-through cache mode"
+
+		# Add the pull-through prefix to the Tanzu CLI URL
+		TANZU_CLI_OCI_URL="${PULL_THROUGH_CACHE}/${TANZU_CLI_OCI_URL}"
+
+		# Add the pull-through prefix to the TKG URL
+		TKG_CUSTOM_IMAGE_REPOSITORY="${PULL_THROUGH_CACHE}/projects.registry.vmware.com/tkg"
+
+	# Else if were using isolated cluster mode
+	elif [[ ${ENABLE_ISOLATED_CLUSTER_MODE} == "TRUE" ]]; then
+
+		writeLog "INFO" "Exporting variables for isolated-cluster-mode"
+
+		# Strip the VMware registry prefix.
+		TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL#*projects.registry.vmware.com}"
+
+		# Add the multi-site registry OCI URL to the Tanzu CLI URL
+		TANZU_CLI_OCI_URL="${REGISTRY}${TANZU_CLI_OCI_URL}"
+
+		# Add the multi-site registry OCI URL to the TKG URL
+		TKG_CUSTOM_IMAGE_REPOSITORY="${REGISTRY}/tkg"
+
+	# Catch unhandled error
+	else
+
+		dialogMsgBox "ERROR" "Unhandled error determining if using pull-through cache or isolated cluster mode. Log a bug with the session logs."
+		return 1
+
+	fi
+
 	# Export the correct registry variables for the selected site.
 	TKG_VERSION="${TANZU_CLI_PLUGIN_GROUP_TKG_TAG}"
-
-	# Strip the VMware registry prefix.
-	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL#*projects.registry.vmware.com}"
-
-	# Add the multi-site registry OCI URL to the Tanzu CLI URL
-	TANZU_CLI_OCI_URL="${REGISTRY}${TANZU_CLI_OCI_URL}"
 
 	# Strip the current inventory image tag.
 	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL%:*}"
 
 	# Add the user provided image tag.
 	TANZU_CLI_OCI_URL="${TANZU_CLI_OCI_URL}:${TANZU_CLI_PLUGIN_INVENTORY_TAG}"
-
-	# Add the multi-site registry OCI URL to the TKG URL
-	TKG_CUSTOM_IMAGE_REPOSITORY="${REGISTRY}/tkg"
 
 	# Export the final results
 	export TANZU_SITE_NAME

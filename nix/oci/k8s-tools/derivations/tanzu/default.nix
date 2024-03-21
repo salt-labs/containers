@@ -1,23 +1,26 @@
 # NOTE: Cachix push
 # nix build --json --impure ".#packages.\"x86_64-linux.x86_64-linux\".tanzu" | jq -r '.[0].outputs.out' | cachix push salt-labs
+# https://github.com/vmware-tanzu/tanzu-cli
 {pkgs, ...}: let
+  version = "1.2.0";
+
   tanzu-cli = {
     core = pkgs.fetchurl {
       name = "tanzu-cli";
-      url = "https://github.com/vmware-tanzu/tanzu-cli/releases/download/v1.1.0/tanzu-cli-linux-amd64.tar.gz";
-      sha256 = "sha256-FlbxiaD9GHvx7X92wzt/T3DmW/zDWPrDpzs4Gd+WYpI=";
+      url = "https://github.com/vmware-tanzu/tanzu-cli/releases/download/v${version}/tanzu-cli-linux-amd64.tar.gz";
+      sha256 = "sha256-8ZI9VR/5ue/zoDnZSGJ6QaoK6/dofL/YCZAVA1Za43U=";
     };
 
     plugins = pkgs.fetchurl {
       name = "tanzu-cli-plugins";
-      url = "https://github.com/vmware-tanzu/tanzu-cli/releases/download/v1.1.0/tanzu-plugins-admin-linux-amd64.tar.gz";
-      sha256 = "sha256-Ae/N3D/54ZiYS8T7QpQFQxkG0IjbpCValMGeYtVc1vs=";
+      url = "https://github.com/vmware-tanzu/tanzu-cli/releases/download/v${version}/tanzu-plugins-admin-linux-amd64.tar.gz";
+      sha256 = "sha256-4ButVE6N1l0pTz9cZ+QLlKGEhvWMLzLHiTmk1GXI6Ic=";
     };
   };
 in
   pkgs.stdenv.mkDerivation {
     name = "tanzu-cli";
-    version = "1.1.0";
+    inherit version;
 
     dontBuild = true;
     dontConfigure = true;

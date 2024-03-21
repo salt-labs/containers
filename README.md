@@ -4,7 +4,7 @@
 
 A collection of container images used for CI tooling.
 
-**NOTE:** In order for use in vRealise Aria, Codestream requires that each container has at least the following available;
+**NOTE:** In order for use in vRealize Aria, Codestream requires that each container has at least the following available;
 
     - Shell (bash, sh, etc.)
     - curl or wget

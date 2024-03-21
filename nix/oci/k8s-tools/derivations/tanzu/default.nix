@@ -20,7 +20,7 @@
 in
   pkgs.stdenv.mkDerivation {
     name = "tanzu-cli";
-    version = version;
+    inherit version;
 
     dontBuild = true;
     dontConfigure = true;

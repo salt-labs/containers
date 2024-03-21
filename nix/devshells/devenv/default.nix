@@ -90,7 +90,9 @@ inputs.devenv.lib.mkShell {
           alejandra.enable = true;
           nixfmt.enable = false;
           nixpkgs-fmt.enable = false;
-          deadnix.enable = false;
+          deadnix = {
+            enable = false;
+          };
           statix.enable = true;
 
           # GitHub Actions
@@ -125,7 +127,14 @@ inputs.devenv.lib.mkShell {
 
           # Spelling
           hunspell.enable = true;
-          typos.enable = false;
+          typos = {
+            enable = true;
+            settings = {
+              format = "long";
+              diff = true;
+              write = false;
+            };
+          };
 
           # Git commit messages
           commitizen.enable = true;
@@ -139,69 +148,58 @@ inputs.devenv.lib.mkShell {
           # Markdown
           markdownlint = {
             enable = true;
+            settings = {
+              config = {
+                # No hard tabs allowed.
+                no-hard-tabs = true;
+
+                # Unordered list intendation.
+                MD007 = {
+                  indent = 2;
+                };
+
+                # Training spaces
+                MD009 = {
+                  br_spaces = 2;
+                };
+
+                # Line length
+                MD013 = false;
+
+                # Inline HTML
+                MD033 = false;
+
+                # List marker spaces.
+                # Disabled for use with prettier.
+                MD030 = false;
+              };
+            };
           };
           mdsh.enable = true;
 
           # Common
-          prettier.enable = true;
+          prettier = {
+            enable = true;
+            settings = {
+              check = true;
+              list-different = true;
+              write = true;
+            };
+          };
 
           # YAML
-          yamllint.enable = true;
+          yamllint = {
+            enable = true;
+            settings = {
+              configPath = ".linters/config/.yamllint.yml";
+            };
+          };
 
           # Terraform
           terraform-format.enable = false;
 
           # Haskell
           hlint.enable = false;
-        };
-
-        settings = {
-          deadnix = {
-            noUnderscore = true;
-          };
-
-          markdownlint = {
-            config = {
-              # No hard tabs allowed.
-              no-hard-tabs = true;
-
-              # Unordered list intendation.
-              MD007 = {
-                indent = 2;
-              };
-
-              # Training spaces
-              MD009 = {
-                br_spaces = 2;
-              };
-
-              # Line length
-              MD013 = false;
-
-              # Inline HTML
-              MD033 = false;
-
-              # List marker spaces.
-              # Disabled for use with prettier.
-              MD030 = false;
-            };
-          };
-
-          prettier = {
-            check = true;
-            list-different = true;
-            write = true;
-          };
-
-          typos = {
-            format = "long";
-            diff = true;
-            write = false;
-          };
-
-          yamllint = {
-            configPath = ".linters/config/.yamllint.yml";
-          };
         };
       };
 
@@ -233,7 +231,6 @@ inputs.devenv.lib.mkShell {
 
       devenv = {
         flakesIntegration = true;
-        #warnOnNewVersion = true;
       };
 
       dotenv = {
@@ -242,8 +239,6 @@ inputs.devenv.lib.mkShell {
       };
 
       difftastic.enable = true;
-
-      #hosts = {"example.com" = "1.1.1.1";};
 
       languages = {
         cue = {

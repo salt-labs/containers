@@ -1,8 +1,4 @@
-{
-  pkgs,
-  crossPkgs,
-  ...
-}: let
+{pkgs, ...}: let
   versions = {
     imgpkg = "v0.41.1";
     kapp = "v0.60.0";

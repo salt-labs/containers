@@ -1,6 +1,5 @@
 {
   pkgs,
-  crossPkgs,
   self,
   ...
 }: let
@@ -9,7 +8,6 @@
 
   pivnet = pkgs.callPackage ./pivnet.nix {
     inherit pkgs;
-    inherit crossPkgs;
   };
 in
   pkgs.dockerTools.buildImage {

@@ -1,6 +1,5 @@
 {
   pkgs,
-  crossPkgs,
   self,
   ...
 }: let

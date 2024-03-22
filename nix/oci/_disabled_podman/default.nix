@@ -6,8 +6,6 @@
 {
   pkgs,
   pkgsUnstable,
-  crossPkgs,
-  crossPkgsUnstable,
   self,
   ...
 }: let

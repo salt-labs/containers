@@ -182,7 +182,7 @@ inputs.devenv.lib.mkShell {
             enable = true;
             settings = {
               check = true;
-              list-different = true;
+              list-different = false;
               write = true;
             };
           };

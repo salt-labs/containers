@@ -1,20 +1,18 @@
 {
   pkgs,
   pkgsUnstable,
-  crossPkgs,
-  crossPkgsUnstable,
   self,
   ...
 }: let
   # Get the current date in YYYY-MM-DD
-  currentDate = pkgs.lib.readFile "${
-    pkgs.runCommand "current-time" {
-      env.UNIXTIME = builtins.currentTime;
-    } "echo -n `date -d @$UNIXTIME +%Y-%m-%d` > $out"
-  }";
-
+  #currentDate = pkgs.lib.readFile "${
+  #  pkgs.runCommand "current-time" {
+  #    env.UNIXTIME = builtins.currentTime;
+  #  } "echo -n `date -d @$UNIXTIME +%Y-%m-%d` > $out"
+  #}";
   # Use the current date for calver.
-  containerVersion = currentDate;
+  #containerVersion = currentDate;
+  containerVersion = "1.0.0";
 
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   creationDate = builtins.substring 0 8 modifiedDate;
@@ -28,12 +26,10 @@
 
   tanzu = pkgs.callPackage ./derivations/tanzu {
     inherit pkgs;
-    inherit crossPkgs;
   };
 
   carvel = pkgs.callPackage ../carvel/carvel.nix {
     inherit pkgs;
-    inherit crossPkgs;
   };
 
   root_files = builtins.path {

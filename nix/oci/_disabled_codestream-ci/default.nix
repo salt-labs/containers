@@ -1,7 +1,6 @@
 {
   pkgs,
   pkgsUnstable,
-  crossPkgs,
   pkgCodestreamCLI,
   self,
   ...

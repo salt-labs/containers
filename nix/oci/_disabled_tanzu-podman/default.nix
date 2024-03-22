@@ -6,8 +6,6 @@
 {
   pkgs,
   pkgsUnstable,
-  crossPkgs,
-  crossPkgsUnstable,
   self,
   ...
 }: let
@@ -29,12 +27,10 @@
 
   tanzu = pkgs.callPackage ../tanzu/tanzu.nix {
     inherit pkgs;
-    inherit crossPkgs;
   };
 
   carvel = pkgs.callPackage ../carvel/carvel.nix {
     inherit pkgs;
-    inherit crossPkgs;
   };
 
   root_files = builtins.path {

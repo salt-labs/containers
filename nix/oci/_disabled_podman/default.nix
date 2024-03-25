@@ -5,7 +5,6 @@
 ##################################################
 {
   pkgs,
-  pkgsUnstable,
   self,
   ...
 }: let
@@ -32,9 +31,6 @@
   ];
 
   stablePkgs = with pkgs; [
-  ];
-
-  unstablePkgs = with pkgsUnstable; [
   ];
 in
   pkgs.dockerTools.buildLayeredImage {

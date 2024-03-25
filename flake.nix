@@ -115,22 +115,34 @@
     inherit (self) outputs;
 
     forEachSystem = nixpkgs.lib.genAttrs (import systems);
+
+    _pkgsImport = system:
+      import nixpkgs.legacyPackages {
+        system = system;
+        overlays = [];
+        config = {
+          allowUnfree = true;
+          allowUnfreePredicate = _: true;
+        };
+      };
+
+    pkgsImport = system: nixpkgs.legacyPackages.${system};
   in {
     ###############
     # Packages
     ###############
 
     packages = forEachSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = pkgsImport system;
 
       # codestream-cli
       #pkgCodestreamCLI = codestream-cli.packages.${system}.codestream-cli;
 
       # Loopy
       pkgLoopy = loopy.packages.${system}.loopy;
-    in {
-      devenv-up = self.devShells.${system}.default.config.procfileScript;
 
+      devenv-up = self.devShells.${system}.default.config.procfileScript;
+    in {
       brakeman = import ./nix/oci/brakeman {
         inherit self;
         inherit pkgs;
@@ -358,12 +370,13 @@
     ###############
 
     devShells = forEachSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = pkgsImport system;
     in {
       devenv = import ./nix/devshells/devenv {
         inherit inputs;
         inherit system;
         inherit pkgs;
+        inherit nixpkgs;
       };
 
       default = self.devShells.${system}.devenv;

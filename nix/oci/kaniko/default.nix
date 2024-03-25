@@ -1,15 +1,10 @@
 {
   pkgs,
-  pkgsUnstable,
   self,
   ...
 }: let
   modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   creationDate = builtins.substring 0 8 modifiedDate;
-
-  unstablePkgs = with pkgsUnstable; [
-    kaniko
-  ];
 
   environmentHelpers = with pkgs.dockerTools; [
     usrBinEnv
@@ -52,9 +47,8 @@ in
           coreutils-full
           docker-credential-gcr
           docker-credential-helpers
-          #kaniko
+          kaniko
         ]
-        ++ unstablePkgs
         ++ environmentHelpers;
     };
 
@@ -76,8 +70,7 @@ in
         "org.opencontainers.image.description" = "Kaniko";
       };
       Entrypoint = [
-        #"${kaniko}/bin/executor"
-        "${pkgsUnstable.kaniko}/bin/executor"
+        "${pkgs.kaniko}/bin/executor"
       ];
       Cmd = [
       ];

@@ -1,6 +1,5 @@
 {
   pkgs,
-  pkgsUnstable,
   pkgCodestreamCLI,
   self,
   ...
@@ -74,10 +73,6 @@
         ''
       )
     ];
-
-  unstablePkgs = with pkgsUnstable; [
-    kaniko
-  ];
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "codestream-ci";
@@ -164,6 +159,7 @@ in
           tflint
           tfsec
           trivy
+          kaniko
 
           # Python
           python310
@@ -175,7 +171,6 @@ in
           # Codestream CLI
           #pkgCodestreamCLI
         ]
-        ++ unstablePkgs
         ++ environmentHelpers; #++ nonRootShadowSetup { uid = 1000; user = "codestream-ci"; };
     };
 

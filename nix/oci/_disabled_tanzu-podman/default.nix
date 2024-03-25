@@ -5,7 +5,6 @@
 ##################################################
 {
   pkgs,
-  pkgsUnstable,
   self,
   ...
 }: let
@@ -84,7 +83,7 @@
     # Kubernetes Tools
     clusterctl
     kail
-    #kind
+    kind
     krew
     kube-bench
     kube-linter
@@ -103,10 +102,6 @@
     carvel
     tanzu
   ];
-
-  unstablePkgs = with pkgsUnstable; [
-    kind
-  ];
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu-podman";
@@ -123,7 +118,6 @@ in
 
       paths =
         stablePkgs
-        ++ unstablePkgs
         ++ environmentHelpers
         ++ [root_files];
 

@@ -1,6 +1,5 @@
 {
   pkgs,
-  pkgsUnstable,
   self,
   ...
 }: let
@@ -8,10 +7,6 @@
   creationDate = builtins.substring 0 8 modifiedDate;
 
   entrypoint = pkgs.callPackage ./entrypoint {};
-
-  unstablePkgs = with pkgsUnstable; [
-    hugo
-  ];
 in
   pkgs.dockerTools.buildImage {
     name = "hugo";
@@ -22,15 +17,14 @@ in
       name = "image-root";
       pathsToLink = ["/bin"];
 
-      paths = with pkgs;
-        [
-          # Common
-          busybox
-          curlFull
-          cacert
-          git
-        ]
-        ++ unstablePkgs;
+      paths = with pkgs; [
+        # Common
+        busybox
+        curlFull
+        cacert
+        git
+        hugo
+      ];
     };
 
     config = {

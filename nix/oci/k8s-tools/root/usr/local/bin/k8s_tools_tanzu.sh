@@ -22,7 +22,6 @@ function k8s_tools_distro_launch() {
 
 	writeLog "DEBUG" "Resetting variables"
 
-	unset TANZU_CLI_READY
 	unset TANZU_CLI_OCI_URL
 	unset TANZU_CLI_PLUGIN_SYNC
 	unset TKG_CUSTOM_IMAGE_REPOSITORY
@@ -75,54 +74,46 @@ function k8s_tools_distro_launch() {
 
 	# If this is the first time, an initialization process is required
 	# to accept the EULA and disable the Telemetry
-	tanzu_cli_init || {
+	tanzu_cli_eula || {
 
-		MESSAGE="Failed to initialize the Tanzu CLI"
+		MESSAGE="Failed to accept the Tanzu CLI EULA"
 		writeLog "ERROR" "${MESSAGE}"
 		dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
 		return 1
 
 	}
 
-	if [[ ${TANZU_CLI_READY:-FALSE} == "TRUE" ]]; then
+	dialogProgress "Tanzu CLI: Launching..." "40"
 
-		dialogProgress "Tanzu CLI: Launching..." "40"
+	# Apply user customizations based on provided variables.
+	# The user customizations function displays it's own dialog boxes.
+	tanzu_cli_custom || {
+		MESSAGE="Failed to set the Tanzu CLI user customisations"
+		writeLog "ERROR" "${MESSAGE}"
+		return 1
+	}
 
-		# Apply user customizations based on provided variables.
-		# The user customizations function displays it's own dialog boxes.
-		tanzu_cli_custom || {
-			MESSAGE="Failed to set the Tanzu CLI user customisations"
-			writeLog "ERROR" "${MESSAGE}"
-			return 1
-		}
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "50"
 
-		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "50"
+	# Ask the user to select the Tanzu CLI context work in and authenticate against.
+	# If this fails, the process can continue but we cannot sync the plugins without auth.
+	tanzu_cli_context || {
+		MESSAGE="Failed to enter the selected Tanzu CLI context, skipping plugin sync if enabled."
+		writeLog "WARNING" "${MESSAGE}"
+		TANZU_CLI_PLUGIN_SYNC=FALSE
+	}
 
-		# Ask the user to select the Tanzu CLI context work in and authenticate against.
-		# If this fails, the process can continue but we cannot sync the plugins without auth.
-		tanzu_cli_context || {
-			MESSAGE="Failed to enter the selected Tanzu CLI context, skipping plugin sync if enabled."
-			writeLog "WARNING" "${MESSAGE}"
-			TANZU_CLI_PLUGIN_SYNC=FALSE
-		}
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "60"
 
-		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "60"
+	# Download the Tanzu CLI plugins.
+	tanzu_cli_plugins || {
+		MESSAGE="Failed to download the Tanzu CLI plugins, skipping."
+		writeLog "ERROR" "${MESSAGE}"
+		dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
+		# Allow the user to continue.
+	}
 
-		# Download the Tanzu CLI plugins.
-		tanzu_cli_plugins || {
-			MESSAGE="Failed to download the Tanzu CLI plugins"
-			writeLog "ERROR" "${MESSAGE}"
-			dialogMsgBox "ERROR" "${MESSAGE}.\n\nReview the session logs for further information."
-			return 1
-		}
-
-		dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "75"
-
-	else
-
-		writeLog "WARN" "Tanzu CLI: Not ready... skipping plugin downloads"
-
-	fi
+	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "75"
 
 	dialogProgress "${K8S_TOOLS_TITLE}: Launching..." "100"
 
@@ -133,6 +124,23 @@ function k8s_tools_distro_launch() {
 ##################################################
 # Tanzu CLI
 ##################################################
+
+function tanzu_cli_eula() {
+
+	# Accepts the EULA
+
+	dialogProgress "Tanzu CLI: EULA..." "0"
+
+	tanzu config eula accept 1>>"${LOG_FILE}" 2>&1 || {
+		writeLog "ERROR" "Failed to accept the Tanzu CLI EULA"
+		return 1
+	}
+
+	dialogProgress "Tanzu CLI: EULA..." "100"
+
+	return 0
+
+}
 
 function tanzu_cli_nuke() {
 
@@ -190,7 +198,8 @@ function tanzu_cli_envs() {
 
 		writeLog "INFO" "Taking a backup of the existing Tanzu CLI directory"
 
-		mv "${HOME}/.config/tanzu" "${HOME}/.config/tanzu.bak" || {
+		BACKUP_DATE="$(date +%Y-%m-%d_%H-%M-%S)"
+		mv "${HOME}/.config/tanzu" "${HOME}/.config/tanzu.bak-${BACKUP_DATE:-date_unknown}" || {
 
 			writeLog "ERROR" "Failed to take a backup of the Tanzu CLI directory, aborting"
 			return 1
@@ -245,14 +254,8 @@ function tanzu_cli_custom() {
 
 	dialogProgress "Tanzu CLI: Applying user customizations..." "0"
 
-	# HACK: Reset the plugin URL to defaults each run.
-	tanzu plugin source init 1>>"${LOG_FILE}" 2>&1 || {
-		writeLog "ERROR" "Failed to initialize the Tanzu CLI plugin source."
-		return 1
-	}
-
-	# Capture existing OCI URL as the default.
-	TANZU_CLI_DEFAULT_URL=$(tanzu plugin source list --output yaml | yq '.[] | select(.name == "default") | .image')
+	# Define the default URL
+	TANZU_CLI_DEFAULT_URL="projects.registry.vmware.com/tanzu_cli/plugins/plugin-inventory:latest"
 
 	# Strip the current inventory image tag.
 	TANZU_CLI_OCI_URL="${TANZU_CLI_DEFAULT_URL%:*}"
@@ -320,9 +323,9 @@ function tanzu_cli_custom() {
 		writeLog "INFO" "No custom registry or pull-through cache provided, pulling images direct from the internet."
 
 	fi
-
+	
 	#########################
-	# End
+	# Update the plugins
 	#########################
 
 	# Now that the container registry has been configured, update the variables and plugins.
@@ -335,16 +338,16 @@ function tanzu_cli_custom() {
 
 	}
 
+	#########################
+	# End
+	#########################
+		
 	dialogProgress "Tanzu CLI: Apply user customizations..." "100"
-
 	return 0
 
 }
 
 function tanzu_cli_init() {
-
-	# Initialize the Tanzu CLI for first time users.
-	TANZU_CLI_READY=FALSE
 
 	# We use a fake lock file to determine if the CLI has been "initialized".
 	TANZU_CLI_INIT_LOCK="${HOME}/.config/tanzu/.tanzu-init.lock"
@@ -352,7 +355,6 @@ function tanzu_cli_init() {
 	if [[ -f ${TANZU_CLI_INIT_LOCK} ]]; then
 
 		writeLog "INFO" "The Tanzu CLI has already been initialized"
-		TANZU_CLI_READY=TRUE
 		return 0
 
 	fi
@@ -406,8 +408,7 @@ function tanzu_cli_init() {
 			EOF
 
 			dialogProgress "Tanzu CLI: Initializing..." "100"
-			TANZU_CLI_READY=TRUE
-
+			
 			break
 
 			;;

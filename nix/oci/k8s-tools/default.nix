@@ -1,6 +1,5 @@
 {
   pkgs,
-  pkgsUnstable,
   self,
   ...
 }: let
@@ -147,18 +146,13 @@
     sops
 
     # TKG Tools
-    #pinniped
+    pinniped
     sonobuoy
     velero
 
     # Custom derivations
     carvel
     tanzu
-  ];
-
-  unstablePkgs = with pkgsUnstable; [
-    # Pinniped v0.28 has the --timeout parameter
-    pinniped
   ];
 in
   #pkgs.dockerTools.buildLayeredImage {
@@ -174,7 +168,6 @@ in
 
       paths =
         stablePkgs
-        ++ unstablePkgs
         ++ environmentHelpers
         ++ [root_files];
 

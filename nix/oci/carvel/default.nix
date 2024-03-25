@@ -1,6 +1,5 @@
 {
   pkgs,
-  pkgsUnstable,
   self,
   ...
 }: let
@@ -47,9 +46,6 @@ in
 
         # Carvel
         carvel
-        #pkgsUnstable.ytt
-        #pkgsUnstable.kapp
-        #pkgsUnstable.vendir
       ];
     };
 

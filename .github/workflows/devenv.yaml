@@ -88,14 +88,9 @@ jobs:
       - id: install_devenv
         name: Install devenv
         run: |
-          nix profile install --accept-flake-config tarball+https://install.devenv.sh/latest
+          nix profile install tarball+https://install.devenv.sh/latest
 
-      - id: devenv_ci
-        name: Devenv CI
+      - id: devenv_test
+        name: Devenv Tests
         run: |
-          devenv ci
-
-      - id: devenv_shell
-        name: Devenv Shell
-        run: |
-          devenv shell echo "Development environment OK!"
+          devenv test

@@ -80,6 +80,12 @@ inputs.devenv.lib.mkShell {
           "
       '';
 
+      enterTest = ''
+
+        ytt --version || exit 1
+
+      '';
+
       pre-commit = {
         default_stages = ["commit"];
 

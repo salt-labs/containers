@@ -116,16 +116,6 @@
 
     forEachSystem = nixpkgs.lib.genAttrs (import systems);
 
-    _pkgsImport = system:
-      import nixpkgs.legacyPackages {
-        system = system;
-        overlays = [];
-        config = {
-          allowUnfree = true;
-          allowUnfreePredicate = _: true;
-        };
-      };
-
     pkgsImport = system: nixpkgs.legacyPackages.${system};
   in {
     ###############

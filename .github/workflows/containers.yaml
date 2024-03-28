@@ -103,13 +103,6 @@ jobs:
           lfs: false
           submodules: recursive
 
-      - id: cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            /nix/store/
-          key: ${{ runner.os }}-devenv-${{ hashFiles('**/devenv.lock') }}
-
       - id: install_nix
         name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v26
@@ -125,6 +118,18 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           useDaemon: true
           skipPush: false
+
+      - id: cache
+        name: Restore Nix store cache
+        uses: nix-community/cache-nix-action@v5
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 1073741824
+          purge: true
+          purge-prefixes: cache-${{ runner.os }}-
+          purge-created: 0
+          purge-primary-key: never
 
       - id: install_devenv
         name: Install devenv

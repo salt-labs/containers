@@ -26,6 +26,7 @@ env:
   NIXPKGS_ALLOW_UNFREE: 1
 
   REGISTRY: ghcr.io
+  PROJECT: ${{ github.repository }}
 
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
   BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
@@ -138,6 +139,6 @@ jobs:
       - id: build_container
         name: "Build container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
         run: >
-          echo devenv container build ${{ matrix.container }}
-          --registry docker://${{ github.repository }}/${{ env.PROJECT }}/
+          devenv container build ${{ matrix.container }}
+          --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
           --copy-args="--dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"

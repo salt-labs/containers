@@ -1,8 +1,5 @@
 {
   pkgs,
-  pkgsUnstable,
-  crossPkgs,
-  crossPkgsUnstable,
   self,
   ...
 }: let
@@ -16,7 +13,6 @@
 
   tanzu = pkgs.callPackage ./derivations/tanzu {
     inherit pkgs;
-    inherit crossPkgs;
   };
 
   super_custom = pkgs.callPackage ./derivations/super {
@@ -25,7 +21,6 @@
 
   carvel = pkgs.callPackage ../carvel/carvel.nix {
     inherit pkgs;
-    inherit crossPkgs;
   };
 
   root_files = builtins.path {
@@ -94,6 +89,7 @@
     which
     xz
     yq-go
+    glibc
 
     # User tools
     shadow
@@ -125,13 +121,14 @@
     docker-slim
     docker-proxy
     runc
+    docker_24
 
     # Kubernetes Tools
     clusterctl
     k9s
     kail
     kapp
-    #kind
+    kind
     krew
     kube-bench
     kube-linter
@@ -151,13 +148,6 @@
     carvel
     tanzu
     super_custom # Added for 23.11
-  ];
-
-  unstablePkgs = with pkgsUnstable; [
-    # TODO: Check when docker-client is up to v24+
-    docker_24
-    kind
-    glibc
   ];
 in
   pkgs.dockerTools.buildLayeredImage {
@@ -206,7 +196,6 @@ in
 
       paths =
         stablePkgs
-        ++ unstablePkgs
         ++ environmentHelpers
         ++ [root_files];
     };

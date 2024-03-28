@@ -5,9 +5,6 @@
 ##################################################
 {
   pkgs,
-  pkgsUnstable,
-  crossPkgs,
-  crossPkgsUnstable,
   self,
   ...
 }: let
@@ -29,12 +26,10 @@
 
   tanzu = pkgs.callPackage ../tanzu/tanzu.nix {
     inherit pkgs;
-    inherit crossPkgs;
   };
 
   carvel = pkgs.callPackage ../carvel/carvel.nix {
     inherit pkgs;
-    inherit crossPkgs;
   };
 
   root_files = builtins.path {
@@ -88,7 +83,7 @@
     # Kubernetes Tools
     clusterctl
     kail
-    #kind
+    kind
     krew
     kube-bench
     kube-linter
@@ -107,10 +102,6 @@
     carvel
     tanzu
   ];
-
-  unstablePkgs = with pkgsUnstable; [
-    kind
-  ];
 in
   pkgs.dockerTools.buildLayeredImage {
     name = "tanzu-podman";
@@ -127,7 +118,6 @@ in
 
       paths =
         stablePkgs
-        ++ unstablePkgs
         ++ environmentHelpers
         ++ [root_files];
 

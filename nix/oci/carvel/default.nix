@@ -1,7 +1,5 @@
 {
   pkgs,
-  pkgsUnstable,
-  crossPkgs,
   self,
   ...
 }: let
@@ -10,7 +8,6 @@
 
   carvel = pkgs.callPackage ./carvel.nix {
     inherit pkgs;
-    inherit crossPkgs;
   };
 in
   pkgs.dockerTools.buildImage {
@@ -49,9 +46,6 @@ in
 
         # Carvel
         carvel
-        #pkgsUnstable.ytt
-        #pkgsUnstable.kapp
-        #pkgsUnstable.vendir
       ];
     };
 

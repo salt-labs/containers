@@ -32,8 +32,8 @@ env:
   REGISTRY_USERNAME: ${{ github.actor }}
   REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
-  CONTAINER_BUILD: "true"
-  CONTAINER_PUBLISH: "true"
+  CONTAINER_BUILD: "false"
+  CONTAINER_PUBLISH: "false"
 
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
   BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}

@@ -12,14 +12,14 @@ on:
     paths:
       - .github/workflows/devenv.yaml
       - devenv.nix
-      - flake.lock
-      - flake.nix
-      - nix/devshells/**
+      - devenv.nix
+      - devenv.lock
+      - devenv/**
 
 permissions:
-  contents: read
-  packages: read
-  pull-requests: read
+  contents: write
+  packages: write
+  pull-requests: write
   statuses: read
 
 env:
@@ -30,13 +30,15 @@ env:
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
   BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
 
+  REGISTRY_AUTH_FILE: ./auth.json
+
 defaults:
   run:
     shell: bash
 
 jobs:
   ##################################################
-  # Test the Development environment shell
+  # Test
   ##################################################
 
   test:
@@ -72,30 +74,19 @@ jobs:
         with:
           name: ${{ secrets.CACHIX_CACHE_NAME }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-          useDaemon: false
+          useDaemon: true
           skipPush: false
 
-      - id: configure_nix
-        name: Configure Nix
-        env:
-          NIX_CONFIG_HOME: "~/.config/nix"
-        run: |
-          mkdir -p "$NIX_CONFIG_HOME"
-          cat <<- EOF >> "$NIX_CONFIG_HOME/nix.conf"
-          access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-          EOF
+      - id: cache
+        name: Magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
       - id: install_devenv
         name: Install devenv
         run: |
-          nix profile install --accept-flake-config tarball+https://install.devenv.sh/latest
+          nix profile install tarball+https://install.devenv.sh/latest
 
-      - id: devenv_ci
-        name: Devenv CI
+      - id: devenv_test
+        name: Devenv Tests
         run: |
-          devenv ci
-
-      - id: devenv_shell
-        name: Devenv Shell
-        run: |
-          devenv shell echo "Development environment OK!"
+          devenv test

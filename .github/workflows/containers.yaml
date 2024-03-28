@@ -103,6 +103,13 @@ jobs:
           lfs: false
           submodules: recursive
 
+      - id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /nix/store/
+          key: ${{ runner.os }}-devenv-${{ hashFiles('**/devenv.lock') }}
+
       - id: install_nix
         name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v26

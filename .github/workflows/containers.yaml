@@ -105,7 +105,7 @@ jobs:
 
       - id: install_nix
         name: "Install Nix ❄️"
-        uses: nixbuild/nix-quick-install-action@v26
+        uses: nixbuild/nix-quick-install-action@v27
 
       - id: cachix
         name: "Enable Cachix ❄️"
@@ -117,7 +117,7 @@ jobs:
           skipPush: false
 
       - id: cache
-        name: Restore Nix store cache
+        name: Nix store cache
         uses: nix-community/cache-nix-action@v5
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
@@ -148,11 +148,11 @@ jobs:
       - id: container_build
         name: "Build container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
         run: >
-          echo devenv container build ${{ matrix.container }}
+          devenv container build ${{ matrix.container }}
 
       - id: container_copy
         name: "Copy container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
         run: >
-          echo devenv container copy ${{ matrix.container }}
+          devenv container copy ${{ matrix.container }}
           --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
           --copy-args="--dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"

@@ -7,14 +7,11 @@ result
 !.vscode/settings.json
 
 # Ignore dev env vars.
-.devenv
-**/.devenv
-**/.devenv*
-**/devenv.local.nix
+.devenv*
+devenv.local.nix
 
 # Ignore direnv
 .direnv
-**/.direnv
 
 # Ignore TODOs
 TODO/
@@ -27,4 +24,3 @@ TODO/
 
 # Ignore SOPS secrets
 secrets/
-

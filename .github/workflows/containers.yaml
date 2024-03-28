@@ -136,9 +136,14 @@ jobs:
             echo "package_version=$(date '+%Y.%m.%d')-$(date -d "1970-01-01 UTC $(date +%T)" +%s)" >> "$GITHUB_OUTPUT"
           fi
 
-      - id: build_container
+      - id: container_build
         name: "Build container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
         run: >
           devenv container build ${{ matrix.container }}
+
+      - id: container_copy
+        name: "Copy container image ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
+        run: >
+          devenv container copy ${{ matrix.container }}
           --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
           --copy-args="--dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"

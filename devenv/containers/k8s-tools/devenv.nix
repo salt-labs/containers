@@ -7,11 +7,11 @@ in {
 
   containers = {
 
-    "k8s-tools" = {
+    hello = {
 
       isBuilding = true;
 
-      name = "k8s-tools";
+      name = hello;
 
       version = oci_version;
 

@@ -13,7 +13,7 @@ This is in order for the container to be able to download and run the codestream
 
 ## Builds
 
-![Containers](https://img.shields.io/github/actions/workflow/status/salt-labs/containers/nix-container.yml?label=Containers&style=for-the-badge)
+![Containers](https://img.shields.io/github/actions/workflow/status/salt-labs/containers/container.yaml?label=Containers&style=for-the-badge)
 
 ## Tags
 

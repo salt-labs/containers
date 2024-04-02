@@ -149,6 +149,8 @@ jobs:
           devenv container
           --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
           --copy-args=" \
+            --debug \
+            --insecure-policy \
             --format=oci \
             --dest-precompute-digests \
             --preserve-digests \

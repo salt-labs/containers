@@ -12,8 +12,6 @@ in {
 
       maxLayers = 1;
 
-      registry = null;
-
       copyToRoot = with pkgs; [
         hello
       ];

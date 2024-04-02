@@ -1,5 +1,5 @@
 {pkgs, ...}: let
-  oci_name = "k8s-tools";
+  oci_name = "k8s_tools";
   oci_version = "latest";
 in {
   containers = {

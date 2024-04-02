@@ -4,6 +4,7 @@
 # Reference: https://devenv.sh/reference/options/
 ###############
 {pkgs, ...}: {
+
   ###############
   # Environment - https://devenv.sh/basics/
   ###############
@@ -20,37 +21,6 @@
     filename = ".env";
     disableHint = false;
   };
-
-  unsetEnvVars = [
-    "HOST_PATH"
-    "NIX_BUILD_CORES"
-    "__structuredAttrs"
-    "buildInputs"
-    "buildPhase"
-    "builder"
-    "depsBuildBuild"
-    "depsBuildBuildPropagated"
-    "depsBuildTarget"
-    "depsBuildTargetPropagated"
-    "depsHostHost"
-    "depsHostHostPropagated"
-    "depsTargetTarget"
-    "depsTargetTargetPropagated"
-    "doCheck"
-    "doInstallCheck"
-    "nativeBuildInputs"
-    "out"
-    "outputs"
-    "patches"
-    "phases"
-    "preferLocalBuild"
-    "propagatedBuildInputs"
-    "propagatedNativeBuildInputs"
-    "shell"
-    "shellHook"
-    "stdenv"
-    "strictDeps"
-  ];
 
   ################
   # Devenv
@@ -79,15 +49,16 @@
   ###############
 
   packages = with pkgs; [
-    hello
     figlet
+    git
+    hello
   ];
 
   ###############
   # Scripts - https://devenv.sh/scripts/
   ###############
 
-  scripts.hello.exec = "echo hello from $GREET";
+  scripts.hello.exec = "Welcome to $GREET";
 
   enterShell = ''
     figlet ''${PROJECT_SHELL:-Unknown}
@@ -103,10 +74,140 @@
   '';
 
   ###############
+  # git -  https://devenv.sh/pre-commit-hooks/
+  ###############
+
+  difftastic = {
+    enable = false;
+  };
+
+  pre-commit = {
+    default_stages = ["commit"];
+
+    excludes = ["README.md"];
+
+    hooks = {
+      # Nix
+      alejandra.enable = false;
+      nixfmt.enable = false;
+      nixpkgs-fmt.enable = false;
+      deadnix.enable = false;
+      statix.enable = false;
+
+      # GitHub Actions
+      actionlint.enable = false;
+
+      # Ansible
+      ansible-lint.enable = false;
+
+      # Python
+      autoflake.enable = false;
+      black.enable = false;
+      flake8.enable = false;
+      pylint.enable = false;
+      ruff.enable = false;
+
+      # Bash
+      bats.enable = false;
+      shellcheck.enable = false;
+      shfmt.enable = false;
+
+      # Rust
+      cargo-check.enable = false;
+      clippy.enable = false;
+      rustfmt.enable = false;
+
+      # Go
+      gofmt.enable = false;
+      gotest.enable = false;
+      govet.enable = false;
+      revive.enable = false;
+      staticcheck.enable = false;
+
+      # Spelling
+      hunspell.enable = false;
+      typos = {
+        enable = false;
+        settings = {
+          format = "long";
+          diff = true;
+          write = false;
+        };
+      };
+
+      # Git commit messages
+      commitizen.enable = false;
+
+      # Docker
+      hadolint.enable = false;
+
+      # Dhall
+      dhall-format.enable = false;
+
+      # Markdown
+      markdownlint = {
+        enable = false;
+        settings = {
+          config = {
+            # No hard tabs allowed.
+            no-hard-tabs = true;
+
+            # Unordered list intendation.
+            MD007 = {
+              indent = 2;
+            };
+
+            # Training spaces
+            MD009 = {
+              br_spaces = 2;
+            };
+
+            # Line length
+            MD013 = false;
+
+            # Inline HTML
+            MD033 = false;
+
+            # List marker spaces.
+            # Disabled for use with prettier.
+            MD030 = false;
+          };
+        };
+      };
+      mdsh.enable = false;
+
+      # Common
+      prettier = {
+        enable = false;
+        settings = {
+          check = true;
+          list-different = false;
+          write = true;
+        };
+      };
+
+      # YAML
+      yamllint = {
+        enable = false;
+        settings = {
+          configPath = ".linters/config/.yamllint.yml";
+        };
+      };
+
+      # Terraform
+      terraform-format.enable = false;
+
+      # Haskell
+      hlint.enable = false;
+    };
+  };
+
+  ###############
   # Languages - https://devenv.sh/languages/
   ###############
 
   languages = {
+
     cue = {
       enable = false;
       package = pkgs.cue;
@@ -144,138 +245,6 @@
     };
   };
 
-  ###############
-  # git
-  ###############
-
-  difftastic = {
-    enable = true;
-  };
-
-  ###############
-  # Hooks - https://devenv.sh/pre-commit-hooks/
-  ###############
-
-  pre-commit = {
-    default_stages = ["commit"];
-
-    excludes = ["README.md"];
-
-    hooks = {
-      # Nix
-      alejandra.enable = true;
-      nixfmt.enable = false;
-      nixpkgs-fmt.enable = false;
-      deadnix.enable = false;
-      statix.enable = true;
-
-      # GitHub Actions
-      actionlint.enable = true;
-
-      # Ansible
-      ansible-lint.enable = false;
-
-      # Python
-      autoflake.enable = false;
-      black.enable = false;
-      flake8.enable = false;
-      pylint.enable = false;
-      ruff.enable = false;
-
-      # Bash
-      bats.enable = true;
-      shellcheck.enable = true;
-      shfmt.enable = true;
-
-      # Rust
-      cargo-check.enable = false;
-      clippy.enable = false;
-      rustfmt.enable = false;
-
-      # Go
-      gofmt.enable = false;
-      gotest.enable = false;
-      govet.enable = false;
-      revive.enable = false;
-      staticcheck.enable = false;
-
-      # Spelling
-      hunspell.enable = true;
-      typos = {
-        enable = true;
-        settings = {
-          format = "long";
-          diff = true;
-          write = false;
-        };
-      };
-
-      # Git commit messages
-      commitizen.enable = true;
-
-      # Docker
-      hadolint.enable = true;
-
-      # Dhall
-      dhall-format.enable = false;
-
-      # Markdown
-      markdownlint = {
-        enable = true;
-        settings = {
-          config = {
-            # No hard tabs allowed.
-            no-hard-tabs = true;
-
-            # Unordered list intendation.
-            MD007 = {
-              indent = 2;
-            };
-
-            # Training spaces
-            MD009 = {
-              br_spaces = 2;
-            };
-
-            # Line length
-            MD013 = false;
-
-            # Inline HTML
-            MD033 = false;
-
-            # List marker spaces.
-            # Disabled for use with prettier.
-            MD030 = false;
-          };
-        };
-      };
-      mdsh.enable = true;
-
-      # Common
-      prettier = {
-        enable = true;
-        settings = {
-          check = true;
-          list-different = false;
-          write = true;
-        };
-      };
-
-      # YAML
-      yamllint = {
-        enable = true;
-        settings = {
-          configPath = ".linters/config/.yamllint.yml";
-        };
-      };
-
-      # Terraform
-      terraform-format.enable = false;
-
-      # Haskell
-      hlint.enable = false;
-    };
-  };
 
   ###############
   # Processes - https://devenv.sh/processes/
@@ -293,7 +262,7 @@
   ###############
 
   starship = {
-    enable = true;
+    enable = false;
     package = pkgs.starship;
     config = {
       enable = true;
@@ -314,7 +283,7 @@
   ###############
 
   devcontainer = {
-    enable = true;
+    enable = false;
 
     settings = {
       customizations = {
@@ -346,4 +315,5 @@
   enterTest = ''
     echo "Running tests..."
   '';
+
 }

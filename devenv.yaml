@@ -1,28 +1,41 @@
 inputs:
+
   devenv:
     url: github:cachix/devenv/main
+    flake: true
+
   fenix:
     url: github:nix-community/fenix/main
+    flake: true
+
   nix2container:
     url: github:nlewo/nix2container
-    inputs:
-      nixpkgs:
-        follows: nixpkgs
+    flake: true
+
   nixpkgs:
     url: github:cachix/devenv-nixpkgs/rolling
-  pre-commit-hooks:
-    url: github:cachix/pre-commit-hooks.nix/master
-  #loopy:
-  #url: github:salt-labs/loopy/trunk
-  #nixos-generators:
-  #url: github:nix-community/nixos-generators/master
-  #poetry2nix:
-  #url: github:nix-community/poetry2nix/master
+    flake: true
+
+  git-hooks:
+    url: github:cachix/git-hooks.nix/master
+    flake: true
+
+  loopy:
+    url: github:salt-labs/loopy/trunk
+    flake: true
+
+  poetry2nix:
+    url: github:nix-community/poetry2nix/master
+    flake: false
+
 allowUnfree: true
+
 imports:
-  - ./devenv/containers/test
+- ./devenv/containers/test
+
 clean:
   enabled: false
   keep:
     - EDITOR
-impure: true
+
+impure: false

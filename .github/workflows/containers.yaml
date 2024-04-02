@@ -47,7 +47,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: false
 
     strategy:
@@ -85,7 +85,7 @@ jobs:
     needs:
       - matrix
 
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: false
 
     strategy:

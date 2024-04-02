@@ -7,7 +7,7 @@ in {
 
   containers = {
 
-    oci_name = {
+    "k8s-tools" = {
 
       isBuilding = true;
 

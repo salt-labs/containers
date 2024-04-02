@@ -3,14 +3,14 @@
 #
 # Reference: https://devenv.sh/reference/options/
 ###############
-{pkgs, ...}: {
+{pkgs, lib, config, ...}: {
 
   ###############
   # Environment - https://devenv.sh/basics/
   ###############
 
   env = {
-    GREET = "devenv";
+    PROJECT_SHELL = "devenv";
     HUNSPELL_CONFIG = ".linters/config/hunspell.conf";
     PRETTIER_CONFIG = ".linters/config/.prettierrc.yaml";
     YAMLLINT_CONFIG_FILE = ".linters/config/.yamllint.yml";
@@ -58,19 +58,14 @@
   # Scripts - https://devenv.sh/scripts/
   ###############
 
-  scripts.hello.exec = "Welcome to $GREET";
+  enterShell = "";
 
-  enterShell = ''
-    figlet ''${PROJECT_SHELL:-Unknown}
+  scripts.welcome.exec = ''
+    #!/usr/bin/env bash
 
-    hello \
-      --greeting \
-      "
-      Welcome ''${USER}!
+    figlet ''${PROJECT_SHELL}
 
-      Project: ''${PROJECT_NAME:-Unknown}
-      Shell: ''${PROJECT_SHELL:-Unknown}
-      Directory: ''${PROJECT_DIR:-Unknown}
+    echo "Hello, $USER, welcome to ''${PROJECT_SHELL}"
   '';
 
   ###############

@@ -9,6 +9,6 @@ inputs:
 imports:
 - ./devenv/containers/test
 clean:
-  enabled: true
+  enabled: false
   keep:
   - EDITOR

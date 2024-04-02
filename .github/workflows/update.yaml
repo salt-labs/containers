@@ -72,10 +72,15 @@ jobs:
         name: Magic Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - id: install_devenv
+      - id: devenv_install
         name: Install devenv
         run: |
           nix profile install tarball+https://install.devenv.sh/latest
+
+      - id: devenv_gc
+        name: Garbage collect devenv
+        run: |
+          devenv gc
 
       - id: devenv_update
         name: Devenv Update

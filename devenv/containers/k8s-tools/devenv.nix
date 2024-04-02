@@ -11,7 +11,7 @@ in {
 
       isBuilding = true;
 
-      name = oci_name;
+      name = "k8s-tools";
 
       version = oci_version;
 

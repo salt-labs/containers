@@ -9,7 +9,7 @@ in {
 
     "${oci_name}" = {
 
-      isBuilding = true;
+      isBuilding = false;
 
       name = "${oci_name}";
 

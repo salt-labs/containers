@@ -195,6 +195,36 @@
       # Haskell
       hlint.enable = false;
     };
+
+    settings = {
+      markdownlint = {
+        config = {
+
+          # No hard tabs allowed.
+          no-hard-tabs = true;
+
+          # Unordered list intendation.
+          MD007 = {
+            indent = 2;
+          };
+
+          # Training spaces
+          MD009 = {
+            br_spaces = 2;
+          };
+
+          # Line length
+          MD013 = false;
+          # Inline HTML
+
+          MD033 = false;
+
+          # List marker spaces.
+          # Disabled for use with prettier.
+          MD030 = false;
+        };
+      };
+    };
   };
 
   ###############

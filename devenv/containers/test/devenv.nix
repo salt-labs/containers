@@ -9,13 +9,13 @@ in {
 
     "${oci_name}" = {
 
-      isBuilding = false;
+      #isBuilding = false;
 
       name = "${oci_name}";
 
       version = "${oci_version}";
 
-      maxLayers = 1;
+      #maxLayers = 1;
 
       copyToRoot = with pkgs; [
         hello

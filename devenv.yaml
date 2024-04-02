@@ -28,10 +28,10 @@ inputs:
     url: github:nix-community/poetry2nix/master
     flake: false
 
-allowUnfree: true
+allowUnfree: false
 
 imports:
-- ./devenv/containers/test
+  - ./devenv/containers/test
 
 clean:
   enabled: false

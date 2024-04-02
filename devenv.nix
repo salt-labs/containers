@@ -283,7 +283,7 @@
   ###############
 
   devcontainer = {
-    enable = false;
+    enable = true;
 
     settings = {
       customizations = {

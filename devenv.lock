@@ -107,6 +107,7 @@
       },
       "original": {
         "owner": "nlewo",
+        "ref": "master",
         "repo": "nix2container",
         "type": "github"
       }

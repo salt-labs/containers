@@ -151,6 +151,7 @@ jobs:
           --copy-args=" \
             --format=oci \
             --dest-precompute-digests \
+            --preserve-digests \
             --retry-times=3 \
             --all \
             --additional-tag=${{matrix.container}}:latest \

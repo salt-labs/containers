@@ -30,8 +30,6 @@ env:
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
   BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
 
-  REGISTRY_AUTH_FILE: ./auth.json
-
 defaults:
   run:
     shell: bash
@@ -67,6 +65,9 @@ jobs:
       - id: install_nix
         name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v26
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_kvm: true
 
       - id: cachix
         name: "Enable Cachix ❄️"
@@ -81,12 +82,17 @@ jobs:
         name: Magic Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - id: install_devenv
-        name: Install devenv
+      - id: devenv_install
+        name: Devenv install
         run: |
           nix profile install tarball+https://install.devenv.sh/latest
 
+      - id: devenv_shell
+        name: Devenv shell
+        run: |
+          devenv shell
+
       - id: devenv_test
-        name: Devenv Tests
+        name: Devenv test
         run: |
           devenv test

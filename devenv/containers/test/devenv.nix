@@ -3,7 +3,7 @@
   oci_version = "latest";
 in {
   containers = {
-    "${oci_name}" = {
+    oci_name = {
       isBuilding = true;
 
       name = oci_name;

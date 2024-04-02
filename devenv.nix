@@ -65,7 +65,7 @@
 
     figlet ''${PROJECT_SHELL}
 
-    echo "Hello, $USER, welcome to ''${PROJECT_SHELL}"
+    echo "Hello $USER, welcome to ''${PROJECT_SHELL}"
   '';
 
   ###############

@@ -52,7 +52,6 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-latest
 
     steps:
       - id: checkout_repository

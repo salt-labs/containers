@@ -1,9 +1,9 @@
 {pkgs, ...}: let
-  oci_name = "k8s_tools";
+  oci_name = "k8s-tools";
   oci_version = "latest";
 in {
   containers = {
-    "${oci_name}" = {
+    oci_name = {
       isBuilding = true;
 
       name = oci_name;

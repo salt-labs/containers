@@ -148,13 +148,11 @@ jobs:
         run: >
           devenv container
           --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
-          --copy-args=
-            "
+          --copy-args="
             --additional-tag=${{matrix.container}}:latest
             --additional-tag=${{matrix.container}}:${{ steps.calver.outputs.package_version }}
             --dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}
             --preserve-digests
             --retry-times=3
-            --all
-            "
+            --all"
           copy ${{ matrix.container }}

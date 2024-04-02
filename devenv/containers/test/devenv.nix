@@ -18,6 +18,7 @@ in {
       #maxLayers = 1;
 
       copyToRoot = with pkgs; [
+        stdenv
         hello
       ];
 

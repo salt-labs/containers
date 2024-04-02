@@ -1,4 +1,6 @@
 inputs:
+  devenv:
+    url: github:cachix/devenv/main
   fenix:
     url: github:nix-community/fenix/main
   nix2container:
@@ -8,16 +10,14 @@ inputs:
         follows: nixpkgs
   nixpkgs:
     url: github:cachix/devenv-nixpkgs/rolling
-  loopy:
-    url: github:salt-labs/loopy/trunk
   pre-commit-hooks:
     url: github:cachix/pre-commit-hooks.nix/master
-  nixos-generators:
-    url: github:nix-community/nixos-generators/master
-  poetry2nix:
-    url: github:nix-community/poetry2nix/master
-  devenv:
-    url: github:cachix/devenv/main
+  #loopy:
+  #url: github:salt-labs/loopy/trunk
+  #nixos-generators:
+  #url: github:nix-community/nixos-generators/master
+  #poetry2nix:
+  #url: github:nix-community/poetry2nix/master
 allowUnfree: true
 imports:
   - ./devenv/containers/test

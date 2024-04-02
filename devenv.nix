@@ -166,9 +166,7 @@
       alejandra.enable = true;
       nixfmt.enable = false;
       nixpkgs-fmt.enable = false;
-      deadnix = {
-        enable = false;
-      };
+      deadnix.enable = false;
       statix.enable = true;
 
       # GitHub Actions

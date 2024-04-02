@@ -142,32 +142,32 @@
       # Markdown
       markdownlint = {
         enable = false;
-        settings = {
-          config = {
-            # No hard tabs allowed.
-            no-hard-tabs = true;
+      #  settings = {
+      #    config = {
+      #      # No hard tabs allowed.
+      #      no-hard-tabs = true;
 
-            # Unordered list intendation.
-            MD007 = {
-              indent = 2;
-            };
+      #      # Unordered list intendation.
+      #      MD007 = {
+      #        indent = 2;
+      #      };
 
-            # Training spaces
-            MD009 = {
-              br_spaces = 2;
-            };
+      #      # Training spaces
+      #      MD009 = {
+      #        br_spaces = 2;
+      #      };
 
-            # Line length
-            MD013 = false;
+      #      # Line length
+      #      MD013 = false;
 
-            # Inline HTML
-            MD033 = false;
+      #      # Inline HTML
+      #      MD033 = false;
 
-            # List marker spaces.
-            # Disabled for use with prettier.
-            MD030 = false;
-          };
-        };
+      #      # List marker spaces.
+      #      # Disabled for use with prettier.
+      #      MD030 = false;
+      #    };
+      #  };
       };
       mdsh.enable = false;
 

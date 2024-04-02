@@ -1,14 +1,17 @@
 # Notes
 
-## Cachix
+## devenv
 
-To pre-build and push to cachix:
+The repository has now moved from using a Nix flake with `devenv` to using straight `devenv`.
+
+- To build a container, the new process is;
 
 ```bash
-CONTAINER=name
-CACHE=salt-labs
+devenv container build <container>
+```
 
-nix build --impure --json ".#${CONTAINER}"  \
-    | jq -r '.[].outputs | to_entries[].value' \
-    | cachix push "${CACHE}"
+- To build and copy a container
+
+```bash
+devenv container --registry <registry> --copy-args="<copy-args>" copy <container>
 ```

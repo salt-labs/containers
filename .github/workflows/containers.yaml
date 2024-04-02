@@ -142,5 +142,5 @@ jobs:
         run: >
           devenv container
           --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
-          --copy-args="--dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"
+          --copy-args="--all --preserve-digests --dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"
           copy ${{ matrix.container }}

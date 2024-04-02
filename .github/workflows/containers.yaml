@@ -126,6 +126,11 @@ jobs:
         run: |
           nix profile install tarball+https://install.devenv.sh/latest
 
+      - id: devenv_gc
+        name: Devenv gc
+        run: |
+          devenv gc
+
       - id: devenv_shell
         name: Devenv shell
         run: |

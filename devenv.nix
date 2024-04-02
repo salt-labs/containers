@@ -214,14 +214,19 @@
           };
 
           # Line length
-          MD013 = false;
-          # Inline HTML
-
-          MD033 = false;
+          MD013 = {
+            line_length = 120;
+          };
 
           # List marker spaces.
           # Disabled for use with prettier.
           MD030 = false;
+
+          # Inline HTML
+          MD033 = false;
+
+          # Bare URLs
+          MD034 = false;
         };
       };
     };

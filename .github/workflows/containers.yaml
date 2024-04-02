@@ -145,10 +145,8 @@ jobs:
 
       - id: container
         name: "Devenv container ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
-        run: |
-          devenv container --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/ copy ${{ matrix.container }}
-        #run: >
-          #devenv container
-          #--registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
-          #--copy-args="--insecure-policy --additional-tag=${{matrix.container}}:latest --additional-tag=${{matrix.container}}:${{ steps.calver.outputs.package_version }} --dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} --preserve-digests --retry-times=3 --all"
-          #copy ${{ matrix.container }}
+        run: >
+          devenv container
+          --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
+          --copy-args="--insecure-policy --additional-tag=${{matrix.container}}:latest --additional-tag=${{matrix.container}}:${{ steps.calver.outputs.package_version }} --dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} --preserve-digests=false --retry-times=3 --all"
+          copy ${{ matrix.container }}

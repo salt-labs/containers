@@ -20,11 +20,8 @@ in {
         hello
       ];
 
-      startupCommand = null;
+      startupCommand = hello;
 
-      # Default arguments for Skopeo
-      defaultCopyArgs = [
-      ];
     };
   };
 }

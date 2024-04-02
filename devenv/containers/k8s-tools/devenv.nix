@@ -1,9 +1,14 @@
 {pkgs, ...}: let
+
   oci_name = "k8s-tools";
   oci_version = "latest";
+
 in {
+
   containers = {
+
     oci_name = {
+
       isBuilding = true;
 
       name = oci_name;
@@ -23,5 +28,7 @@ in {
       startupCommand = pkgs.hello;
 
     };
+
   };
+
 }

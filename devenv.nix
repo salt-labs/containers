@@ -17,7 +17,7 @@
   };
 
   dotenv = {
-    enable = true;
+    enable = false;
     filename = ".env";
     disableHint = false;
   };

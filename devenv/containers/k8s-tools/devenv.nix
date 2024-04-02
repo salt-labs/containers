@@ -6,7 +6,7 @@ in {
     "${oci_name}" = {
       isBuilding = true;
 
-      name = "${oci_name}";
+      name = oci_name;
 
       version = oci_version;
 

@@ -20,7 +20,7 @@ in {
         hello
       ];
 
-      startupCommand = hello;
+      startupCommand = pkgs.hello;
 
     };
   };

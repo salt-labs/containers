@@ -291,7 +291,7 @@
   ###############
 
   starship = {
-    enable = false;
+    enable = true;
     package = pkgs.starship;
     config = {
       enable = true;

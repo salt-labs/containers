@@ -1,3 +1,4 @@
+
 inputs:
   nixpkgs:
     url: github:cachix/devenv-nixpkgs/rolling
@@ -11,10 +12,11 @@ inputs:
     inputs:
       nixpkgs:
         follows: nixpkgs
+
 imports:
 - ./devenv/containers/test
+
 clean:
   enabled: true
   keep:
   - EDITOR
-impure: true

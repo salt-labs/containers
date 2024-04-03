@@ -153,16 +153,21 @@ jobs:
         run: >
           devenv container
           --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
-          --copy-args=" \
-            --debug \
-            --insecure-policy \
-            --format=oci \
-            --dest-precompute-digests \
-            --preserve-digests \
-            --retry-times=3 \
-            --all \
-            --additional-tag=${{matrix.container}}:latest \
-            --additional-tag=${{matrix.container}}:${{ steps.calver.outputs.package_version }} \
-            --dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} \
-          "
+          --copy-args="--dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"
           copy ${{ matrix.container }}
+        #run: >
+        #  devenv container
+        #  --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
+        #  --copy-args=" \
+        #    --debug \
+        #    --insecure-policy \
+        #    --format=oci \
+        #    --dest-precompute-digests \
+        #    --preserve-digests \
+        #    --retry-times=3 \
+        #    --all \
+        #    --additional-tag=${{matrix.container}}:latest \
+        #    --additional-tag=${{matrix.container}}:${{ steps.calver.outputs.package_version }} \
+        #    --dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} \
+        #  "
+        #  copy ${{ matrix.container }}

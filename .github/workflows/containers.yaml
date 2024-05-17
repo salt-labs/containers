@@ -152,8 +152,8 @@ jobs:
         name: "Devenv container ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
         run: >
           devenv container
-          --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
-          --copy-args="--dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"
+          --registry docker://ghcr.io/salt-labs/containers/
+          --copy-args="--dest-creds=MAHDTech:${{ secrets.GITHUB_TOKEN }}"
           copy ${{ matrix.container }}
         #run: >
         #  devenv container

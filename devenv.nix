@@ -83,11 +83,11 @@
 
     hooks = {
       # Nix
-      alejandra.enable = false;
-      nixfmt.enable = false;
-      nixpkgs-fmt.enable = false;
-      deadnix.enable = false;
-      statix.enable = false;
+      alejandra.enable = true;
+      nixfmt.enable = true;
+      nixpkgs-fmt.enable = true;
+      deadnix.enable = true;
+      statix.enable = true;
 
       # GitHub Actions
       actionlint.enable = false;

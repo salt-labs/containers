@@ -197,12 +197,10 @@ inputs.devenv.lib.mkShell {
         nix = {enable = true;};
 
         python = {
-          enable = true;
-          package = pkgs.python3;
+          enable = false;
 
           poetry = {
             enable = true;
-            package = pkgs.poetry;
           };
 
           venv = {enable = true;};

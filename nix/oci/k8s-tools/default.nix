@@ -6,13 +6,9 @@
 }:
 let
   # Get the current date in YYYY-MM-DD
-  currentDate = pkgs.lib.strings.sanitizeDerivationName (
-    builtins.readFile (
-      pkgs.runCommand "current-date" { } ''
-        ${pkgs.coreutils}/bin/date '+%Y-%m-%d' > $out
-      ''
-    )
-  );
+  currentDate = pkgs.writeText "current-date" ''
+    ${pkgs.coreutils}/bin/date '+%Y-%m-%d'
+  '';
 
   # Use the current date for calver.
   containerVersion = currentDate;

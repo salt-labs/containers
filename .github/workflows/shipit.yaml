@@ -16,21 +16,18 @@ permissions:
   packages: read
 
 jobs:
-  
   dependabot:
-  
     runs-on: ubuntu-latest
-  
+
     if: ${{ github.actor == 'dependabot[bot]' }}
-  
+
     steps:
-  
       - id: dependabot_metadata
         name: Dependabot metadata
         uses: dependabot/fetch-metadata@v1.3.4
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          skip-commit-verification: true
+          skip-commit-verification: false
 
       - id: checkout_repository
         name: Checkout repository

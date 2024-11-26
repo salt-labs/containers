@@ -69,10 +69,10 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update flake.lock"
-          title: "Update flake.lock"
-          body: "This PR updates the flake input dependencies"
-          branch: "update-flake-lock"
+          commit-message: "bump flake.lock"
+          title: "bump flake.lock"
+          body: "This PR bumps the flake input dependencies"
+          branch: "bump-flake-lock"
           base: ${{ env.BRANCH_NAME_DEFAULT }}
           labels: "dependencies"
           assignees: "MAHDTech"

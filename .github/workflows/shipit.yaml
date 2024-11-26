@@ -1,0 +1,59 @@
+---
+name: Ship it
+
+on:
+  pull_request_target:
+    types:
+      - review_requested
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: read
+
+jobs:
+  
+  dependabot:
+  
+    runs-on: ubuntu-latest
+  
+    if: ${{ github.actor == 'dependabot[bot]' }}
+  
+    steps:
+  
+      - id: dependabot_metadata
+        name: Dependabot metadata
+        uses: dependabot/fetch-metadata@v1.3.4
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          skip-commit-verification: true
+
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: approve_pr
+        name: Approve pull request
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr checkout "$PR_URL"
+          if [ "$(gh pr status --json reviewDecision -q .currentBranch.reviewDecision)" != "APPROVED" ];
+          then
+            gh pr review --approve "$PR_URL"
+          else
+            echo "PR already approved.";
+          fi
+
+      - id: enable_auto_merge
+        name: Enable auto-merge
+        if: ${{ contains(github.event.pull_request.title, 'bump')}}
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.SHIPIT_TOKEN }}
+        run: gh pr merge --auto --merge "$PR_URL"

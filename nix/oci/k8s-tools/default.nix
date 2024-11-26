@@ -129,7 +129,6 @@ let
     docker-credential-helpers
     docker-gc
     docker-ls
-    docker-proxy
     docker-slim
 
     # Kubernetes Tools

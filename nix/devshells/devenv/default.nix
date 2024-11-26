@@ -181,8 +181,6 @@ inputs.devenv.lib.mkShell {
         filename = ".env";
       };
 
-      difftastic.enable = true;
-
       languages = {
         cue = {
           enable = false;

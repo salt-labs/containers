@@ -25,9 +25,9 @@
   inputs = {
     nixpkgs = {
       type = "github";
-      owner = "NixOS";
-      repo = "nixpkgs";
-      ref = "nixos-24.11";
+      owner = "cachix";
+      repo = "devenv-nixpkgs";
+      ref = "bump-rolling";
       flake = true;
     };
 

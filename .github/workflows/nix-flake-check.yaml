@@ -52,6 +52,10 @@ jobs:
           useDaemon: false
           skipPush: false
 
+      - id: cache
+        name: Magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
       - name: Nix Flake check
         run: >-
           nix flake check

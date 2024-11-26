@@ -125,6 +125,10 @@ jobs:
           useDaemon: false
           skipPush: false
 
+      - id: cache
+        name: Magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
       - id: configure_nix
         name: Configure Nix
         env:

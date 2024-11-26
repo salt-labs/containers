@@ -6,15 +6,12 @@
 }:
 let
   # Get the current date in YYYY-MM-DD
-  timestamp = builtins.currentTime / 86400 * 86400;
-  currentDate = pkgs.lib.readFile (
-    pkgs.runCommand "current-date"
-      {
-        env.UNIXTIME = toString timestamp;
-      }
+  currentDate = pkgs.lib.strings.sanitizeDerivationName (
+    builtins.readFile (
+      pkgs.runCommand "current-date" { } ''
+        ${pkgs.coreutils}/bin/date '+%Y-%m-%d' > $out
       ''
-        ${pkgs.coreutils}/bin/date -d @$UNIXTIME '+%Y-%m-%d' > $out
-      ''
+    )
   );
 
   # Use the current date for calver.

@@ -26,6 +26,7 @@ kubeconfig = "kubeconfig"
 doas = "doas"
 guage = "guage"
 customizations = "customizations"
+sanitize = "sanitize"
 
 [files]
 

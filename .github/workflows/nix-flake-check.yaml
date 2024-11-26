@@ -64,6 +64,7 @@ jobs:
           --keep-going
           --verbose
           --impure
+          --all-systems
 
       - name: Statix check
         run: nix run nixpkgs#statix -- check

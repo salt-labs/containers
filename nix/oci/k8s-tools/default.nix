@@ -6,9 +6,16 @@
 }:
 let
   # Get the current date in YYYY-MM-DD
-  currentDate = pkgs.lib.readFile "${pkgs.runCommand "current-time" {
-    env.UNIXTIME = builtins.currentTime;
-  } "echo -n `date -d @$UNIXTIME +%Y-%m-%d` > $out"}";
+  timestamp = builtins.currentTime / 86400 * 86400;
+  currentDate = pkgs.lib.readFile (
+    pkgs.runCommand "current-date"
+      {
+        env.UNIXTIME = toString timestamp;
+      }
+      ''
+        ${pkgs.coreutils}/bin/date -d @$UNIXTIME '+%Y-%m-%d' > $out
+      ''
+  );
 
   # Use the current date for calver.
   containerVersion = currentDate;

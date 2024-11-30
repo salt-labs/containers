@@ -27,6 +27,7 @@ doas = "doas"
 guage = "guage"
 customizations = "customizations"
 sanitize = "sanitize"
+synchronize = "synchronize"
 
 [files]
 

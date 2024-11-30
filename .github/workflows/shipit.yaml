@@ -5,6 +5,9 @@ on:
   pull_request_target:
     types:
       - review_requested
+      - opened
+      - reopened
+      - synchronize
 
 defaults:
   run:
@@ -19,7 +22,9 @@ jobs:
   dependabot:
     runs-on: ubuntu-latest
 
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: |
+      github.event.pull_request.user.login == 'dependabot[bot]' ||
+      (github.event.pull_request.user.login == 'github-actions[bot]' && contains(github.event.pull_request.title, 'bump flake.lock'))
 
     steps:
       - id: dependabot_metadata
@@ -33,7 +38,7 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: approve_pr
+      - id: pr_approve
         name: Approve pull request
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
@@ -47,10 +52,13 @@ jobs:
             echo "PR already approved.";
           fi
 
-      - id: enable_auto_merge
-        name: Enable auto-merge
-        if: ${{ contains(github.event.pull_request.title, 'bump')}}
+      - id: pr_merge
+        name: Merge pull request
+        if: |
+          github.event.pull_request.user.login == 'dependabot[bot]' ||
+          contains(github.event.pull_request.title, 'bump flake.lock')
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.SHIPIT_TOKEN }}
-        run: gh pr merge --auto --merge "$PR_URL"
+        run: |
+          gh pr merge --auto --merge "$PR_URL"

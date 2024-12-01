@@ -4,10 +4,10 @@ name: Ship it
 on:
   pull_request_target:
     types:
-      - review_requested
       - opened
       - reopened
       - synchronize
+      - review_requested
 
 defaults:
   run:
@@ -19,7 +19,9 @@ permissions:
   packages: read
 
 jobs:
-  dependabot:
+  check:
+    name: Check PR
+
     runs-on: ubuntu-latest
 
     if: |
@@ -29,6 +31,7 @@ jobs:
     steps:
       - id: dependabot_metadata
         name: Dependabot metadata
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
         uses: dependabot/fetch-metadata@v2.2.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"

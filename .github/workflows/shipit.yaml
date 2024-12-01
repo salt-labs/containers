@@ -4,7 +4,18 @@ name: Ship it
 on:
   pull_request_target:
     types:
+      - opened
+      - reopened
+      - synchronize
       - review_requested
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - review_requested
+    paths:
+      - flake.lock
 
 defaults:
   run:
@@ -16,31 +27,37 @@ permissions:
   packages: read
 
 jobs:
-  
-  dependabot:
-  
+  check:
+    name: Check PR
+
     runs-on: ubuntu-latest
-  
-    if: ${{ github.actor == 'dependabot[bot]' }}
-  
+
+    if: |
+      (github.event_name == 'pull_request_target' &&
+       github.event.pull_request.user.login == 'dependabot[bot]') ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.user.login == 'github-actions[bot]' &&
+       contains(github.event.pull_request.title, 'bump flake.lock') &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+
     steps:
-  
       - id: dependabot_metadata
         name: Dependabot metadata
-        uses: dependabot/fetch-metadata@v1.3.4
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        uses: dependabot/fetch-metadata@v2.2.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          skip-commit-verification: true
+          skip-commit-verification: false
 
       - id: checkout_repository
         name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: approve_pr
+      - id: pr_approve
         name: Approve pull request
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SHIPIT_TOKEN }}
         run: |
           gh pr checkout "$PR_URL"
           if [ "$(gh pr status --json reviewDecision -q .currentBranch.reviewDecision)" != "APPROVED" ];
@@ -50,10 +67,10 @@ jobs:
             echo "PR already approved.";
           fi
 
-      - id: enable_auto_merge
-        name: Enable auto-merge
-        if: ${{ contains(github.event.pull_request.title, 'bump')}}
+      - id: pr_merge
+        name: Merge pull request
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.SHIPIT_TOKEN }}
-        run: gh pr merge --auto --merge "$PR_URL"
+        run: |
+          gh pr merge --auto --merge "$PR_URL"

@@ -7,13 +7,28 @@ on:
 
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
+  packages: write
   pull-requests: write
   statuses: read
 
 env:
+  # GitHub
+  PROJECT: ${{ github.repository }}
+  BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
+  BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
+
+  # Nix
   NIXPKGS_ALLOW_UNFREE: 1
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   nix:
@@ -26,47 +41,43 @@ jobs:
 
       - id: install_nix
         name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v26
+        uses: cachix/install-nix-action@v30
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_kvm: true
 
       - id: cachix
         name: "Enable Cachix ❄️"
-        uses: cachix/cachix-action@v14
+        uses: cachix/cachix-action@v15
+        if: vars.CACHIX_CACHE_NAME != ''
         with:
-          name: ${{ secrets.CACHIX_CACHE_NAME }}
+          name: ${{ vars.CACHIX_CACHE_NAME }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-          useDaemon: false
+          useDaemon: true
           skipPush: false
+
+      - id: cache
+        name: Magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
       - id: update_nix_flake
         name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@v23
+        run: nix flake update --verbose
+
+      - id: create_pull_request
+        name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
         with:
-          sign-commits: false
-          gpg-fingerprint: ${{ secrets.GPG_FINGERPRINT }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          git-author-email: "github-actions@users.noreply.github.com"
-          git-author-name: "Nix Flake Bot"
-          git-committer-email: "github-actions@users.noreply.github.com"
-          git-committer-name: "Nix Flake Bot"
-
-      - id: print_pr_number
-        name: Pull request number
-        run: |
-          echo PR number: ${{ steps.update_nix_flake.outputs.pull-request-number }}
-
-      #- name: Nix Flake update
-      #  run: >
-      #    nix flake update --verbose
-
-      #- name: Update flake.lock
-      #  uses: stefanzweifel/git-auto-commit-action@v4
-      #  with:
-      #    commit_message: Update flake.lock
-      #    branch: trunk
-      #    commit_options: '--no-verify --signoff'
-      #    file_pattern: flake.lock
-      #    commit_user_name: Nix Flake Bot
-      #    commit_author: Nix Flake Bot <github-actions@users.noreply.github.com>
-      #    skip_dirty_check: false
-      #    skip_fetch: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "bump flake.lock"
+          title: "bump flake.lock"
+          body: "This PR bumps the flake input dependencies"
+          branch: "bump-flake-lock"
+          base: ${{ env.BRANCH_NAME_DEFAULT }}
+          labels: "dependencies"
+          assignees: "MAHDTech"
+          reviewers: "MAHDTech"
+          draft: false
+          signoff: true
+          delete-branch: true
+          sign-commits: true

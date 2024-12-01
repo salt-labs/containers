@@ -25,6 +25,9 @@ SOM-ID = "SOM-ID"
 kubeconfig = "kubeconfig"
 doas = "doas"
 guage = "guage"
+customizations = "customizations"
+sanitize = "sanitize"
+synchronize = "synchronize"
 
 [files]
 

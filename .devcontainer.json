@@ -5,7 +5,6 @@
         "exiasr.hadolint",
         "nhoizey.gremlins",
         "esbenp.prettier-vscode",
-        "github.copilot",
         "github.vscode-github-actions",
         "kamadorueda.alejandra",
         "ms-azuretools.vscode-docker",
@@ -20,5 +19,5 @@
   },
   "image": "ghcr.io/cachix/devenv:latest",
   "overrideCommand": false,
-  "updateContentCommand": "devenv ci"
+  "updateContentCommand": "devenv test"
 }

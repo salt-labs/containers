@@ -114,7 +114,7 @@ jobs:
 
       - id: install_nix
         name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v30
+        uses: cachix/install-nix-action@v31
 
       - id: cachix
         name: "Enable Cachix ❄️"

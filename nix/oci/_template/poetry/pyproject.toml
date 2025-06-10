@@ -8,7 +8,7 @@ license = "Unlicense"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-requests = "^2.32.2"
+requests = "^2.32.4"
 pillow = "^10.3.0"
 flask = "^2.3.2"
 

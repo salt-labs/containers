@@ -2,7 +2,7 @@
 
 function k8s_get_cert() {
 
-	# Reads the certifcate from the server in base64
+	# Reads the certificate from the server in base64
 	# format for Kubernetes without having to remember
 	# the OpenSSL flags.
 
@@ -11,7 +11,7 @@ function k8s_get_cert() {
 
 	if [[ ${SERVER:-EMPTY} == "EMPTY" ]]; then
 
-		writeLog "ERROR" 'Please provide a SERVER:PORT as $1'
+		writeLog "ERROR" 'Please provide a SERVER:PORT as param 1'
 		return 1
 
 	elif [[ ! ${SERVER} =~ ${REGEX} ]]; then

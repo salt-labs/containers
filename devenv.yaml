@@ -1,0 +1,22 @@
+---
+inputs:
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+  nix2container:
+    url: github:nlewo/nix2container/master
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  git-hooks:
+    url: github:cachix/git-hooks.nix/master
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+
+imports:
+  - ./devenv/containers/test
+
+clean:
+  enabled: false
+  keep:
+    - EDITOR

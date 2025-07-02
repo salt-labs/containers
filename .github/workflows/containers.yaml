@@ -1,0 +1,173 @@
+---
+name: Containers
+
+on:
+  push:
+    branches:
+      - trunk
+
+  pull_request:
+    branches:
+      - "trunk"
+    paths:
+      - .github/workflows/devenv.yaml
+      - devenv.nix
+      - devenv.nix
+      - devenv.lock
+      - devenv/**
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+  statuses: read
+
+env:
+  NIXPKGS_ALLOW_UNFREE: 1
+
+  REGISTRY: ghcr.io
+  PROJECT: ${{ github.repository }}
+
+  BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
+  BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ##################################################
+  # Matrix
+  ##################################################
+
+  matrix:
+    name: Matrix
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 60
+    continue-on-error: false
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: generate_matrix
+        name: Generating a matrix of container names
+        run: |
+          echo "Generating matrix of container names..."
+          # yamllint disable-line rule:line-length
+          CONTAINER_NAMES=$(find devenv/containers -mindepth 1 -maxdepth 1 -type d ! -name "_template" ! -name "_disabled*" -printf "%f\n" | jq -R -s -c 'split("\n")[:-1]')
+          echo "${CONTAINER_NAMES}" | jq .
+          echo "CONTAINER_MATRIX=${CONTAINER_NAMES}" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      container_matrix: ${{ steps.generate_matrix.outputs.CONTAINER_MATRIX }}
+
+  ##################################################
+  # Build
+  ##################################################
+
+  test:
+    name: Build Container ${{ matrix.container }}
+
+    runs-on: ${{ matrix.os }}
+
+    needs:
+      - matrix
+
+    timeout-minutes: 60
+    continue-on-error: false
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        container: ${{ fromJson(needs.matrix.outputs.container_matrix) }}
+
+    steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+          submodules: recursive
+
+      - id: install_nix
+        name: "Install Nix ❄️"
+        uses: cachix/install-nix-action@v26
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_kvm: true
+
+      - id: cachix
+        name: "Enable Cachix ❄️"
+        uses: cachix/cachix-action@v14
+        with:
+          name: ${{ secrets.CACHIX_CACHE_NAME }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          useDaemon: true
+          skipPush: false
+
+      - id: cache
+        name: Magix Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - id: devenv_install
+        name: Devenv install
+        run: |
+          nix profile install tarball+https://install.devenv.sh/latest
+
+      - id: devenv_gc
+        name: Devenv gc
+        run: |
+          devenv gc
+
+      - id: devenv_shell
+        name: Devenv shell
+        run: |
+          devenv shell
+
+      - id: calver
+        name: Set Calver Version
+        run: |
+          if [[ "${BRANCH_NAME_CURRENT}" == "${BRANCH_NAME_DEFAULT}" ]];
+          then
+            echo "Set CalVer for default branch"
+            echo "package_version=$(date '+%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+          else
+            echo "Set CalVer for non-default branch"
+            echo "package_version=$(date '+%Y.%m.%d')-$(date -d "1970-01-01 UTC $(date +%T)" +%s)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: container
+        name: "Devenv container ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
+        run: >
+          devenv container
+          --registry docker://ghcr.io/salt-labs/containers/
+          --copy-args="--dest-creds=MAHDTech:${{ secrets.GITHUB_TOKEN }}"
+          copy ${{ matrix.container }}
+        #run: >
+        #  devenv container
+        #  --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
+        #  --copy-args=" \
+        #    --debug \
+        #    --insecure-policy \
+        #    --format=oci \
+        #    --dest-precompute-digests \
+        #    --preserve-digests \
+        #    --retry-times=3 \
+        #    --all \
+        #    --additional-tag=${{matrix.container}}:latest \
+        #    --additional-tag=${{matrix.container}}:${{ steps.calver.outputs.package_version }} \
+        #    --dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} \
+        #  "
+        #  copy ${{ matrix.container }}

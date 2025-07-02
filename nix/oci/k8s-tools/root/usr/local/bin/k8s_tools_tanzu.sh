@@ -813,7 +813,7 @@ function tanzu_multi_site() {
 
 			# Double check our work.
 			if [[ ${REGISTRY} == "EMPTY" ]]; then
-				writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_REGISTRY}"
+				writeLog "ERROR" "Error encountered obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_REGISTRY}"
 				return 1
 			else
 				writeLog "DEBUG" "The site ${SITES_ARRAY[$VALUE]} has a registry value of ${REGISTRY}"
@@ -831,7 +831,7 @@ function tanzu_multi_site() {
 
 		# Double check our work.
 		if [[ ${PULL_THROUGH_CACHE} == "EMPTY" ]]; then
-			writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_PULL_THROUGH_CACHE}"
+			writeLog "ERROR" "Error encountered obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_PULL_THROUGH_CACHE}"
 			return 1
 		else
 			writeLog "DEBUG" "The site ${SITES_ARRAY[$VALUE]} has a pull-through cache value of ${PULL_THROUGH_CACHE}"
@@ -857,7 +857,7 @@ function tanzu_multi_site() {
 
 		# Double check our work.
 		if [[ ${CLI_PLUGIN_INVENTORY_TAG} == "EMPTY" ]]; then
-			writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_CLI_PLUGIN_INVENTORY_TAG}"
+			writeLog "ERROR" "Error encountered obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_CLI_PLUGIN_INVENTORY_TAG}"
 			return 1
 		else
 			writeLog "INFO" "The site ${SITES_ARRAY[$VALUE]} has a Tanzu CLI Inventory tag value of ${CLI_PLUGIN_INVENTORY_TAG}"
@@ -878,7 +878,7 @@ function tanzu_multi_site() {
 
 		# Double check our work.
 		if [[ ${CLI_PLUGIN_GROUP_TKG_TAG} == "EMPTY" ]]; then
-			writeLog "ERROR" "Error encounted obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_CLI_PLUGIN_GROUP_TKG_TAG}"
+			writeLog "ERROR" "Error encountered obtaining the variable contents for site ${SITES_ARRAY[$VALUE]}. The variable is meant to be named ${VAR_CLI_PLUGIN_GROUP_TKG_TAG}"
 			return 1
 		else
 			writeLog "INFO" "The site ${SITES_ARRAY[$VALUE]} has a Tanzu CLI TKG version tag value of ${CLI_PLUGIN_GROUP_TKG_TAG}"

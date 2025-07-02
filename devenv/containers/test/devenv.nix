@@ -1,0 +1,35 @@
+{pkgs, ...}: let
+
+  oci_name = "test";
+  oci_version = "latest";
+
+in {
+
+  containers = {
+
+    "${oci_name}" = {
+
+      #isBuilding = false;
+
+      name = "${oci_name}";
+
+      version = "${oci_version}";
+
+      #maxLayers = 1;
+
+      copyToRoot = with pkgs; [
+        stdenv
+        hello
+      ];
+
+      entrypoint = with pkgs; [
+        hello
+      ];
+
+      startupCommand = pkgs.hello;
+
+    };
+
+  };
+
+}

@@ -1,8 +1,7 @@
 ---
 name: Devenv
 
-# prettier-ignore
-on:  # yamllint disable-line rule:truthy
+on:
   push:
     branches:
       - trunk
@@ -13,31 +12,23 @@ on:  # yamllint disable-line rule:truthy
     paths:
       - .github/workflows/devenv.yaml
       - devenv.nix
-      - devenv.yaml
+      - devenv.nix
       - devenv.lock
       - devenv/**
-      - flake.nix
-      - flake.lock
-      - nix/devshells/**
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: write
   packages: write
   pull-requests: write
-  statuses: write
+  statuses: read
 
 env:
-  # GitHub
+  NIXPKGS_ALLOW_UNFREE: 1
+
   PROJECT: ${{ github.repository }}
+
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
   BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
-
-  # Nix
-  NIXPKGS_ALLOW_UNFREE: 1
 
 defaults:
   run:
@@ -45,7 +36,7 @@ defaults:
 
 jobs:
   ##################################################
-  # Test the Development environment shell
+  # Test
   ##################################################
 
   test:
@@ -61,7 +52,6 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-latest
 
     steps:
       - id: checkout_repository
@@ -73,17 +63,16 @@ jobs:
 
       - id: install_nix
         name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v31
+        uses: cachix/install-nix-action@v26
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           enable_kvm: true
 
       - id: cachix
         name: "Enable Cachix ❄️"
-        uses: cachix/cachix-action@v16
-        if: vars.CACHIX_CACHE_NAME != ''
+        uses: cachix/cachix-action@v14
         with:
-          name: ${{ vars.CACHIX_CACHE_NAME }}
+          name: ${{ secrets.CACHIX_CACHE_NAME }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           useDaemon: true
           skipPush: false
@@ -95,38 +84,14 @@ jobs:
       - id: devenv_install
         name: Devenv install
         run: |
-          nix profile install --accept-flake-config nixpkgs#devenv
+          nix profile install tarball+https://install.devenv.sh/latest
 
-      - id: devenv_gc
-        name: Devenv gc
+      - id: devenv_shell
+        name: Devenv shell
         run: |
-          devenv gc
+          devenv shell
 
       - id: devenv_test
         name: Devenv test
         run: |
           devenv test
-
-      - id: devenv_status
-        name: Devenv (status)
-        if: always()
-        shell: devenv shell --quiet bash -- -e {0}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [[ ${{ steps.devenv_test.outcome }} == 'success' ]];
-          then
-            RESULT="success"
-            DESCRIPTION="Devenv test passed"
-          else
-            RESULT="failure"
-            DESCRIPTION="Devenv test failed"
-          fi
-          gh api \
-            repos/${{ github.repository }}/statuses/${{ github.sha }} \
-            -f state=${RESULT} \
-            -f context="${{ github.workflow }}" \
-            -f description="${DESCRIPTION}" \
-            -f target_url="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" || {
-              echo "Failed to report devenv status"; exit 1;
-            }

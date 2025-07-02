@@ -1,348 +1,241 @@
-###############
-# Devenv
-#
-# Reference: https://devenv.sh/reference/options/
-###############
-{pkgs, lib, config, ...}: {
+{
+  pkgs,
+  config,
+  lib,
+  inputs,
+  ...
+}:
+let
 
-  ###############
-  # Environment - https://devenv.sh/basics/
-  ###############
+  pkgsUnstable = import inputs.nixpkgs-unstable {
+    config.allowUnfree = true;
+  };
+
+  packagesUnstable = with pkgsUnstable; [
+  ];
+
+  packages = with pkgs; [
+    bashInteractive
+  ];
+
+  devPackages = with pkgs; [
+    # Common
+    convco
+    figlet
+    git
+    gnutar
+    hello
+    jq
+    just
+    sshuttle
+    wget
+    yq-go
+
+    # Security
+    trivy
+  ];
+
+in
+{
+  name = "containers";
 
   env = {
-    PROJECT_SHELL = "devenv";
-    HUNSPELL_CONFIG = ".linters/config/hunspell.conf";
-    PRETTIER_CONFIG = ".linters/config/.prettierrc.yaml";
-    YAMLLINT_CONFIG_FILE = ".linters/config/.yamllint.yml";
+    PROJECT = config.name;
   };
 
-  dotenv = {
-    enable = false;
-    filename = ".env";
-    disableHint = false;
+  cachix = {
+    enable = true;
+    pull = [
+      "salt-labs"
+    ];
+    push = "salt-labs";
   };
-
-  ################
-  # Devenv
-  ################
 
   devenv = {
     warnOnNewVersion = true;
   };
 
-  ###############
-  # Cachix
-  ###############
-
-  cachix = {
-    pull = [
-      "pre-commit-hooks"
-      "salt-labs"
-    ];
-    push = [
-      "salt-labs"
-    ];
+  dotenv = {
+    enable = true;
+    disableHint = false;
   };
-
-  ###############
-  # Packages - https://devenv.sh/packages/
-  ###############
-
-  packages = with pkgs; [
-    figlet
-    git
-    hello
-  ];
-
-  ###############
-  # Scripts - https://devenv.sh/scripts/
-  ###############
-
-  enterShell = "";
-
-  scripts.welcome.exec = ''
-    #!/usr/bin/env bash
-
-    figlet ''${PROJECT_SHELL}
-
-    echo "Hello $USER, welcome to ''${PROJECT_SHELL}"
-  '';
-
-  ###############
-  # git -  https://devenv.sh/pre-commit-hooks/
-  ###############
 
   difftastic = {
-    enable = false;
+    enable = true;
   };
 
-  pre-commit = {
-    default_stages = ["commit"];
+  packages =
+    packages
+    ++ packagesUnstable
+    ++ lib.optionals (!config.container.isBuilding || config.name == "devenv") devPackages;
 
-    excludes = ["README.md"];
+  enterShell = ''
+    figlet -f starwars -w 180 $PROJECT
 
-    hooks = {
-      # Nix
-      alejandra.enable = true;
-      nixfmt.enable = true;
-      nixpkgs-fmt.enable = true;
-      deadnix.enable = true;
-      statix.enable = true;
+    hello --greeting="Hello ''${USER:-user}, welcome to the $PROJECT project!"
 
-      # GitHub Actions
-      actionlint.enable = false;
-
-      # Ansible
-      ansible-lint.enable = false;
-
-      # Python
-      autoflake.enable = false;
-      black.enable = false;
-      flake8.enable = false;
-      pylint.enable = false;
-      ruff.enable = false;
-
-      # Bash
-      bats.enable = false;
-      shellcheck.enable = false;
-      shfmt.enable = false;
-
-      # Rust
-      cargo-check.enable = false;
-      clippy.enable = false;
-      rustfmt.enable = false;
-
-      # Go
-      gofmt.enable = false;
-      gotest.enable = false;
-      govet.enable = false;
-      revive.enable = false;
-      staticcheck.enable = false;
-
-      # Spelling
-      hunspell.enable = false;
-      typos = {
-        enable = false;
-        settings = {
-          format = "long";
-          diff = true;
-          write = false;
-        };
-      };
-
-      # Git commit messages
-      commitizen.enable = false;
-
-      # Docker
-      hadolint.enable = false;
-
-      # Dhall
-      dhall-format.enable = false;
-
-      # Markdown
-      markdownlint = {
-        enable = false;
-      #  settings = {
-      #    config = {
-      #      # No hard tabs allowed.
-      #      no-hard-tabs = true;
-
-      #      # Unordered list intendation.
-      #      MD007 = {
-      #        indent = 2;
-      #      };
-
-      #      # Training spaces
-      #      MD009 = {
-      #        br_spaces = 2;
-      #      };
-
-      #      # Line length
-      #      MD013 = false;
-
-      #      # Inline HTML
-      #      MD033 = false;
-
-      #      # List marker spaces.
-      #      # Disabled for use with prettier.
-      #      MD030 = false;
-      #    };
-      #  };
-      };
-      mdsh.enable = false;
-
-      # Common
-      prettier = {
-        enable = false;
-        settings = {
-          check = true;
-          list-different = false;
-          write = true;
-        };
-      };
-
-      # YAML
-      yamllint = {
-        enable = false;
-        settings = {
-          configPath = ".linters/config/.yamllint.yml";
-        };
-      };
-
-      # Terraform
-      terraform-format.enable = false;
-
-      # Haskell
-      hlint.enable = false;
-    };
-
-    settings = {
-      markdownlint = {
-        config = {
-
-          # No hard tabs allowed.
-          no-hard-tabs = true;
-
-          # Unordered list intendation.
-          MD007 = {
-            indent = 2;
-          };
-
-          # Training spaces
-          MD009 = {
-            br_spaces = 2;
-          };
-
-          # Line length
-          MD013 = {
-            line_length = 120;
-          };
-
-          # List marker spaces.
-          # Disabled for use with prettier.
-          MD030 = false;
-
-          # Inline HTML
-          MD033 = false;
-
-          # Bare URLs
-          MD034 = false;
-        };
-      };
-    };
-  };
-
-  ###############
-  # Languages - https://devenv.sh/languages/
-  ###############
+    echo ""
+    echo "#########################"
+    echo "#### Helper scripts #####"
+    echo "#########################"
+    echo ""
+    ${pkgs.gnused}/bin/sed -e 's| |••|g' -e 's|=| |' <<EOF | ${pkgs.util-linuxMinimal}/bin/column -t | ${pkgs.gnused}/bin/sed -e 's|^|🦾 |' -e 's|••| |g'
+    ${lib.generators.toKeyValue { } (lib.mapAttrs (_name: value: value.description) config.scripts)}
+    EOF
+    echo ""
+    echo "#########################"
+  '';
 
   languages = {
-
-    cue = {
-      enable = false;
-      package = pkgs.cue;
+    nix = {
+      enable = true;
     };
-
-    gawk = {enable = false;};
-
-    go = {
-      enable = false;
-      package = pkgs.go;
+    shell = {
+      enable = true;
     };
-
-    nix = {enable = false;};
-
-    python = {
-      enable = false;
-      package = pkgs.python3;
-
-      poetry = {
-        enable = false;
-        package = pkgs.poetry;
-      };
-
-      venv = {enable = true;};
-    };
-
-    rust = {
-      enable = false;
-      channel = "stable";
-    };
-
-    terraform = {
-      enable = false;
-      package = pkgs.terraform;
+    opentofu = {
+      enable = true;
     };
   };
 
-  ###############
-  # Processes - https://devenv.sh/processes/
-  ###############
-
-  # https://devenv.sh/processes/
-  # processes.ping.exec = "ping example.com";\
-
-  ###############
-  # Services
-  ###############
-
-  ###############
-  # Shell
-  ###############
+  git-hooks = {
+    excludes = [
+      ".cache"
+      ".devenv"
+      ".direnv"
+      ".git"
+      ".vscode"
+      "bundle"
+      "vendor"
+    ];
+    hooks = {
+      actionlint.enable = true;
+      check-json.enable = true;
+      check-merge-conflicts.enable = true;
+      check-shebang-scripts-are-executable.enable = true;
+      check-symlinks.enable = true;
+      check-yaml.enable = true;
+      commitizen.enable = true;
+      convco.enable = true;
+      deadnix.enable = true;
+      dialyzer.enable = true;
+      editorconfig-checker.enable = true;
+      gofmt.enable = true;
+      golangci-lint.enable = true;
+      golines.enable = true;
+      gotest.enable = true;
+      govet.enable = true;
+      gptcommit.enable = true;
+      markdownlint = {
+        enable = true;
+        settings = {
+          configuration = {
+            MD013 = {
+              line_length = 500;
+            };
+            MD033 = {
+              allowed_elements = [
+                "a"
+                "br"
+                "nobr"
+                "pre"
+                "sup"
+              ];
+            };
+          };
+        };
+      };
+      mixed-line-endings.enable = true;
+      nixfmt-rfc-style.enable = true;
+      pre-commit-hook-ensure-sops.enable = true;
+      prettier = {
+        enable = true;
+        excludes = [
+          "module/README.md"
+        ];
+      };
+      # Use prettier instead.
+      pretty-format-json.enable = false;
+      revive = {
+        enable = true;
+        fail_fast = false;
+      };
+      ripsecrets.enable = true;
+      shellcheck.enable = true;
+      shfmt.enable = true;
+      staticcheck.enable = true;
+      statix.enable = true;
+      trim-trailing-whitespace.enable = true;
+      trufflehog.enable = false;
+      typos.enable = true;
+      yamllint = {
+        enable = true;
+        settings = {
+          configuration = ''
+            extends: relaxed
+            rules:
+              line-length: disable
+              indentation: enable
+          '';
+        };
+      };
+    };
+  };
 
   starship = {
     enable = true;
-    package = pkgs.starship;
     config = {
-      enable = true;
-      path = "/home/$USER/.config/starship.toml";
+      enable = false;
     };
   };
 
-  ################
-  # Containers
-  ################
-
-  container = {
-    isBuilding = false;
-  };
-
-  ###############
-  # Devcontainer - https://devenv.sh/integrations/codespaces-devcontainer/
-  ###############
-
   devcontainer = {
     enable = true;
-
     settings = {
       customizations = {
         vscode = {
           extensions = [
-            "exiasr.hadolint"
-            "nhoizey.gremlins"
+            "arrterian.nix-env-selector"
+            "brettm12345.nixfmt-vscode"
+            "dotenv.dotenv-vscode"
             "esbenp.prettier-vscode"
-            "github.copilot"
+            "exiasr.hadolint"
             "github.vscode-github-actions"
-            "kamadorueda.alejandra"
+            "github.vscode-pull-request-github"
+            "gruntfuggly.todo-tree"
+            "hediet.vscode-drawio"
+            "jnoortheen.nix-ide"
+            "johnpapa.vscode-peacock"
+            "mkhl.direnv"
             "ms-azuretools.vscode-docker"
+            "ms-kubernetes-tools.vscode-kubernetes-tools"
+            "nhoizey.gremlins"
             "pinage404.nix-extension-pack"
             "redhat.vscode-yaml"
+            "streetsidesoftware.code-spell-checker"
+            "tamasfe.even-better-toml"
+            "tekumura.typos-vscode"
             "timonwong.shellcheck"
             "tuxtina.json2yaml"
             "vscodevim.vim"
+            "waderyan.gitblame"
             "wakatime.vscode-wakatime"
+            "yzhang.markdown-all-in-one"
           ];
         };
       };
     };
   };
 
-  ###############
-  # Tests - https://devenv.sh/tests/
-  ###############
-
   enterTest = ''
-    echo "Running tests..."
+    echo "Running devenv tests..."
   '';
+
+  outputs = {
+  };
+
+  container = {
+    isBuilding = false;
+  };
 
 }

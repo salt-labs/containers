@@ -2,23 +2,36 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "exiasr.hadolint",
-        "nhoizey.gremlins",
+        "arrterian.nix-env-selector",
+        "brettm12345.nixfmt-vscode",
+        "dotenv.dotenv-vscode",
         "esbenp.prettier-vscode",
-        "github.copilot",
+        "exiasr.hadolint",
         "github.vscode-github-actions",
-        "kamadorueda.alejandra",
+        "github.vscode-pull-request-github",
+        "gruntfuggly.todo-tree",
+        "hediet.vscode-drawio",
+        "jnoortheen.nix-ide",
+        "johnpapa.vscode-peacock",
+        "mkhl.direnv",
         "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "nhoizey.gremlins",
         "pinage404.nix-extension-pack",
         "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "tamasfe.even-better-toml",
+        "tekumura.typos-vscode",
         "timonwong.shellcheck",
         "tuxtina.json2yaml",
         "vscodevim.vim",
-        "wakatime.vscode-wakatime"
+        "waderyan.gitblame",
+        "wakatime.vscode-wakatime",
+        "yzhang.markdown-all-in-one"
       ]
     }
   },
-  "image": "ghcr.io/cachix/devenv:latest",
+  "image": "ghcr.io/cachix/devenv/devcontainer:latest",
   "overrideCommand": false,
   "updateContentCommand": "devenv test"
 }

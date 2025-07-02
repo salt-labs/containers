@@ -1,34 +1,46 @@
 ---
+##################################################
+# Name: devenv.yaml
+# Description: Workflow for Developer Environment Testing
+##################################################
+
 name: Devenv
 
-on:
-  push:
-    branches:
-      - trunk
-
+# prettier-ignore
+on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
+      - "main"
+      - "master"
       - "trunk"
     paths:
       - .github/workflows/devenv.yaml
       - devenv.nix
-      - devenv.nix
+      - devenv.yaml
       - devenv.lock
       - devenv/**
+    paths_ignore:
+      - "docs/**"
+      - "**.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
   packages: write
   pull-requests: write
-  statuses: read
+  statuses: write
 
 env:
-  NIXPKGS_ALLOW_UNFREE: 1
-
+  # GitHub
   PROJECT: ${{ github.repository }}
-
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
   BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
+
+  # Nix
+  NIXPKGS_ALLOW_UNFREE: 1
 
 defaults:
   run:
@@ -36,7 +48,7 @@ defaults:
 
 jobs:
   ##################################################
-  # Test
+  # Test the Development environment shell
   ##################################################
 
   test:
@@ -63,35 +75,52 @@ jobs:
 
       - id: install_nix
         name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v26
+        uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           enable_kvm: true
 
       - id: cachix
         name: "Enable Cachix ❄️"
-        uses: cachix/cachix-action@v14
+        uses: cachix/cachix-action@v16
+        if: vars.CACHIX_CACHE_NAME != ''
         with:
-          name: ${{ secrets.CACHIX_CACHE_NAME }}
+          name: ${{ vars.CACHIX_CACHE_NAME }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           useDaemon: true
           skipPush: false
 
-      - id: cache
-        name: Magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@main
-
       - id: devenv_install
         name: Devenv install
         run: |
-          nix profile install tarball+https://install.devenv.sh/latest
-
-      - id: devenv_shell
-        name: Devenv shell
-        run: |
-          devenv shell
+          nix profile install --accept-flake-config nixpkgs#devenv
 
       - id: devenv_test
         name: Devenv test
         run: |
           devenv test
+
+      - id: devenv_status
+        name: Devenv status
+        if: always()
+        shell: devenv shell --quiet bash -- -e {0}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ ${{ steps.devenv_test.outcome }} == 'success' ]];
+          then
+            RESULT="success"
+            DESCRIPTION="Devenv test passed!"
+          else
+            RESULT="failure"
+            DESCRIPTION="Devenv test failed!"
+          fi
+          gh api \
+            repos/${{ github.repository }}/statuses/${{ github.sha }} \
+            -f state=${RESULT} \
+            -f context="${{ github.workflow }}" \
+            -f description="${DESCRIPTION}" \
+            -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" || {
+              echo "Failed to report devenv status!"
+              exit 1
+            }

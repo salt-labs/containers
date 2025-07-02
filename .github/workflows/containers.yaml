@@ -1,35 +1,51 @@
 ---
+##################################################
+# Name: containers.yaml
+# Description: Workflow for building containers
+##################################################
+
 name: Containers
 
 on:
   push:
     branches:
-      - trunk
+      - "main"
+      - "master"
+      - "trunk"
 
   pull_request:
     branches:
+      - "main"
+      - "master"
       - "trunk"
     paths:
-      - .github/workflows/devenv.yaml
+      - .github/workflows/containers.yaml
       - devenv.nix
-      - devenv.nix
+      - devenv.yaml
       - devenv.lock
       - devenv/**
+    paths_ignore:
+      - "docs/**"
+      - "**.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
   packages: write
   pull-requests: write
-  statuses: read
+  statuses: write
 
 env:
-  NIXPKGS_ALLOW_UNFREE: 1
-
-  REGISTRY: ghcr.io
+  # GitHub
   PROJECT: ${{ github.repository }}
-
   BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
   BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
+
+  # Nix
+  NIXPKGS_ALLOW_UNFREE: 1
 
 defaults:
   run:
@@ -103,38 +119,25 @@ jobs:
 
       - id: install_nix
         name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v26
+        uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           enable_kvm: true
 
       - id: cachix
         name: "Enable Cachix ❄️"
-        uses: cachix/cachix-action@v14
+        uses: cachix/cachix-action@v16
+        if: vars.CACHIX_CACHE_NAME != ''
         with:
-          name: ${{ secrets.CACHIX_CACHE_NAME }}
+          name: ${{ vars.CACHIX_CACHE_NAME }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           useDaemon: true
           skipPush: false
 
-      - id: cache
-        name: Magix Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@main
-
       - id: devenv_install
         name: Devenv install
         run: |
-          nix profile install tarball+https://install.devenv.sh/latest
-
-      - id: devenv_gc
-        name: Devenv gc
-        run: |
-          devenv gc
-
-      - id: devenv_shell
-        name: Devenv shell
-        run: |
-          devenv shell
+          nix profile install --accept-flake-config nixpkgs#devenv
 
       - id: calver
         name: Set Calver Version
@@ -152,22 +155,17 @@ jobs:
         name: "Devenv container ${{ matrix.container }}:${{ steps.calver.outputs.package_version }}"
         run: >
           devenv container
-          --registry docker://ghcr.io/salt-labs/containers/
-          --copy-args="--dest-creds=MAHDTech:${{ secrets.GITHUB_TOKEN }}"
+          --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
+          --copy-args=" \
+            --debug \
+            --insecure-policy \
+            --format=oci \
+            --dest-precompute-digests \
+            --preserve-digests \
+            --retry-times=3 \
+            --all \
+            --additional-tag=${{matrix.container}}:latest \
+            --additional-tag=${{matrix.container}}:${{ steps.calver.outputs.package_version }} \
+            --dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} \
+          "
           copy ${{ matrix.container }}
-        #run: >
-        #  devenv container
-        #  --registry docker://${{ env.REGISTRY }}/${{ env.PROJECT }}/
-        #  --copy-args=" \
-        #    --debug \
-        #    --insecure-policy \
-        #    --format=oci \
-        #    --dest-precompute-digests \
-        #    --preserve-digests \
-        #    --retry-times=3 \
-        #    --all \
-        #    --additional-tag=${{matrix.container}}:latest \
-        #    --additional-tag=${{matrix.container}}:${{ steps.calver.outputs.package_version }} \
-        #    --dest-creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} \
-        #  "
-        #  copy ${{ matrix.container }}

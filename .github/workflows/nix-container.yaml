@@ -64,7 +64,7 @@ jobs:
     steps:
       - id: checkout_repository
         name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - id: generate_matrix
         name: Generating a matrix of container names
@@ -107,7 +107,7 @@ jobs:
     steps:
       - id: checkout_repository
         name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           lfs: false
           submodules: recursive

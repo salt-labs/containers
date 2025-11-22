@@ -51,7 +51,7 @@ jobs:
 
       - id: checkout_repository
         name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - id: pr_approve
         name: Approve pull request

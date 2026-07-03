@@ -114,9 +114,9 @@ nix flake show --impure --all-systems --json | jq \
 	--arg host_system "$HOST_SYSTEM" \
 	--arg image_name "$IMAGE_NAME" \
 	'.#packages."$build_system.$host_system".$image_name' || {
-		writeLog "ERROR" "No package found for $IMAGE_NAME on $BUILD_SYSTEM-$HOST_SYSTEM. Have you added it to flake.nix?"
-		exit 1
-	}
+	writeLog "ERROR" "No package found for $IMAGE_NAME on $BUILD_SYSTEM-$HOST_SYSTEM. Have you added it to flake.nix?"
+	exit 1
+}
 
 if [[ ${CONTAINER_BUILD^^} == "TRUE" ]]; then
 

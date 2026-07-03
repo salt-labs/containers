@@ -99,15 +99,7 @@ in
   };
 
   git-hooks = {
-    excludes = [
-      ".cache"
-      ".devenv"
-      ".direnv"
-      ".git"
-      ".vscode"
-      "bundle"
-      "vendor"
-    ];
+    excludes = [ ];
     hooks = {
       actionlint.enable = true;
       check-json.enable = true;
@@ -150,9 +142,7 @@ in
       pre-commit-hook-ensure-sops.enable = true;
       prettier = {
         enable = true;
-        excludes = [
-          "module/README.md"
-        ];
+        excludes = [ ];
       };
       # Use prettier instead.
       pretty-format-json.enable = false;

@@ -19,7 +19,7 @@ This is in order for the container to be able to download and run the codestream
 
 The following tags are available for each container:
 
-| Tag | Description |
-| :--: | :----------- |
-| latest | The latest development release of the container. These come direct from PRs. |
+|  Tag   | Description                                                                                          |
+| :----: | :--------------------------------------------------------------------------------------------------- |
+| latest | The latest development release of the container. These come direct from PRs.                         |
 | calver | A calendar versioned release of the container. These are released automatically when PRs are merged. |

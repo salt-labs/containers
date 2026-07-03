@@ -19,9 +19,8 @@ on:  # yamllint disable-line rule:truthy
       - devenv.yaml
       - devenv.lock
       - devenv/**
-    paths_ignore:
-      - "docs/**"
-      - "**.md"
+      - "!docs/**"
+      - "!**.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -80,6 +79,9 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           enable_kvm: true
+          extra_nix_config: |
+            extra-substituters = https://devenv.cachix.org
+            extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=
 
       - id: cachix
         name: "Enable Cachix ❄️"
@@ -94,7 +96,7 @@ jobs:
       - id: devenv_install
         name: Devenv install
         run: |
-          nix profile install --accept-flake-config nixpkgs#devenv
+          nix profile install --accept-flake-config github:cachix/devenv
 
       - id: devenv_test
         name: Devenv test

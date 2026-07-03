@@ -32,7 +32,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    if: |
+    if: >-
       (github.event_name == 'pull_request_target' &&
        github.event.pull_request.user.login == 'dependabot[bot]') ||
       (github.event_name == 'pull_request' &&

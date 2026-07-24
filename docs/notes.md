@@ -2,7 +2,7 @@
 
 ## Cachix
 
-To pre-build and push to cachix:
+To pre-build and push a container image to cachix:
 
 ```bash
 CONTAINER=name

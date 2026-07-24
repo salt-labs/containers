@@ -62,7 +62,6 @@ jobs:
         run: >-
           nix flake check
           --accept-flake-config
-          --no-build
           --keep-going
           --verbose
           --impure

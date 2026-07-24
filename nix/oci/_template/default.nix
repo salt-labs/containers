@@ -8,18 +8,16 @@
   pkgs,
   system,
   poetry2nix,
-  self,
   ...
-}: let
-  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  creationDate = builtins.substring 0 8 modifiedDate;
+}:
+let
 
   #app = pkgs.callPackage ./poetry {
   #  inherit pkgs;
   #  inherit system;
   #  inherit poetry2nix;
   #};
-  overlay = self: super: {
+  overlay = self: _super: {
     app = self.poetry2nix.mkPoetryApplication {
       projectDir = ./poetry;
       python = pkgs.python3;
@@ -31,46 +29,47 @@
 
   overlayPkgs = import nixpkgs {
     inherit system;
-    overlays = [overlay];
+    overlays = [ overlay ];
   };
 in
-  pkgs.dockerTools.buildImage {
-    name = "template";
-    tag = "latest";
-    # created = creationDate;
+pkgs.dockerTools.buildImage {
+  name = "template";
+  tag = "latest";
+  # created = creationDate;
 
-    copyToRoot = pkgs.buildEnv {
-      name = "image-root";
-      pathsToLink = ["/bin"];
+  copyToRoot = pkgs.buildEnv {
+    name = "image-root";
+    pathsToLink = [ "/bin" ];
 
-      paths = with pkgs;
-        [
-          # Common
-          busybox
-          curlFull
-          cacert
-        ]
-        ++ [
-          # Tools
-          overlayPkgs.app
-        ];
+    paths =
+      with pkgs;
+      [
+        # Common
+        busybox
+        curlFull
+        cacert
+      ]
+      ++ [
+        # Tools
+        overlayPkgs.app
+      ];
+  };
+
+  config = {
+    Labels = {
+      "org.opencontainers.image.description" = "DESCRIPTION";
     };
-
-    config = {
-      Labels = {
-        "org.opencontainers.image.description" = "DESCRIPTION";
-      };
-      Entrypoint = [
-        "${overlayPkgs.app}/bin/entrypoint"
-        #"${pkgs.template}/bin/template"
-      ];
-      Cmd = [
-      ];
-      ExposedPorts = {
-      };
-      Env = [
-        "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-      ];
-      WorkingDir = "/workdir";
+    Entrypoint = [
+      "${overlayPkgs.app}/bin/entrypoint"
+      #"${pkgs.template}/bin/template"
+    ];
+    Cmd = [
+    ];
+    ExposedPorts = {
     };
-  }
+    Env = [
+      "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+    ];
+    WorkingDir = "/workdir";
+  };
+}

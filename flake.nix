@@ -106,14 +106,12 @@
       self,
       nixpkgs,
       nixpkgs-unstable,
-      devenv,
       #poetry2nix,
       #codestream-cli,
       #loopy,
       ...
     }@inputs:
     let
-      inherit (self) ;
 
       supportedSystems = [
         #"aarch64-darwin"

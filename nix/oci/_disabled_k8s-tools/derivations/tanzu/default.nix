@@ -1,6 +1,7 @@
 # NOTE: Cachix push
 # nix build --json --impure ".#packages.\"x86_64-linux.x86_64-linux\".tanzu" | jq -r '.[0].outputs.out' | cachix push salt-labs
-{pkgs, ...}: let
+{ pkgs, ... }:
+let
   tanzu-cli = {
     core = pkgs.fetchurl {
       name = "tanzu-cli";
@@ -15,40 +16,43 @@
     };
   };
 in
-  pkgs.stdenv.mkDerivation {
-    name = "tanzu-cli";
-    version = "1.1.0";
+pkgs.stdenv.mkDerivation {
+  name = "tanzu-cli";
+  version = "1.1.0";
 
-    dontBuild = true;
-    dontConfigure = true;
-    sourceRoot = ".";
-    preferLocalBuild = true;
+  dontBuild = true;
+  dontConfigure = true;
+  sourceRoot = ".";
+  preferLocalBuild = true;
 
-    phases = ["unpackPhase" "installPhase"];
+  phases = [
+    "unpackPhase"
+    "installPhase"
+  ];
 
-    unpackPhase = ''
-      mkdir --parents unpack
+  unpackPhase = ''
+    mkdir --parents unpack
 
-      tar -xzf ${tanzu-cli.core} -C unpack
+    tar -xzf ${tanzu-cli.core} -C unpack
 
-      tar -xvf ${tanzu-cli.plugins} -C unpack
-    '';
+    tar -xvf ${tanzu-cli.plugins} -C unpack
+  '';
 
-    installPhase = ''
-      mkdir --parents $out/usr/local/bin
-      mkdir --parents $out/usr/local/share/applications/tanzu-cli/plugins
+  installPhase = ''
+    mkdir --parents $out/usr/local/bin
+    mkdir --parents $out/usr/local/share/applications/tanzu-cli/plugins
 
-      CORE=unpack/*/tanzu-cli-linux_amd64
-      PLUGINS=unpack/admin-plugins-*
+    CORE=unpack/*/tanzu-cli-linux_amd64
+    PLUGINS=unpack/admin-plugins-*
 
-      install --mode=0755 --verbose $CORE $out/usr/local/bin/tanzu
+    install --mode=0755 --verbose $CORE $out/usr/local/bin/tanzu
 
-      cp -r $PLUGINS $out/usr/local/share/applications/tanzu-cli/plugins
-    '';
+    cp -r $PLUGINS $out/usr/local/share/applications/tanzu-cli/plugins
+  '';
 
-    meta = {
-      description = "Command line interface for Tanzu Kubernetes Grid.";
-      homepage = "https://github.com/vmware-tanzu/tanzu-cli";
-      license = "Apache 2.0";
-    };
-  }
+  meta = {
+    description = "Command line interface for Tanzu Kubernetes Grid.";
+    homepage = "https://github.com/vmware-tanzu/tanzu-cli";
+    license = "Apache 2.0";
+  };
+}

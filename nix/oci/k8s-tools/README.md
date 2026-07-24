@@ -22,7 +22,8 @@
 
 The Kubernetes Tools container image bundles common tooling for working with Kubernetes and Tanzu Kubernetes Grid.
 
-_This version runs the container as `root` and is expected to be used from Docker or Podman in a `rootless` configuration so that the files permissions of root inside the container (id 0) will match the file permissions of the user outside the container (id -u)._
+_This version runs the container as `root` and is expected to be used from Docker or Podman in a `rootless` configuration
+so that the files permissions of root inside the container (id 0) will match the file permissions of the user outside the container (id -u)._
 
 ## Variable
 
@@ -45,10 +46,10 @@ Kubernetes Tools variables.
 
 You can use `vendir` to automatically pull your vendored dependencies during launch.
 
-| VENDOR_ENABLED   | Enable to run 'vendir sync' on launch               |   FALSE    | TRUE, FALSE         |
-| VENDOR_DIR       | The location where the vendor folder is created.    |   vendor   | /workdir            |
-| VENDOR_CONFIG    | The config file for the vendir CLI                  | vendir.yml | .vendir/config.yaml |
-| VENDOR_LOCKED    | A boolean to enable locked vendored dependencies    |   FALSE    | TRUE, FALSE         |
+| VENDOR_ENABLED | Enable to run 'vendir sync' on launch | FALSE | TRUE, FALSE |
+| VENDOR_DIR | The location where the vendor folder is created. | vendor | /workdir |
+| VENDOR_CONFIG | The config file for the vendir CLI | vendir.yml | .vendir/config.yaml |
+| VENDOR_LOCKED | A boolean to enable locked vendored dependencies | FALSE | TRUE, FALSE |
 
 ### Tanzu CLI
 
@@ -65,9 +66,9 @@ Tanzu CLI specific variables.
 
 Tanzu _hack_ specific variables.
 
-| Variable               | Description                                         |  Default   | Example             |
-| :--------------------- | :-------------------------------------------------- | :--------: | :------------------ |
-| TANZU_PINNIPED_ENABLED | Enable in Pinniped environments to login on startup |   FALSE    | TRUE, FALSE         |
+| Variable               | Description                                         | Default | Example     |
+| :--------------------- | :-------------------------------------------------- | :-----: | :---------- |
+| TANZU_PINNIPED_ENABLED | Enable in Pinniped environments to login on startup |  FALSE  | TRUE, FALSE |
 
 ### Tanzu Sites
 

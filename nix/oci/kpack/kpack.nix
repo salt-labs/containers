@@ -1,8 +1,8 @@
 {
   pkgs,
-  crossPkgs,
   ...
-}: let
+}:
+let
   kpack = {
     cli = pkgs.fetchurl {
       name = "kpack-cli";
@@ -17,22 +17,22 @@
     };
   };
 in
-  pkgs.stdenv.mkDerivation {
-    name = "kpack";
-    version = "1.0.0";
+pkgs.stdenv.mkDerivation {
+  name = "kpack";
+  version = "1.0.0";
 
-    phases = ["installPhase"];
+  phases = [ "installPhase" ];
 
-    installPhase = ''
-      mkdir --parents $out/bin $out/share
+  installPhase = ''
+    mkdir --parents $out/bin $out/share
 
-      install --verbose ${kpack.cli} $out/bin/kp
-      install --verbose ${kpack.manifest} $out/share/kpack.yaml
-    '';
+    install --verbose ${kpack.cli} $out/bin/kp
+    install --verbose ${kpack.manifest} $out/share/kpack.yaml
+  '';
 
-    meta = {
-      description = "Kubernetes Native Container Build Service";
-      homepage = "https://github.com/pivotal/kpack";
-      license = "Apache 2.0";
-    };
-  }
+  meta = {
+    description = "Kubernetes Native Container Build Service";
+    homepage = "https://github.com/pivotal/kpack";
+    license = "Apache 2.0";
+  };
+}

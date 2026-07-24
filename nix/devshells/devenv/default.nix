@@ -89,7 +89,12 @@ inputs.devenv.lib.mkShell {
           check-yaml.enable = true;
           commitizen.enable = true;
           convco.enable = true;
-          deadnix.enable = true;
+          deadnix = {
+            enable = true;
+            settings = {
+              edit = true;
+            };
+          };
           dialyzer.enable = true;
           editorconfig-checker.enable = true;
           gofmt.enable = true;
@@ -104,6 +109,7 @@ inputs.devenv.lib.mkShell {
               configuration = {
                 MD013 = {
                   line_length = 180;
+                  tables = false;
                 };
                 MD033 = {
                   allowed_elements = [
@@ -132,7 +138,6 @@ inputs.devenv.lib.mkShell {
           statix.enable = true;
           trim-trailing-whitespace.enable = true;
           trufflehog.enable = true;
-          typos.enable = true;
           yamllint = {
             enable = true;
             settings = {

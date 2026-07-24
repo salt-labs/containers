@@ -636,7 +636,7 @@ function run_gosec() {
 
 			The following environment variables are optional:
 
-			- GI_GOSEC_PATH      (default: ./...)   
+			- GI_GOSEC_PATH      (default: ./...)
 
 		EOF
 

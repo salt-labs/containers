@@ -1,13 +1,10 @@
 {
   pkgs,
   pkgsUnstable,
-  crossPkgs,
   pkgCodestreamCLI,
-  self,
   ...
 }:
 let
-  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
   creationDate = builtins.substring 0 8 modifiedDate;
 
   containerUser = "codestream-ci";
@@ -78,9 +75,9 @@ in
 pkgs.dockerTools.buildLayeredImage {
   name = "codestream-ci";
   tag = "latest";
-  # created = creationDate;
+  created = creationDate;
 
-  #fromImage = baseImage;
+  fromImage = baseImage;
   maxLayers = 100;
 
   contents = pkgs.buildEnv {
@@ -170,10 +167,14 @@ pkgs.dockerTools.buildLayeredImage {
         entrypoint
 
         # Codestream CLI
-        #pkgCodestreamCLI
+        pkgCodestreamCLI
       ]
       ++ unstablePkgs
-      ++ environmentHelpers; # ++ nonRootShadowSetup { uid = 1000; user = "codestream-ci"; };
+      ++ environmentHelpers
+      ++ nonRootShadowSetup {
+        uid = 1000;
+        user = "codestream-ci";
+      };
   };
 
   enableFakechroot = true;

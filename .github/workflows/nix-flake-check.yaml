@@ -41,6 +41,8 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           enable_kvm: true
+          extra_nix_config: |
+            accept-flake-config = true
 
       - id: cachix
         name: "Enable Cachix ❄️"
@@ -59,6 +61,7 @@ jobs:
       - name: Nix Flake check
         run: >-
           nix flake check
+          --accept-flake-config
           --no-build
           --keep-going
           --verbose

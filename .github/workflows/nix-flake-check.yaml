@@ -60,7 +60,6 @@ jobs:
         run: >-
           nix flake check
           --no-build
-          --refresh
           --keep-going
           --verbose
           --impure

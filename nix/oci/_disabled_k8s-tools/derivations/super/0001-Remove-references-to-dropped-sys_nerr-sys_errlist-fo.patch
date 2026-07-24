@@ -21,12 +21,12 @@ index 3ec70b6..430f027 100644
 --- a/utils.c
 +++ b/utils.c
 @@ -2003,7 +2003,6 @@ int n;
- 
+
  #ifdef HAVE_SYS_ERRLIST
      extern char *sys_errlist[];
 -    extern int sys_nerr;
  #endif
- 
+
  /*
 @@ -2019,16 +2018,7 @@ int errnum;
      sprintf(buf, "Error %d", errnum);
@@ -45,7 +45,7 @@ index 3ec70b6..430f027 100644
 +    return strerror(errnum);
  #endif
  }
- 
--- 
+
+--
 2.25.4
 

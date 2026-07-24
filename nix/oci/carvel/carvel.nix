@@ -1,8 +1,8 @@
 {
   pkgs,
-  crossPkgs,
   ...
-}: let
+}:
+let
   versions = {
     imgpkg = "v0.41.1";
     kapp = "v0.60.0";
@@ -64,27 +64,27 @@
     };
   };
 in
-  pkgs.stdenv.mkDerivation {
-    name = "carvel-dev";
-    version = "1.2.0";
+pkgs.stdenv.mkDerivation {
+  name = "carvel-dev";
+  version = "1.2.0";
 
-    phases = ["installPhase"];
+  phases = [ "installPhase" ];
 
-    installPhase = ''
-      mkdir --parents $out/usr/local/bin
+  installPhase = ''
+    mkdir --parents $out/usr/local/bin
 
-      install --verbose ${carvel.imgpkg} $out/usr/local/bin/imgpkg
-      install --verbose ${carvel.kapp} $out/usr/local/bin/kapp
-      install --verbose ${carvel.kbld} $out/usr/local/bin/kbld
-      install --verbose ${carvel.kctrl} $out/usr/local/bin/kctrl
-      install --verbose ${carvel.kwt} $out/usr/local/bin/kwt
-      install --verbose ${carvel.vendir} $out/usr/local/bin/vendir
-      install --verbose ${carvel.ytt} $out/usr/local/bin/ytt
-    '';
+    install --verbose ${carvel.imgpkg} $out/usr/local/bin/imgpkg
+    install --verbose ${carvel.kapp} $out/usr/local/bin/kapp
+    install --verbose ${carvel.kbld} $out/usr/local/bin/kbld
+    install --verbose ${carvel.kctrl} $out/usr/local/bin/kctrl
+    install --verbose ${carvel.kwt} $out/usr/local/bin/kwt
+    install --verbose ${carvel.vendir} $out/usr/local/bin/vendir
+    install --verbose ${carvel.ytt} $out/usr/local/bin/ytt
+  '';
 
-    meta = {
-      description = "Carvel provides a set of reliable, single-purpose, composable tools that aid in your application building, configuration, and deployment to Kubernetes.";
-      homepage = "https://carvel.dev";
-      license = "Apache 2.0";
-    };
-  }
+  meta = {
+    description = "Carvel provides a set of reliable, single-purpose, composable tools that aid in your application building, configuration, and deployment to Kubernetes.";
+    homepage = "https://carvel.dev";
+    license = "Apache 2.0";
+  };
+}

@@ -7,18 +7,13 @@
   pkgs,
   pkgsUnstable,
   crossPkgs,
-  crossPkgsUnstable,
-  self,
   ...
 }:
 let
-  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  creationDate = builtins.substring 0 8 modifiedDate;
 
   # A non-root user to add to the container image.
   containerUser = "podman";
   containerUID = "1000";
-  containerGID = "1000";
 
   baseImage = pkgs.dockerTools.pullImage {
     imageName = "quay.io/podman/stable";
@@ -44,10 +39,8 @@ let
     recursive = true;
   };
 
-  environmentHelpers =
-    with pkgs.dockerTools;
-    [
-    ];
+  environmentHelpers = with pkgs.dockerTools; [
+  ];
 
   stablePkgs = with pkgs; [
     # Common
@@ -219,7 +212,7 @@ pkgs.dockerTools.buildLayeredImage {
   '';
 
   # Runs in the final layer, on top of other layers.
-  extraCommands = '''';
+  extraCommands = "";
 
   config = {
     User = containerUser;
@@ -240,9 +233,8 @@ pkgs.dockerTools.buildLayeredImage {
     Cmd = [
       "/usr/local/bin/entrypoint.sh"
     ];
-    ExposedPorts =
-      {
-      };
+    ExposedPorts = {
+    };
     Env = [
       "CHARSET=UTF-8"
       "ENABLE_DEBUG=FALSE"

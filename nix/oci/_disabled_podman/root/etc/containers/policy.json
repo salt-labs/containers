@@ -8,16 +8,16 @@
     "docker": {
       "registry.access.redhat.com": [
         {
-          "type": "signedBy",
+          "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
           "keyType": "GPGKeys",
-          "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+          "type": "signedBy"
         }
       ],
       "registry.redhat.io": [
         {
-          "type": "signedBy",
+          "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
           "keyType": "GPGKeys",
-          "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+          "type": "signedBy"
         }
       ]
     },

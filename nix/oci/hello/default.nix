@@ -1,46 +1,41 @@
 {
   pkgs,
-  crossPkgs,
-  self,
   ...
-}: let
-  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  creationDate = builtins.substring 0 8 modifiedDate;
-in
-  pkgs.dockerTools.buildImage {
-    name = "hello";
-    tag = "latest";
-    # created = creationDate;
+}:
+pkgs.dockerTools.buildImage {
+  name = "hello";
+  tag = "latest";
+  # created = creationDate;
 
-    copyToRoot = pkgs.buildEnv {
-      name = "image-root";
-      pathsToLink = ["/bin"];
+  copyToRoot = pkgs.buildEnv {
+    name = "image-root";
+    pathsToLink = [ "/bin" ];
 
-      paths = with pkgs; [
-        # Common
-        busybox
-        curlFull
-        cacert
+    paths = with pkgs; [
+      # Common
+      busybox
+      curlFull
+      cacert
 
-        # Tools
-        hello
-      ];
+      # Tools
+      hello
+    ];
+  };
+
+  config = {
+    Labels = {
+      "org.opencontainers.image.description" = "hello";
     };
-
-    config = {
-      Labels = {
-        "org.opencontainers.image.description" = "hello";
-      };
-      Entrypoint = [
-        "${pkgs.hello}/bin/hello"
-      ];
-      Cmd = [
-      ];
-      ExposedPorts = {
-      };
-      Env = [
-        "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-      ];
-      WorkingDir = "/workdir";
+    Entrypoint = [
+      "${pkgs.hello}/bin/hello"
+    ];
+    Cmd = [
+    ];
+    ExposedPorts = {
     };
-  }
+    Env = [
+      "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+    ];
+    WorkingDir = "/workdir";
+  };
+}

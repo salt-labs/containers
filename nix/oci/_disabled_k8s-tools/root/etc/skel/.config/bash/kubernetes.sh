@@ -11,6 +11,7 @@ function k8s_get_cert() {
 
 	if [[ ${SERVER:-EMPTY} == "EMPTY" ]]; then
 
+		# shellcheck disable=SC2016
 		writeLog "ERROR" 'Please provide a SERVER:PORT as $1'
 		return 1
 

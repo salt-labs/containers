@@ -1,4 +1,4 @@
-{pkgs}:
+{ pkgs }:
 pkgs.stdenv.mkDerivation rec {
   pname = "super";
   version = "3.30.0";
@@ -36,9 +36,12 @@ pkgs.stdenv.mkDerivation rec {
     "--localstatedir=/var"
   ];
 
-  buildInputs = [pkgs.libxcrypt];
+  buildInputs = [ pkgs.libxcrypt ];
 
-  installFlags = ["sysconfdir=$(out)/etc" "localstatedir=$(TMPDIR)"];
+  installFlags = [
+    "sysconfdir=$(out)/etc"
+    "localstatedir=$(TMPDIR)"
+  ];
 
   meta = {
     homepage = "https://www.ucolick.org/~will/#super";

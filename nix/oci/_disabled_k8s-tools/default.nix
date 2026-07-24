@@ -2,18 +2,12 @@
   pkgs,
   pkgsUnstable,
   crossPkgs,
-  crossPkgsUnstable,
-  self,
   ...
 }:
 let
-  modifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-  creationDate = builtins.substring 0 8 modifiedDate;
 
   # A non-root user that will be used inside the image.
   containerUser = "tanzu";
-  containerUID = "1000";
-  containerGID = "1000";
 
   tanzu = pkgs.callPackage ./derivations/tanzu {
     inherit pkgs;
@@ -410,7 +404,7 @@ pkgs.dockerTools.buildLayeredImage {
   '';
 
   # Runs in the final layer, on top of other layers.
-  extraCommands = '''';
+  extraCommands = "";
 
   config = {
     User = "root";

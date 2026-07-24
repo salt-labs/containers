@@ -1,38 +1,40 @@
 {
   pkgs,
-  crossPkgs,
   ...
-}: let
+}:
+let
   kpack = {
     cli = pkgs.fetchurl {
       name = "kpack-cli";
-      url = "https://github.com/vmware-tanzu/kpack-cli/releases/download/v0.9.1/kp-linux-amd64-0.9.1";
-      sha256 = "sha256-F10IGO2D59hPFp3XTCZTHTKMwJcZN/IVijrf77z1f9s=";
+      version = "0.17.2";
+      url = "https://github.com/buildpacks-community/kpack-cli/releases/download/v${kpack.cli.version}/kp-linux-amd64-${kpack.cli.version}";
+      sha256 = "sha256-pWVQSo72ELFtp7u4YF9eB7vIUY08fgAdVu0AAgt6B34=";
     };
 
     manifest = pkgs.fetchurl {
       name = "kpack-manifest";
-      url = "https://github.com/pivotal/kpack/releases/download/v0.9.2/release-0.9.2.yaml";
-      sha256 = "sha256-oU/QiF/QUlmVez/C5FZr2K8dLTmvFvErWEnzgSAda04=";
+      version = "0.18.0";
+      url = "https://github.com/pivotal/kpack/releases/download/v${kpack.manifest.version}/release-${kpack.manifest.version}.yaml";
+      sha256 = "sha256-zei3340x1qV1jsSIDuxFAJ8XgRuvPfWim3ahRP4gDmk=";
     };
   };
 in
-  pkgs.stdenv.mkDerivation {
-    name = "kpack";
-    version = "1.0.0";
+pkgs.stdenv.mkDerivation {
+  name = "kpack";
+  version = "1.0.0";
 
-    phases = ["installPhase"];
+  phases = [ "installPhase" ];
 
-    installPhase = ''
-      mkdir --parents $out/bin $out/share
+  installPhase = ''
+    mkdir --parents $out/bin $out/share
 
-      install --verbose ${kpack.cli} $out/bin/kp
-      install --verbose ${kpack.manifest} $out/share/kpack.yaml
-    '';
+    install --verbose ${kpack.cli} $out/bin/kp
+    install --verbose ${kpack.manifest} $out/share/kpack.yaml
+  '';
 
-    meta = {
-      description = "Kubernetes Native Container Build Service";
-      homepage = "https://github.com/pivotal/kpack";
-      license = "Apache 2.0";
-    };
-  }
+  meta = {
+    description = "Kubernetes Native Container Build Service";
+    homepage = "https://github.com/pivotal/kpack";
+    license = "Apache 2.0";
+  };
+}

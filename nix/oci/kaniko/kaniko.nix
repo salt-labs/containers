@@ -4,7 +4,6 @@
   fetchFromGitHub,
   buildGoModule,
   installShellFiles,
-  testers,
   #, kaniko
 }:
 buildGoModule rec {
@@ -26,7 +25,7 @@ buildGoModule rec {
     "-X github.com/GoogleContainerTools/kaniko/pkg/version.version=${version}"
   ];
 
-  nativeBuildInputs = [installShellFiles];
+  nativeBuildInputs = [ installShellFiles ];
 
   doCheck = false; # requires docker, container-diff (unpackaged yet)
 
@@ -48,7 +47,10 @@ buildGoModule rec {
     homepage = "https://github.com/GoogleContainerTools/kaniko";
     license = lib.licenses.asl20;
     platforms = lib.platforms.linux;
-    maintainers = with lib.maintainers; [jk superherointj];
+    maintainers = with lib.maintainers; [
+      jk
+      superherointj
+    ];
     mainProgram = "executor";
   };
 }

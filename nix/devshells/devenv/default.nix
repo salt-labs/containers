@@ -42,7 +42,7 @@ inputs.devenv.lib.mkShell {
         opensc
         pam_u2f
         pcsclite
-        pinentry
+        pinentry-curses
         socat
 
         kind
@@ -113,7 +113,7 @@ inputs.devenv.lib.mkShell {
             };
           };
           mixed-line-endings.enable = true;
-          nixfmt-rfc-style.enable = true;
+          nixfmt.enable = true;
           pre-commit-hook-ensure-sops.enable = true;
           prettier = {
             enable = true;

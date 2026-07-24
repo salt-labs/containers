@@ -86,7 +86,7 @@ let
     openssh
     openssl
     pass
-    pinentry
+    pinentry-curses
     procps
     ripgrep
     rsync
@@ -296,7 +296,7 @@ pkgs.dockerTools.buildImage {
   '';
 
   # Runs in the final layer, on top of other layers.
-  extraCommands = '''';
+  extraCommands = "";
 
   config = {
     User = "root";

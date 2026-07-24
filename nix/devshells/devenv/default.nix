@@ -19,9 +19,6 @@ inputs.devenv.lib.mkShell {
         cachix
         nil
 
-        hunspell
-        hunspellDicts.en_AU
-
         sops
         ssh-to-age
         ssh-to-pgp
@@ -60,7 +57,6 @@ inputs.devenv.lib.mkShell {
 
       enterShell = ''
         # Linters
-        export HUNSPELL_CONFIG=''${PROJECT_DIR}/.linters/config/hunspell.conf
         export PRETTIER_CONFIG=''${PROJECT_DIR}/.linters/config/.prettierrc.yaml
         export YAMLLINT_CONFIG_FILE=''${PROJECT_DIR}/.linters/config/.yamllint.yml
 

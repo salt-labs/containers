@@ -1,4 +1,4 @@
-##################################################
+#################################################
 # Notes:
 #
 #   # Build & run container
@@ -25,9 +25,9 @@
   inputs = {
     nixpkgs = {
       type = "github";
-      owner = "NixOS";
-      repo = "nixpkgs";
-      ref = "nixos-unstable";
+      owner = "cachix";
+      repo = "devenv-nixpkgs";
+      ref = "rolling";
       flake = true;
     };
 

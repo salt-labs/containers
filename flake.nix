@@ -106,7 +106,7 @@
       self,
       nixpkgs,
       nixpkgs-unstable,
-      #devenv,
+      devenv,
       #poetry2nix,
       #codestream-cli,
       #loopy,

@@ -39,10 +39,10 @@
       flake = true;
     };
 
-    pre-commit-hooks = {
+    git-hooks = {
       type = "github";
       owner = "cachix";
-      repo = "pre-commit-hooks.nix";
+      repo = "git-hooks.nix";
       ref = "master";
       flake = true;
       inputs.nixpkgs.follows = "nixpkgs";
@@ -106,7 +106,7 @@
       self,
       nixpkgs,
       nixpkgs-unstable,
-      devenv,
+      #devenv,
       #poetry2nix,
       #codestream-cli,
       #loopy,
@@ -182,14 +182,14 @@
           ) acc (builtins.attrNames systems.${system})
         ) { } (builtins.attrNames systems);
 
-      _pkgsAllowUnfree = {
-        nixpkgs = {
-          config = {
-            allowUnfree = true;
-            allowUnfreePredicate = _: true;
-          };
-        };
-      };
+      #_pkgsAllowUnfree = {
+      #  nixpkgs = {
+      #    config = {
+      #      allowUnfree = true;
+      #      allowUnfreePredicate = _: true;
+      #    };
+      #  };
+      #};
     in
     {
       ###############
@@ -200,7 +200,7 @@
           buildPlatform: hostPlatform:
           let
             # Build Platform
-            system = buildPlatform;
+            #system = buildPlatform;
             pkgs = pkgsImportCrossSystem buildPlatform buildPlatform;
             pkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform buildPlatform;
 

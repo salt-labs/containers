@@ -27,7 +27,7 @@ pkgs.dockerTools.buildImage {
       "org.opencontainers.image.description" = "snyk";
     };
     Entrypoint = [
-      "${pkgs.nodePackages.snyk}/bin/snyk"
+      "${pkgs.snyk}/bin/snyk"
     ];
     Cmd = [
     ];

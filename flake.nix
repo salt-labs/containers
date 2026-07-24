@@ -495,40 +495,42 @@
       ###############
       # DevShells
       ###############
-      devShells = flattenPackages (
-        forAllSystems (
-          buildPlatform: hostPlatform:
-          let
-            # Build Platform
-            system = buildPlatform;
-            pkgs = pkgsImportCrossSystem buildPlatform buildPlatform;
-            pkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform buildPlatform;
+      devShells =
+        flattenPackages (
+          forAllSystems (
+            buildPlatform: hostPlatform:
+            let
+              # Build Platform
+              system = buildPlatform;
+              pkgs = pkgsImportCrossSystem buildPlatform buildPlatform;
+              pkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform buildPlatform;
 
-            # Host Platform
-            crossPkgs = pkgsImportCrossSystem buildPlatform hostPlatform;
-            crossPkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform hostPlatform;
-          in
-          {
-            devenv = import ./nix/devshells/devenv {
-              inherit inputs;
-              inherit system;
-              inherit pkgs;
-              inherit pkgsUnstable;
-              inherit crossPkgs;
-              inherit crossPkgsUnstable;
-            };
+              # Host Platform
+              crossPkgs = pkgsImportCrossSystem buildPlatform hostPlatform;
+              crossPkgsUnstable = pkgsImportCrossSystemUnstable buildPlatform hostPlatform;
+            in
+            {
+              devenv = import ./nix/devshells/devenv {
+                inherit inputs;
+                inherit system;
+                inherit pkgs;
+                inherit pkgsUnstable;
+                inherit crossPkgs;
+                inherit crossPkgsUnstable;
+              };
 
-            default = self.devShells."${system}.${system}".devenv;
-          }
+              default = self.devShells."${system}.${system}".devenv;
+            }
+          )
         )
-      );
-
-      # Set the default devshell to the one for the current system.
-      devShell = builtins.listToAttrs (
-        map (system: {
-          name = system;
-          value = self.devShells."${system}.${system}".devenv;
-        }) supportedSystems
-      );
+        // builtins.listToAttrs (
+          map (system: {
+            name = system;
+            value = {
+              devenv = self.devShells."${system}.${system}".devenv;
+              default = self.devShells."${system}.${system}".devenv;
+            };
+          }) supportedSystems
+        );
     };
 }

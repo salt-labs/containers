@@ -203,7 +203,6 @@ inputs.devenv.lib.mkShell {
 
         python = {
           enable = false;
-
           poetry = {
             enable = true;
           };

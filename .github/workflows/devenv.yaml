@@ -102,17 +102,17 @@ jobs:
       - id: devenv_gc
         name: Devenv gc
         run: |
-          devenv gc
+          devenv --no-tui gc
 
       - id: devenv_test
         name: Devenv test
         run: |
-          devenv test
+          devenv --no-tui test
 
       - id: devenv_status
         name: Devenv (status)
         if: always()
-        shell: devenv shell --quiet bash -- -e {0}
+        shell: devenv --no-tui shell --quiet bash -- -e {0}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
